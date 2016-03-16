@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+    	<menuitem id="hpusa_report_kpis" name="Report Kpis" parent="hpusa_manufacturing.hpusa_report"  sequence="10"/>
+        <record id="wizard_hp_report_kpis" model="ir.ui.view">
+            <field name="name">wizard.hp.report.kpis.form</field>
+            <field name="model">wizard.hp.report.kpis</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form string="Report" version="7.0">
+	                <group col="6">
+	                	<field name="type" colspan="3"/>
+	                	<newline/>
+	                	<field name="option" colspan="3"/>
+	                	<newline/>
+	                	<field name="date_from" attrs="{'invisible': [('option','!=','other')],'required': [('option','=','other')]}" colspan="3"/>
+	                	<field name="date_to" attrs="{'invisible': [('option','!=','other')],'required': [('option','=','other')]}" colspan="3"/>
+	                	<newline/>
+	                	<field name="month" attrs="{'invisible': [('option','!=','month')],'required': [('option','=','month')]}" string="Month" colspan="3"/>
+	                	<field name="month_from" attrs="{'invisible': [('option','!=','year')],'required': [('option','=','year')]}" colspan="3"/>
+	                	<field name="month_to" attrs="{'invisible': [('option','!=','year')],'required': [('option','=','year')]}" colspan="3"/>
+	                </group>    
+                	<footer>
+                      <button name="action_print" string="Print" type="object" class="oe_highlight"/>
+                      or
+                      <button string="Cancel" class="oe_link" special="cancel" />
+                  </footer>
+                </form>
+            </field>
+        </record>
+        
+        
+        <record id="action_hpusa_report_kpis" model="ir.actions.act_window">
+            <field name="name">Report</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">wizard.hp.report.kpis</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+        <menuitem id="menu_action_hpusa_report_kpis" name="Report Excel" parent="hpusa_report_kpis" action="action_hpusa_report_kpis"  sequence="1"/>
+
+    </data>
+</openerp>

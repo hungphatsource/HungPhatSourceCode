@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+    	
+        <record id="wizard_hpusa_manufacturing_losss_Report_form" model="ir.ui.view">
+            <field name="name">wizard.hpusa.manufacturing.loss.report.form</field>
+            <field name="model">wizard.hpusa.manufacturing.loss.report</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form string="Loss Report" version="7.0">
+                <field invisible="1" name="state"/>  
+                <group states="choose">
+                 	<group>
+		            	<field  name="report_type"></field>
+		                <field  name="worker" attrs="{'invisible': [('report_type','!=','workerdetail')]}"></field>
+		                <!--field  name="mo_ids" widget="many2many_tags"></field-->		
+		            </group>
+			        <group>
+			             <field name="date_from"/>
+			             <field name="date_to"/>  			                		
+			        </group>
+                 </group>	
+                 
+		            <div states="choose">
+		            	<footer states="choose">
+		            		<button name="view_report"  string="View" type="object" class="oe_highlight" />
+				        	<button name="action_export"  string="Export" type="object" class="oe_highlight"/>
+			                  or
+			                <button string="Cancel" class="oe_link" special="cancel" />
+			        	</footer>
+                   </div>
+                   
+                   <div states="get">          
+                        <field name ="context"></field>
+       					  	<script>
+	                            $('.ui-dialog').css({ "width": '1300px', 'left': '0px'});
+	                          	$('iframe').css({ "height": '700px' });
+                        	</script>
+	       					<style>
+		       					.cleditorMain{
+		       						border: 0 solid #999;
+		       					}
+		       					.oe_form_field_html{
+		       						height : 500px;
+		       					}
+		       					iframe {
+		       						height : 500px;
+		       						width : 1250px;
+		       					}
+		       					div.ui-dialog-content , .ui-widget-content{height : 20 px;}
+								.cleditorToolbar {
+									display : none;
+										}
+	       					</style>
+		            	<footer  states = "get" >
+				        	<button name="action_export"  string="Export" type="object" class="oe_highlight"/>
+			                  or
+			                <button string="Cancel" class="oe_link" special="cancel" />
+			        	</footer>
+                    </div>
+                   
+                </form>
+            </field>
+        </record>
+        
+        <record id="action_wizard_hpusa_manufacturing_loss_report" model="ir.actions.act_window">
+            <field name="name">Manufacturing Loss Report</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">wizard.hpusa.manufacturing.loss.report</field>
+            <!--field name="context">{'type_': 'stoc_in_out'}</field-->
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+        <menuitem id="action_wizard_hpusa_manufacturing_loss_report_item" name="Loss Reports" parent="hpusa_manufacturing.hpusa_report" action="action_wizard_hpusa_manufacturing_loss_report"  sequence="1"/>
+
+    </data>
+</openerp>

@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+    	<menuitem id="hpusa_kpi_daily_report" name="KPIs Daily Report" parent="base.menu_mrp_root"  sequence="11"/>
+    	<!--  daily report -->
+        <record id="hpusa_view_daily_report_tree" model="ir.ui.view">
+            <field name="name">hpusa.daily.report.tree</field>
+            <field name="model">hpusa.daily.report</field>
+            <field name="arch" type="xml">
+                <tree string="3D" colors="blue:state == 'draft';black:state == 'submit'">
+                	<field name="name"/>
+                    <field name="reporter_id"/>
+                    <field name="total_point"/>
+                    <field name="invoice_manager"/>
+                    <field name="company_id"/>
+                    <field name="report_date"/>
+                    <field name="state"/>
+                </tree>
+            </field>
+        </record>
+        
+        <record id="hpusa_view_daily_report_form" model="ir.ui.view">
+            <field name="name">hpusa.daily.report.form</field>
+            <field name="model">hpusa.daily.report</field>
+            <field name="arch" type="xml">
+                <form string="Casting" version="7.0">
+	                <header>
+                                <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
+	                	<button name="action_cancel" states="confirmed" groups="mrp.group_mrp_manager" string="Cancel" type="object" confirm="Are you sure you want to cancel this record?"/>
+	                	<button name="action_confirm" states="draft" class="oe_highlight" string="Confirm" type="object"/>
+	                	<button name="action_set_to_draft" states="cancel" groups="mrp.group_mrp_manager" string="Set To Draft" type="object"/>
+				<style>
+				.oe_clear{
+					clear: none !important;
+					}
+				</style>
+	                	
+	                </header>
+			
+	                <sheet>
+	                   <group col="5">
+	                       <group colspan="3" col="3">
+	                       	<field name="name" colspan="3"/>
+	                            <field name="reporter_id" colspan="3" attrs="{'readonly': [('state', '!=','draft')]}"/>
+	                            <field name="user_id" colspan="3" readonly="1"/>
+	                            <field name="invoice_manager" colspan="3"/>
+	                            <newline></newline>	                            
+	                       </group>
+	                       <group colspan="2">
+	                           <field name="report_date"/>
+	                           <field name="hp_create_date" readonly="1"/>   
+	                           <field name="company_id" readonly="1"/>  
+                                  <field name="week" colspan="2"/>     
+                                  <field name="total_point" colspan="2"/> 
+                                  <field name="group_id" colspan="2"/>
+	                       </group>                
+	                   </group>
+	                </sheet>
+	                <div class="oe_chatter">
+	                    <field name="message_follower_ids" widget="mail_followers"/>
+	                    <field name="message_ids" widget="mail_thread"/>
+	                </div>
+                </form>
+           </field>
+        </record>
+        
+        <record id="hpusa_view_3d_daily_report_tree" model="ir.ui.view">
+            <field name="name">hpusa.3d.daily.report.tree</field>
+            <field name="model">hpusa.daily.report.3d</field>
+            <field name="inherit_id" ref="hpusa_view_daily_report_tree"/>
+            <field name="arch" type="xml">
+                <field name="invoice_manager" position="after">
+                	<field name="designer_id"/>
+                </field>
+            </field>
+        </record>
+        
+        
+        <record id="hpusa_view_3d_daily_report_form" model="ir.ui.view">
+            <field name="name">hpusa.3d.daily.report.form</field>
+            <field name="model">hpusa.daily.report.3d</field>
+            <field name="inherit_id" ref="hpusa_view_daily_report_form"/>
+            <field name="arch" type="xml">
+            	<field name="invoice_manager" colspan="3" position="after">
+            		<field name="designer_id"/>
+            	</field>
+                <group col="5" position="after">
+                	<notebook>
+                		<page string="Work Summary">
+                			<field name="line_ids" nolabel="1"  attrs="{'readonly': [('state', '!=','draft')]}">
+	                           <tree editable="bottom">
+	                               <field name="product_id"/>
+	                               <field name="_3d_difficulty_level"/>
+	                               <field name="complete"/>
+	                               <field name="point"/>
+	                           </tree>
+	                       </field>
+                		</page>
+                	</notebook>
+                </group>
+            </field>
+        </record>
+        <!--  daily report -->
+        
+        <!-- 3d  daily report -->
+        <record id="action_hpusa_view_3d_daily_report" model="ir.actions.act_window">
+            <field name="name">3D Design Daily Report</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">hpusa.daily.report.3d</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('type','=','3d')]</field>
+            <field name="help" type="html">
+              <p class="oe_view_nocontent_create">
+                Click to define a new 3D Design Daily Report
+                </p>
+            </field>
+        </record>
+        <record id="action_hpusa_view_3d_daily_report_tree" model="ir.actions.act_window.view">
+            <field eval="1" name="sequence"/>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="hpusa_view_3d_daily_report_tree"/>
+            <field name="act_window_id" ref="action_hpusa_view_3d_daily_report"/>
+        </record>
+        <record id="action_hpusa_view_3d_daily_report_form" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence"/>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="hpusa_view_3d_daily_report_form"/>
+            <field name="act_window_id" ref="action_hpusa_view_3d_daily_report"/>
+        </record>
+        <menuitem id="menu_action_hpusa_view_3d_daily_report_tree" name="3D Design Daily Report" parent="hpusa_kpi_daily_report" action="action_hpusa_view_3d_daily_report" sequence="1"/>
+        <!-- 3d  daily report -->
+        
+        
+        <!-- casting  daily report -->
+        <record id="hpusa_view_casting_daily_report_tree" model="ir.ui.view">
+            <field name="name">hpusa.casting.daily.report.tree</field>
+            <field name="model">hpusa.daily.report.casting</field>
+            <field name="inherit_id" ref="hpusa_view_daily_report_tree"/>
+            <field name="arch" type="xml">
+                <field name="invoice_manager" position="after">
+                	<field name="manager_id"/>
+                </field>
+            </field>
+        </record>
+        
+        
+        <record id="hpusa_view_casting_daily_report_form" model="ir.ui.view">
+            <field name="name">hpusa.casting.daily.report.form</field>
+            <field name="model">hpusa.daily.report.casting</field>
+            <field name="inherit_id" ref="hpusa_view_daily_report_form"/>
+            <field name="arch" type="xml">
+            	<field name="invoice_manager" colspan="3" position="after">
+            		<field name="manager_id"/>
+            	</field>
+                <group col="5" position="after">
+                	<notebook>
+                		<page string="Work Summary">
+                			<field name="line_ids" nolabel="1"  attrs="{'readonly': [('state', '!=','draft')]}">
+	                           <tree editable="bottom">
+	                               <field name="product_id"/>
+	                               <field name="worker"/>
+	                               <field name="complete"/>
+	                               <field name="point"/>
+	                           </tree>
+	                       </field>
+                		</page>
+                	</notebook>
+                </group>
+            </field>
+        </record>
+        
+        <record id="action_hpusa_view_casting_daily_report" model="ir.actions.act_window">
+            <field name="name">Casting Daily Report</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">hpusa.daily.report.casting</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('type','=','casting')]</field>
+            <field name="help" type="html">
+              <p class="oe_view_nocontent_create">
+                Click to define a new Casting Daily Report
+                </p>
+            </field>
+        </record>
+        <record id="action_hpusa_view_casting_daily_report_tree" model="ir.actions.act_window.view">
+            <field eval="1" name="sequence"/>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="hpusa_view_casting_daily_report_tree"/>
+            <field name="act_window_id" ref="action_hpusa_view_casting_daily_report"/>
+        </record>
+        <record id="action_hpusa_view_casting_daily_report_form" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence"/>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="hpusa_view_casting_daily_report_form"/>
+            <field name="act_window_id" ref="action_hpusa_view_casting_daily_report"/>
+        </record>
+        <menuitem id="menu_action_hpusa_view_casting_daily_report_tree" name="Casting Daily Report" parent="hpusa_kpi_daily_report" action="action_hpusa_view_casting_daily_report" sequence="2"/>
+        
+        <!-- casting  daily report -->
+        
+        
+        <!-- assembling  daily report -->
+        
+        <record id="hpusa_view_assembling_daily_report_tree" model="ir.ui.view">
+            <field name="name">hpusa.assembling.daily.report.tree</field>
+            <field name="model">hpusa.daily.report.assembling</field>
+            <field name="inherit_id" ref="hpusa_view_daily_report_tree"/>
+            <field name="arch" type="xml">
+                <field name="invoice_manager" position="after">
+                	
+                </field>
+            </field>
+        </record>
+        
+        
+        <record id="hpusa_view_assembling_daily_report_form" model="ir.ui.view">
+            <field name="name">hpusa.assembling.daily.report.form</field>
+            <field name="model">hpusa.daily.report.assembling</field>
+            <field name="inherit_id" ref="hpusa_view_daily_report_form"/>
+            <field name="arch" type="xml">
+                <group col="5" position="after">
+                	<notebook>
+                		<page string="Work Summary">
+                			<field name="line_ids" nolabel="1"  attrs="{'readonly': [('state', '!=','draft')]}">
+	                           <tree editable="bottom">
+	                               <field name="product_id"/>
+	                               <field name="worker"/>
+	                               <field name="level"/>
+	                               <field name="complete"/>
+	                               <field name="point"/>
+	                           </tree>
+	                       </field>
+                		</page>
+                	</notebook>
+                </group>
+            </field>
+        </record>
+
+		<record id="action_hpusa_view_assembling_daily_report" model="ir.actions.act_window">
+            <field name="name">Assembling Daily Report</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">hpusa.daily.report.assembling</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('type','=','assembling')]</field>
+            <field name="help" type="html">
+              <p class="oe_view_nocontent_create">
+                Click to define a new Assembling Daily Report
+                </p>
+            </field>
+        </record>
+        <record id="action_hpusa_view_assembling_daily_report_tree" model="ir.actions.act_window.view">
+            <field eval="1" name="sequence"/>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="hpusa_view_assembling_daily_report_tree"/>
+            <field name="act_window_id" ref="action_hpusa_view_assembling_daily_report"/>
+        </record>
+        <record id="action_hpusa_view_assembling_daily_report_form" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence"/>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="hpusa_view_assembling_daily_report_form"/>
+            <field name="act_window_id" ref="action_hpusa_view_assembling_daily_report"/>
+        </record>
+        <menuitem id="menu_action_hpusa_view_assembling_daily_report_tree" name="Assembling Daily Report" parent="hpusa_kpi_daily_report" action="action_hpusa_view_assembling_daily_report" sequence="3"/>
+        
+        <!-- assembling  daily report -->
+        
+        
+        <!-- setting  daily report -->
+
+		<record id="hpusa_view_setting_daily_report_tree" model="ir.ui.view">
+            <field name="name">hpusa.setting.daily.report.tree</field>
+            <field name="model">hpusa.daily.report.setting</field>
+            <field name="inherit_id" ref="hpusa_view_daily_report_tree"/>
+            <field name="arch" type="xml">
+                <field name="invoice_manager" position="after">
+                	<field name="manager_id"/>
+                </field>
+            </field>
+        </record>
+        
+        
+        <record id="hpusa_view_setting_daily_report_form" model="ir.ui.view">
+            <field name="name">hpusa.setting.daily.report.form</field>
+            <field name="model">hpusa.daily.report.setting</field>
+            <field name="inherit_id" ref="hpusa_view_daily_report_form"/>
+            <field name="arch" type="xml">
+            	<field name="invoice_manager" colspan="3" position="after">
+            		<field name="manager_id"/>
+            	</field>
+                <group col="5" position="after">
+                	<notebook>
+                		<page string="Work Summary">
+                			<field name="line_ids" nolabel="1"  attrs="{'readonly': [('state', '!=','draft')]}">
+	                           <tree editable="bottom">
+	                               <field name="product_id"/>
+	                               <field name="worker"/>
+	                               <field name="level"/>
+	                               <field name="complete"/>
+	                               <field name="point"/>
+	                           </tree>
+	                       </field>
+                		</page>
+                	</notebook>
+                </group>
+            </field>
+        </record>
+        
+        <record id="action_hpusa_view_setting_daily_report" model="ir.actions.act_window">
+            <field name="name">Setting Daily Report</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">hpusa.daily.report.setting</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('type','=','setting')]</field>
+            <field name="help" type="html">
+              <p class="oe_view_nocontent_create">
+                Click to define a new Setting Daily Report
+                </p>
+            </field>
+        </record>
+        <record id="action_hpusa_view_setting_daily_report_tree" model="ir.actions.act_window.view">
+            <field eval="1" name="sequence"/>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="hpusa_view_setting_daily_report_tree"/>
+            <field name="act_window_id" ref="action_hpusa_view_setting_daily_report"/>
+        </record>
+        <record id="action_hpusa_view_setting_daily_report_form" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence"/>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="hpusa_view_setting_daily_report_form"/>
+            <field name="act_window_id" ref="action_hpusa_view_setting_daily_report"/>
+        </record>
+        <menuitem id="menu_action_hpusa_view_setting_daily_report_tree" name="Setting Daily Report" parent="hpusa_kpi_daily_report" action="action_hpusa_view_setting_daily_report" sequence="4"/>
+         <!-- setting  daily report -->
+    </data>
+</openerp>

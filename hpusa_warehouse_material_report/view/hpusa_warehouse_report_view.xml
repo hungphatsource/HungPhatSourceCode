@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+                
+      <report id="report_rawmaterial_stock" string="Raw Material Report" model="wizard.hpusa.warehouse.report" name="report_rawmaterial_stock" rml="hpusa_warehouse_material_report/report/stock_in_out.ods" menu ="False" header="False"/>  
+      <record model="ir.actions.report.xml" id="report_rawmaterial_stock">
+        	<field name="report_type">oo-xls</field>
+      </record>
+      
+       <report id="report_rawmaterial_stock_month" string="Raw Material Month Report" model="wizard.hpusa.warehouse.report" name="report_rawmaterial_stock_month" rml="hpusa_warehouse_material_report/report/stock_in_out_month.ods" menu ="False" header="False"/>  
+      <record model="ir.actions.report.xml" id="report_rawmaterial_stock_month">
+        	<field name="report_type">oo-xls</field>
+      </record>   
+      
+      <report id="report_diamond_stock_sumary" string="Diamond Report" model="wizard.hpusa.warehouse.report" name='report_diamond_stock_sumary' rml="hpusa_warehouse_material_report/report/stock_in_out_diamond.ods" menu ="False" header="False"/>  
+      <record model="ir.actions.report.xml" id="report_diamond_stock_sumary">
+        	<field name="report_type">oo-xls</field>
+      </record>
+      
+      <report id="report_diamond_stock_sumary_month" string="Diamond Report Month" model="wizard.hpusa.warehouse.report" name='report_diamond_stock_sumary_month' rml="hpusa_warehouse_material_report/report/stock_in_out_diamond_month.ods" menu ="False" header="False"/>  
+      <record model="ir.actions.report.xml" id="report_diamond_stock_sumary_month">
+        	<field name="report_type">oo-xls</field>
+      </record>
+      
+      <report id="hpusa_inventory_report_sumary" string="Inventory Report" model="wizard.hpusa.warehouse.report" name='hpusa_inventory_report_sumary' rml="hpusa_warehouse_material_report/report/inventory_report.ods" menu ="False" header="False"/>  
+      <record model="ir.actions.report.xml" id="hpusa_inventory_report_sumary">
+        	<field name="report_type">oo-xls</field>
+      </record>   
+                      
+    </data>
+</openerp>

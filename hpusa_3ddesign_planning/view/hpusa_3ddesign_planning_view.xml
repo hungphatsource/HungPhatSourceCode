@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+    	
+    	 <!-- === Planning Tree View ===-->            
+  		<record id="3d_design_planning_tree_view" model="ir.ui.view">
+            <field name="name">3d.design.planning.routing.view</field>
+            <field name="model">hpusa.3ddesign.planning</field>
+            <field name="arch" type="xml">
+                <tree string="routing">
+                    <field name="name"/>
+	                <field name="date_start"/>
+	                <field name="date_end"/>
+	                <field name="month"/>
+	                <field name="year"/>
+	                <field name="company_id"/>  
+                </tree>
+            </field>
+        </record>
+    	
+    	<!-- === Planning Form View ===-->
+        <record id="3d_design_view_planning" model="ir.ui.view">
+            <field name="name">hpusa.3ddesign.planning</field>
+            <field name="model">hpusa.3ddesign.planning</field>
+            <field name="arch" type="xml">
+               <form version="7.0" string="Manufacturing Planning">
+                	<sheet>
+                		<group col  = "3">
+                	<h2>Name<field name="name"/></h2>
+                		</group>
+                	<group>
+	                	<group>
+	                			<field name="date_start"/>
+		                        <field name="date_end"/>
+		                </group>
+		                <group>                          
+		                        <field name="month"/>
+		                        <field name="year"/>
+		                        <field name="company_id"/>
+		                        
+		           		</group>	
+               		</group> 
+               		<notebook >
+		           		<page string ="Design Line">
+		           			<field name ="design_line_id">
+		           				<tree>
+			           				<field name="product_id" ></field>
+			           				<field name="dificultive_level"></field>
+			           				<field name="date"></field>
+			           				<field name="qty" sum="Total"></field>
+			           				<field name="employee_id"></field>
+			           				
+		           				</tree>
+		           			</field>
+		           		</page>
+		           	</notebook>
+              </sheet>
+             <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                    <field name="message_ids" widget="mail_thread"/>
+               </div> 
+			</form>
+            </field>
+        </record>
+        
+     <!-- === Planning line form view ===-->   
+     <record id="3d_designview_planning_line" model="ir.ui.view">
+            <field name="name">hpusa.3ddesign.planning.line</field>
+            <field name="model">hpusa.3ddesign.planning.line</field>
+            <field name="arch" type="xml">
+               <form version="7.0" string="Manufacturing Planning">
+                	<sheet>
+                	<header><h1>Product<field name="product_id" /></h1>
+                	</header>
+                	<group>
+	                	<group>
+		                        <field name="dificultive_level"/>
+		                        <field name="date"/>
+		                        
+		                </group>
+		                <group>        
+		                       <field name="qty"/>
+		                       <field name="employee_id"></field>
+		           		</group>	
+               		</group> 	
+              </sheet>
+			</form>
+           </field>
+        </record>
+  
+  
+  		<record id="3d_designplanning_line_tree_view" model="ir.ui.view">
+            <field name="name">hpusa.3ddesign.planning.line.tree</field>
+            <field name="model">hpusa.3ddesign.planning.line</field>
+            <field name="arch" type="xml">
+                <tree string="routing">
+                    <field name="product_id" />
+                    <field name="dificultive_level"/>
+		            <field name="date"/>
+		            <field name="qty" sum="Total"/>
+		            <field name="employee_id"></field>
+                </tree>
+            </field>
+        </record>
+ 
+        
+        
+  		<record id="3d_design_planning_search_view" model="ir.ui.view">
+            <field name="name">3d_design_planning.routing.search</field>
+            <field name="model">hpusa.3ddesign.planning</field>
+            <field name="arch" type="xml">
+                <search string="routing">
+                    <field name="name" string="Routing" filter_domain="['|',('name','ilike',self),('code','ilike',self)]"/>
+                     <separator/>
+                     <group expand="0" string="Group By...">
+                     	<filter name="group_year" string="Year" icon="terp-personal" domain="[]" context="{'group_by':'year'}"/>
+                     	<filter name="group_month" string="Month" icon="terp-personal" domain="[]" context="{'group_by':'month'}"/>
+                     	<filter name="group_company" string="Company" icon="terp-personal" domain="[]" context="{'group_by':'company_id'}"/>
+                     </group>
+                </search>
+            </field>
+        </record>
+        
+    <!-- === Planning Action View ===-->     
+   <record id="3d_design_hpusa_planning_action" model="ir.actions.act_window">
+            <field name="name">3D Design Planning</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">hpusa.3ddesign.planning</field>
+            <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="3d_design_planning_search_view"/>
+        </record >
+  <menuitem  action = "3d_design_hpusa_planning_action" id="hpusa3d_design_planning"  name="3D Design Planning" sequence="13"  parent="mrp.menu_mrp_planning"/>
+ </data>
+</openerp>

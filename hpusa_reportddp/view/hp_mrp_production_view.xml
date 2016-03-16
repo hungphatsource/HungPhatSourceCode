@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+	<openerp>
+		<data>
+			 <record model="ir.ui.view" id="hp_mrp_production_wip_view">
+			 	<field name="name">hp.mrp.production.wip.form</field>
+			    <field name="model">mrp.production</field>
+			    <field name="inherit_id" ref="hpusa_manufacturing.hp_mrp_production_form_view" />
+			    <field name="arch" type="xml">
+			    	<field name="date_planned" position="after">
+			    		<field name="description"/>
+			    	</field>
+			    </field>
+			 </record>
+</data>
+</openerp>
+      

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+    
+        <record id="view_reportddp_wizard" model="ir.ui.view">
+            <field name="name">Report Work In Process</field>
+            <field name="model">hpusa.reportddp</field>
+            <field name="arch" type="xml">
+               <form version="7.0" string="Xuat bao cao">
+               <script type="text/javascript" src="openerp/addons/web/static/src/js/jquery-1.11.3.js"> </script> 
+               <script>
+				function printDiv() {
+					var x = $("iframe").contents().find('body').html();
+	    			window.frames["print_frame"].document.body.innerHTML=x;
+	   				window.frames["print_frame"].window.focus();
+	    			window.frames["print_frame"].window.print();
+				}
+					
+               </script>
+                  <field invisible="1" name="state"/>
+                	<group states="choose"  col="2" span="2">
+	                        <group>
+		                        <field name="from_date"/>
+		                        <field name="to_date"/>
+		                        <field name="check_order_date" on_change="onchange_order_date(check_order_date,context)"/>
+		                        <field name="check_pickup_date" on_change="onchange_check_pickup_date(check_pickup_date,context)"/>
+		                        <field name="check_due_date" on_change="onchange_check_due_date(check_due_date,context)"/>
+	                        </group>
+	                        <group>
+		                        <field name="company_id" widget="many2many_tags"/>
+		                        <field name="so_id"  widget="many2many_tags"/>
+		                        <field name="work_center"  widget="many2one_tags"/>
+		                        <field name="status" />
+		                        <field name="worker"  widget="many2one_tags"/>
+	                        </group>
+               		</group>
+               		
+                    <div states="get">
+                 
+                        <field name ="content"></field>
+       					
+       					<script>
+                            $('.ui-dialog').css({ "width": '900px', 'left': '0px' });
+                            $('iframe').css({ "height": '500px' });
+                        </script>
+       					<style>
+       					.cleditorMain{
+	       					border: 0 solid #999;
+	       					}
+	       					.oe_form_field_html{
+	       					height : 500px;	
+	       					}
+	       					iframe {
+	       					height : 500px;
+	       					width : 850px;
+	       					}
+	       					div.ui-dialog-content .ui-widget-content{height : 500px;}
+							.cleditorToolbar {
+							display : none;
+							
+								}
+       					</style>
+       					<input type="button" class="oe_button oe_highlight" value="Print" onclick="printDiv()"></input >
+       					<iframe name="print_frame" width="0" height="0" frameborder="0" src="about:blank"  value = "disabled"></iframe>
+                    </div> 
+                <footer states="choose">
+                        <button name = "view_rp"  string="View" type="object" class="oe_highlight" /> or
+                        <button name = "action_export"  string="Export" type="object" class="oe_highlight" />
+                        <button special="cancel" string="Cancel" type="object" class="oe_link"/>
+                </footer>
+                <footer states="get" >
+                 		<button name = "action_export"  string="Export" type="object" class="oe_highlight" />or
+                        <button special="cancel" string="Cancel" type="object" class="oe_link"/>
+                     
+                </footer>
+                
+			</form>
+            </field>
+        </record>
+
+        <record id="action_reportddp" model="ir.actions.act_window">
+            <field name="name">WIP Report</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">hpusa.reportddp</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+  
+  <menuitem action="action_reportddp" id="e"  name="WIP Report" sequence="100" groups="base.group_user" parent="hpusa_manufacturing.hpusa_report"/>
+ </data>
+</openerp>

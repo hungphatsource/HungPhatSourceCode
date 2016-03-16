@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+	<data>		
+		<record model="ir.ui.view" id="hpusa_loss_product_normal_form_view">
+            <field name="name">hpusa.product.normal.form</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_normal_form_view" />
+            <field name="priority">17</field>
+            <field name="arch" type="xml">       
+               	<field name="type" position="after">
+               		<field name="metal_class" attrs="{'invisible': [('hp_type','not in',('metal','finish_product'))]}"/>
+               		<field name="sub_class" attrs="{'invisible': [('metal_class','not in',('gold'))]}" on_change="onchange_sub_class(sub_class, context)"/>
+               		
+               	</field>
+            </field>
+        </record>     
+	</data>
+</openerp>

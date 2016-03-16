@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+    
+        <record id="view_year-configuration" model="ir.ui.view">
+            <field name="name">Year Configuration</field>
+            <field name="model">year.configuration</field>
+            <field name="arch" type="xml">
+               <form version="7.0" string="Year Configuration">
+               <sheet>
+                	<header>
+                	<h1><label  for="name" col="3"> Name</label>
+                		<field name="name"/></h1>
+                	</header>
+               </sheet>
+              
+			</form>
+            </field>
+        </record>
+  <record id="year_tree_view" model="ir.ui.view">
+            <field name="name">year.routing.view</field>
+            <field name="model">year.configuration</field>
+            <field name="arch" type="xml">
+                <tree string="routing">
+                    <field name="name"/>
+                
+                </tree>
+            </field>
+        </record>
+  		<record id="year_search_view" model="ir.ui.view">
+            <field name="name">year.routing.search</field>
+            <field name="model">mrp.routing</field>
+            <field name="arch" type="xml">
+                <search string="routing">
+                    <field name="name" string="Routing" filter_domain="['|',('name','ilike',self),('code','ilike',self)]"/>
+                </search>
+            </field>
+        </record>
+   <record id="hpusa_year_action" model="ir.actions.act_window">
+            <field name="name">Year</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">year.configuration</field>
+            <field name="view_type">form</field>
+            <field name="view_id" ref="year_tree_view"/>
+            <field name="search_view_id" ref="year_search_view"/>
+            <field name="help" type="html">
+              <p class="oe_view_nocontent_create">
+                Click to create a routing.
+              </p><p>
+                Routings allow you to create and manage the manufacturing
+                operations that should be followed within your work centers in
+                order to produce a product.  They are attached to bills of
+                materials that will define the required raw materials.
+              </p>
+            </field>
+        </record>
+  <menuitem  action = "hpusa_year_action" id="year"  name="Year Configuration" sequence="11"  parent="mrp.menu_mrp_configuration"/>
+ </data>
+</openerp>

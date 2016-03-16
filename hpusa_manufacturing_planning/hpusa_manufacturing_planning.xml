@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+    	
+    	<!-- === Planning Form View ===-->
+        <record id="view_planning" model="ir.ui.view">
+            <field name="name">hpusa.manufacturing.planning</field>
+            <field name="model">hpusa.manufacturing.planning</field>
+            <field name="arch" type="xml">
+               <form version="7.0" string="Manufacturing Planning">
+                	<sheet>
+                		<group col  = "3">
+                	<h2>Name<field name="name"/></h2>
+                		</group>
+                	<group>
+	                	<group>
+	                			<field name="date_start"/>
+		                        <field name="date_End"/>
+		                        <field name="product_qty"/>
+		                </group>
+		                <group>                          
+		                        <field name="month"/>
+		                        <field name="year"/>
+		                        <field name="company_id"/>
+		                        
+		           		</group>	
+               		</group> 
+               		<notebook >
+		           		<page string ="Manufacturing Line">
+		           			<field name ="mo_line_id">
+		           				<tree>
+			           				<field name="mo_id" string="Name"></field>
+			           				<field name="product_name" string="Product Name"></field>
+			           				<field name="wo" string="Work Center"></field>
+			           				<field name="work_state" string="Work State"></field>
+			           				<field name="mo_date" string=" Manufacturing Date"></field>
+			           				<field name="finished_weight" string="Finished Weight"></field>
+			           				<field name="loss_weight" string="Loss Weight" sum="Total Loss Weight"></field>
+			           				<field name="loss_percent" string="Loss Percent"></field>
+			           				 <field name="employee_id"></field>
+		           				</tree>
+		           			</field>
+		           		</page>
+		           	</notebook>
+              </sheet>
+             <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                    <field name="message_ids" widget="mail_thread"/>
+               </div> 
+			</form>
+            </field>
+        </record>
+        
+     <!-- === Planning line form view ===-->   
+     <record id="view_planning_line" model="ir.ui.view">
+            <field name="name">hpusa.manufacturing.planning.line</field>
+            <field name="model">hpusa.manufacturing.planning.line</field>
+            <field name="arch" type="xml">
+               <form version="7.0" string="Manufacturing Planning">
+                	<sheet>
+                	<header><h1>Name<field name="mo_id" on_change = "onchange_data(mo_id,context)"/></h1>
+                	</header>
+                	<group>
+	                	<group>
+		                        <field name="product_name"/>
+		                        <field name="wo"/>
+		                        <field name="finished_weight"/>
+		                        <field name="employee_id"></field>
+		                </group>
+		                <group>        
+		                        <field name="work_state"/>
+		                        <field name="mo_date"/>
+		                        <field name="loss_weight" />
+		                        <field name="loss_percent"/>
+		           		</group>	
+               		</group> 	
+              </sheet>
+			</form>
+           </field>
+        </record>
+  
+  
+  		<record id="planning_line_tree_view" model="ir.ui.view">
+            <field name="name">planning.line.tree.view</field>
+            <field name="model">hpusa.manufacturing.planning.line</field>
+            <field name="arch" type="xml">
+                <tree string="routing">
+                    <field name="product_name"/>
+	                 <field name="work_state"/>
+	                   <field name="mo_date"/>
+	                  <field name="wo"/>
+	                  <field name="finished_weight"/>
+	                  <field name="loss_weight" sum="Total Loss Weight"/>
+	                  <field name="loss_percent" sum="Total Percent"/>
+	                   <field name="employee_id"></field>
+                </tree>
+            </field>
+        </record>
+  <!-- === Planning Tree View ===-->            
+  		<record id="planning_tree_view" model="ir.ui.view">
+            <field name="name">planning.routing.view</field>
+            <field name="model">hpusa.manufacturing.planning</field>
+            <field name="arch" type="xml">
+                <tree string="routing">
+                    <field name="name"/>
+	                <field name="date_start"/>
+	                <field name="date_End"/>
+	                <field name="month"/>
+	                <field name="year"/>
+	                <field name="product_qty"/>
+	                <field name="company_id"/>  
+                </tree>
+            </field>
+        </record>
+        
+        
+  		<record id="planning_search_view" model="ir.ui.view">
+            <field name="name">planning.routing.search</field>
+            <field name="model">hpusa.manufacturing.planning</field>
+            <field name="arch" type="xml">
+                <search string="routing">
+                    <field name="name" string="Routing" filter_domain="['|',('name','ilike',self),('code','ilike',self)]"/>
+                     <separator/>
+                     <group expand="0" string="Group By...">
+                     	<filter name="group_year" string="Year" icon="terp-personal" domain="[]" context="{'group_by':'year'}"/>
+                     	<filter name="group_month" string="Month" icon="terp-personal" domain="[]" context="{'group_by':'month'}"/>
+                     	<filter name="group_company" string="Company" icon="terp-personal" domain="[]" context="{'group_by':'company_id'}"/>
+                     </group>
+                </search>
+            </field>
+        </record>
+        
+    <!-- === Planning Action View ===-->     
+   <record id="hpusa_planning_action" model="ir.actions.act_window">
+            <field name="name">planning</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">hpusa.manufacturing.planning</field>
+            <field name="view_type">form</field>
+             <field name="view_id" ref="planning_tree_view"/>
+            <field name="search_view_id" ref="planning_search_view"/>
+        </record >
+  <menuitem  action = "hpusa_planning_action" id="hpusa_planning"  name="Manufacturing Planning" sequence="12"  parent="mrp.menu_mrp_planning"/>
+ </data>
+</openerp>

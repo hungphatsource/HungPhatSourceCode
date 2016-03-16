@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+    	<record id="hpusa3d_difficulty_level_form" model="ir.ui.view">
+            <field name="name">hpusa3d.difficulty.level.form</field>
+            <field name="model">hpusa3d.difficulty.level</field>
+            <field name="arch" type="xml">
+                <form string="3D" version="7.0">
+	                <sheet>
+	                   <group col="4">
+	                       <group colspan="2">
+	                            <field name="name"/>
+	                       </group>
+	                       <group colspan="2">
+	                           <field name="coefficient"/>   
+	                       </group>                
+	                   </group>
+	                </sheet>
+                </form>
+           </field>
+        </record>
+        
+        
+        <record id="hpusa3d_times_form" model="ir.ui.view">
+            <field name="name">hpusa3d.times.form</field>
+            <field name="model">hpusa3d.times</field>
+            <field name="arch" type="xml">
+                <form string="3D" version="7.0">
+	                <sheet>
+	                   <group col="4">
+	                       <group colspan="2">
+	                            <field name="name"/>
+	                       </group>
+	                       <group colspan="2">
+	                           <field name="coefficient"/>    
+	                       </group>                
+	                   </group>
+	                </sheet>
+                </form>
+           </field>
+        </record>
+        
+        
+        <record id="hpusa_casting_times_form" model="ir.ui.view">
+            <field name="name">hpusa.casting.times.form</field>
+            <field name="model">hpusa.casting.times</field>
+            <field name="arch" type="xml">
+                <form string="3D" version="7.0">
+	                <sheet>
+	                   <group col="4">
+	                       <group colspan="2">
+	                            <field name="name"/>
+	                       </group>
+	                       <group colspan="2">
+	                           <field name="coefficient_gold"/>
+	                           <field name="coefficient_pt"/>    
+	                       </group>                
+	                   </group>
+	                </sheet>
+                </form>
+           </field>
+        </record>
+        
+        
+        <record id="hpusa_ass_difficulty_level_form" model="ir.ui.view">
+            <field name="name">hpusa.ass.difficulty.level.form</field>
+            <field name="model">hpusa.ass.difficulty.level</field>
+            <field name="arch" type="xml">
+                <form string="3D" version="7.0">
+	                <sheet>
+	                   <group col="4">
+	                       <group colspan="2">
+	                            <field name="name"/>
+	                       </group>
+	                       <group colspan="2">
+	                           <field name="coefficient"/>
+	                           <field name="description"/>    
+	                       </group>                
+	                   </group>
+	                </sheet>
+                </form>
+           </field>
+        </record>
+        
+        
+        <record id="hpusa_setting_difficulty_level_form" model="ir.ui.view">
+            <field name="name">hpusa.setting.difficulty.level</field>
+            <field name="model">hpusa.setting.difficulty.level</field>
+            <field name="arch" type="xml">
+                <form string="3D" version="7.0">
+	                <sheet>
+	                   <group col="4">
+	                       <group colspan="2">
+	                            <field name="name"/>
+	                       </group>
+	                       <group colspan="2">
+	                           <field name="coefficient"/>
+	                           <field name="description"/>    
+	                       </group>                
+	                   </group>
+	                </sheet>
+                </form>
+           </field>
+        </record>
+        
+        
+        
+    </data>
+</openerp>

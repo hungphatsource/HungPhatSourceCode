@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+        <record id="view_inventory_report_hpusa_form" model="ir.ui.view">
+            <field name="name">hpusa.report.inventory.view</field>
+            <field name="model">hpusa.report.inventory</field>
+            <field name="arch" type="xml">
+            <form version="7.0" string="Hpusa Inventory Report">
+               <sheet>
+                <label for="name" class="oe_edit_only"/>
+                    <h1><field name="name"/></h1>
+               		<group>
+               			<group>
+	                		<field name="year_id"/>
+	                		<field name="period"/>
+	                		<field name="date_start"/>
+	                		<field name="date_end" />
+	                		<field name="main_stock_id"/>
+	                		<field name="production_stock_id"/>
+	                		<field name="gold_category"/>
+		                	<field name="diamond_category"/>
+		                	<field name="status"/>	
+                		</group>
+                		<group>
+	                		<group>		
+		                		<field name="gold_start"/>
+		                		<field name="gold_in"/>
+		                		<field name="gold_out"/>
+		                		<field name="gold_pending"/>
+		                		<field name="gold_finish"/>
+		                		<field name="gold_loss"/>
+		                		<field name="gold_loss_limit"/>
+		                		<field name="gold_loss_over"/>
+		                		<field name="gold_ship_to_us"/>
+		                		<field name="gold_end_phyical"/>
+		                		<field name="gold_end_erp"/>
+		                		<field name="diff_gold"/>	
+	                		</group>
+	                		<group>
+	                			<button name="update_data" string="Update" type="object" class="oe_highlight"/>
+	                		</group>
+	                		
+	                		                					
+               			</group>
+               			<group>		
+		                		<field name="pt_start"/>
+		                		<field name="pt_in"/>
+		                		<field name="pt_out"/>
+		                		<field name="pt_pending"/>
+		                		<field name="pt_finish"/>
+		                		<field name="pt_loss"/>
+		                		<field name="pt_loss_limit"/>
+		                		<field name="pt_loss_over"/>
+		                		<field name="pt_ship_to_us"/>
+		                		<field name="pt_end_phyical"/>
+		                		<field name="pt_end_erp"/>
+		                		<field name="diff_pt"/>		
+	                		</group>
+	                		<group>		
+		                		<field name="diamond_start"/>
+		                		<field name="diamond_in"/>
+		                		<field name="diamond_out"/>
+		                		<field name="diamond_pending"/>
+		                		<field name="diamond_finish"/>
+		                		<field name="diamond_loss"/>
+		                		<field name="diamond_loss_limit"/>
+		                		<field name="diamond_loss_over"/>
+		                		<field name="diamond_ship_to_us"/>
+		                		<field name="diamond_end_physical"/>
+		                		<field name="diamond_end_erp"/>
+		                		<field name="diff_diamond"/>		
+	                		</group>
+               		</group>
+               	</sheet>
+               	<div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                    <field name="message_ids" widget="mail_thread"/>
+               </div> 
+			</form>
+        	</field>
+        </record>
+        
+  		<record id="hpusa_inventory_report_tree_view" model="ir.ui.view">
+            <field name="name">hpusa.report.inventory.tree</field>
+            <field name="model">hpusa.report.inventory</field>
+            <field name="type">tree</field>
+            <field name="arch" type="xml">
+                <tree string="routing">
+                	<field name="name" />
+                   	<field name="year_id"/>
+	                <field name="date_start"/>
+	                <field name="date_end" />
+	                <field name="company_id"/>
+	                <field name="status"/>
+	                <field name="gold_end_erp"/>
+	                <field name="diamond_end_erp"/>		
+                </tree>
+            </field>
+        </record>
+        
+
+   		<record id="hpusa_inventory_report_sumary_action" model="ir.actions.act_window">
+            <field name="name">Inventory Report</field>
+            <field name="res_model">hpusa.report.inventory</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+        
+         <record id="mt_tract_new" model="mail.message.subtype">
+            <field name="name">Stage Changed</field>
+            <field name="res_model">hpusa.report.inventory</field>
+            <field name="default" eval="False"/>
+            <field name="description">Stage changed</field>
+        </record>
+        
+  
+  <!--  menuitem id="hpusa_inventory_warehouse_report_menu" name="Inventory Period" parent="stock.menu_stock_root"  action = "hpusa_inventory_report_sumary_action" sequence="5"/>-->
+  <menuitem  action = "hpusa_inventory_report_sumary_action" id="hpusa_inventory_report_item"  name="Inventory Period" sequence="11"  parent="hpusa_warehouse_report"/>
+ </data>
+</openerp>

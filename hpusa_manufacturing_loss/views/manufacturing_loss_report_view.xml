@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+                
+      <report id="manufacturing_loss_report_worker" string="Loss of Goldsmith Report" model="wizard.hpusa.manufacturing.loss.report" name="manufacturing_loss_report_worker" rml="hpusa_manufacturing_loss/report/manufacturing_loss_detail.ods" menu ="False" header="False"/>  
+      <record model="ir.actions.report.xml" id="manufacturing_loss_report_worker">
+        	<field name="report_type">oo-xls</field>
+      </record>
+      
+      <report id="manufacturing_loss_report_sumary" string="Loss of Manufacturing Order" model="wizard.hpusa.manufacturing.loss.report" name="manufacturing_loss_report_sumary" rml="hpusa_manufacturing_loss/report/manufacturing_order_loss.ods" menu ="False" header="False"/>  
+      <record model="ir.actions.report.xml" id="manufacturing_loss_report_sumary">
+        	<field name="report_type">oo-xls</field>
+      </record>
+      
+      <report id="manufacturing_loss_worker_report_sumary" string="Loss of Goldsmith Summary" model="wizard.hpusa.manufacturing.loss.report" name="manufacturing_loss_worker_report_sumary" rml="hpusa_manufacturing_loss/report/manufacturing_loss_worker_sumary.ods" menu ="False" header="False"/>  
+      <record model="ir.actions.report.xml" id="manufacturing_loss_worker_report_sumary">
+        	<field name="report_type">oo-xls</field>
+      </record>
+      
+                         
+    </data>
+</openerp>

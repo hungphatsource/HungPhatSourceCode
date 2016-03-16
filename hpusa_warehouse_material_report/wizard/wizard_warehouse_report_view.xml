@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+    	<menuitem id="hpusa_warehouse_report" name="Report Of Warehouse" parent="stock.menu_stock_root"  sequence="10"/>
+        <record id="wizard_hpusa_warehouse_report" model="ir.ui.view">
+            <field name="name">wizard.hpusa.warehouse.report.form</field>
+            <field name="model">wizard.hpusa.warehouse.report</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form string="Report" version="7.0">
+                 <field invisible="1" name="state"/>      
+	                <group colspan="2" states="choose">
+	                	<group>
+	                		<field  name="type_report" on_change="onchange_report_type(type_report,stock_ids, context)"  col= "2"/>
+	                 		<field  name="option"  col= "2" attrs="{'invisible': [('type_report','=','general')]}"/>
+	                 		<field name="stock_ids" col="2" widget="many2one_tags"/>
+	                 		<field name="category_id" col="2" widget="many2one_tags"/>
+	                 	</group>
+		                <group>
+		                	<field name="year_id" col="2" widget="many2one_tags"/>
+		                	<field name="month" col="2" attrs="{'invisible': ['|',('option', '=', 'export'),('type_report','=','general')]}"/> 
+		                	<field name="month_from" col="2" attrs="{'invisible': ['|',('option', '=', 'view'),('type_report','=','general')]}"/>
+		                	<field name="month_to" col="2" attrs="{'invisible': ['|',('option', '=', 'view'),('type_report','=','general')]}"/>     	
+		                </group>
+		                <footer>
+			                <div states="choose">
+				                 <button  name ="view_report_month" string="View" type="object" class="oe_highlight"  attrs="{'invisible': ['|',('option', '=', 'export'),('type_report','=','diamond')]}"/>
+				                 <button   name = "action_export" string="Export" type="object" class="oe_highlight"  attrs="{'visible': ['|',('type_report','=','raw'),('option','=','view')]}"/>
+			                    or
+			                      <button  string="Cancel" class="oe_link" special="cancel" />
+		                     </div>
+		                </footer>
+		                
+		                 
+	                </group>     
+	                <div states="get">          
+                        <field name ="context"></field>
+       					  	<script>
+	                            $('.ui-dialog').css({ "width": '1300px', 'left': '0px'});
+	                          	$('iframe').css({ "height": '700px' });
+                        	</script>
+	       					<style>
+		       					.cleditorMain{
+		       						border: 0 solid #999;
+		       					}
+		       					.oe_form_field_html{
+		       						height : 500px;
+		       					}
+		       					iframe {
+		       						height : 500px;
+		       						width : 1250px;
+		       					}
+		       					div.ui-dialog-content , .ui-widget-content{height : 20 px;}
+								.cleditorToolbar {
+									display : none;
+										}
+	       					</style>
+		            	<footer  states = "get" >
+				        	<button name="action_export"  string="Export" type="object" class="oe_highlight"/>
+			                  or
+			                <button string="Cancel" class="oe_link" special="cancel" />
+			        	</footer>
+                    </div>
+                </form>
+            </field>
+        </record>
+        
+        <record id="action_wizard_hpusa_warehouse_report" model="ir.actions.act_window">
+            <field name="name">Inventory Report</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">wizard.hpusa.warehouse.report</field>
+            <field name="context">{'type_': 'stoc_in_out'}</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+        <menuitem id="menu_action_wizard_hpusa_warehouse_report" name="Reports" parent="hpusa_warehouse_report" action="action_wizard_hpusa_warehouse_report"  sequence="1"/>
+
+    </data>
+</openerp>

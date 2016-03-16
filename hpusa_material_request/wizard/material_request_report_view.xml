@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+    	<menuitem id="hpusa_material_request" name="Material Report" parent="base.menu_mrp_root"  sequence="10"/>
+        <record id="wizard_hpusa_material" model="ir.ui.view">
+            <field name="name">wizard.hpusa.material.report.form</field>
+            <field name="model">wizard.hpusa.material.request.report</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form string="Report" version="7.0">
+                <field invisible="1" name="state"/>
+	                <group col="6" states="choose">
+	                	<field name="date_from" colspan="2"/>
+	                	<field name="date_to" colspan="2"/>
+	                	<newline/>
+	                	<field name="company_id" colspan="2"/>
+	                	<newline/>
+	                	<field name="so_id" widget="many2many_tags" colspan="2"/>
+	                	<newline/>
+	                	<field name="planning_id" widget="many2many_tags" colspan="2"/>
+	                	<newline/>
+	                	<field name="product_id" colspan="2"/>
+	                </group> 
+	                 <div states="get">
+                 
+                        <field name ="context"></field>
+       					
+       					  <script>
+                            $('.ui-dialog').css({ "width": '1300px', 'left': '0px'});
+                          	$('iframe').css({ "height": '500px' });
+                        </script>
+       					<style>
+       					.cleditorMain{
+       					border: 0 solid #999;
+       					}
+       					.oe_form_field_html{
+       					height : 500px;
+       					}
+       					iframe {
+       					height : 500px;
+       					width : 1250px;
+       					}
+       					div.ui-dialog-content .ui-widget-content{height : 500px;}
+						.cleditorToolbar {
+							display : none;
+							
+								}
+       					</style>
+                    </div>     
+               <footer  states="get">
+                      <button name="action_print" string="Export" type="object" class="oe_highlight"/>
+                      or
+                      <button string="Cancel" class="oe_link" special="cancel" />
+                  </footer>  
+                <footer states="choose">
+                      <button name="view_material_request" string="View" type="object" class="oe_highlight"/>
+                      or
+                      <button string="Cancel" class="oe_link" special="cancel" />
+                  </footer>
+                </form>
+            </field>
+        </record>
+        <record id="action_wizard_hpusa_material_detail_report" model="ir.actions.act_window">
+            <field name="name">Report Material Request Detail</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">wizard.hpusa.material.request.report</field>
+            <field name="context">{'type_': 'material_request_detail'}</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+        
+        <menuitem id="menu_action_material_report_detail" name="Material Request Detail" parent="hpusa_material_request" action="action_wizard_hpusa_material_detail_report"  sequence="6"/>
+        
+        <record id="action_wizard_hpusa_material_summary_report" model="ir.actions.act_window">
+            <field name="name">Report Material Request Summary</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">wizard.hpusa.material.request.report</field>
+            <field name="context">{'type_': 'material_request_summary'}</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+        
+        <menuitem id="menu_action_material_report_summary" name="Material Request Summary" parent="hpusa_material_request" action="action_wizard_hpusa_material_summary_report"  sequence="7"/>
+        
+
+
+    </data>
+</openerp>

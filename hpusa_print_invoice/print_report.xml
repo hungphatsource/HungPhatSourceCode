@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+        <report header='False' auto="False" id="hpvn_invoice" model="account.invoice" name="hpvn.invoice"
+                rml="hpusa_print_invoice/report/account_print_invoice.rml" string="HPVN Invoice"
+                usage="default"/>
+                
+        <report header='False' auto="False" id="hpusa_invoice" model="account.invoice" name="hpusa.invoice"
+                rml="hpusa_print_invoice/report/hpusa_invoice.rml" string="HPUSA Invoice"
+                usage="default"/>
+        <report header='False' auto="False" id="alexander_invoice" model="account.invoice" name="alexander.invoice"
+                rml="hpusa_print_invoice/report/alexander_invoice.rml" string="Alexander Invoice"
+                usage="default"/>        
+                        
+
+    </data>
+</openerp>

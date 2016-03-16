@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+                
+      <report id="wizard_hp_report_kpis_3d" string="wizard_hp_report_kpis_3d" model="wizard.hp.report.kpis" name="wizard_hp_report_kpis_3d" rml="hpusa_kpis_manufacturing/report/3d.ods" menu ="False" header="False"/>  
+      <record model="ir.actions.report.xml" id="wizard_hp_report_kpis_3d">
+        	<field name="report_type">oo-ods</field>
+      </record> 
+      
+      <report id="wizard_hp_report_kpis_casting" string="wizard_hp_report_kpis_casting" model="wizard.hp.report.kpis" name="wizard_hp_report_kpis_casting" rml="hpusa_kpis_manufacturing/report/casting.ods" menu ="False" header="False"/>  
+      <record model="ir.actions.report.xml" id="wizard_hp_report_kpis_casting">
+        	<field name="report_type">oo-ods</field>
+      </record>  
+       
+      <report id="wizard_hp_report_kpis_assembling" string="wizard_hp_report_kpis_assembling" model="wizard.hp.report.kpis" name="wizard_hp_report_kpis_assembling" rml="hpusa_kpis_manufacturing/report/assembling.ods" menu ="False" header="False"/>  
+      <record model="ir.actions.report.xml" id="wizard_hp_report_kpis_assembling">
+        	<field name="report_type">oo-ods</field>
+      </record> 
+      
+      <report id="wizard_hp_report_kpis_setting" string="wizard_hp_report_kpis_setting" model="wizard.hp.report.kpis" name="wizard_hp_report_kpis_setting" rml="hpusa_kpis_manufacturing/report/setting.ods" menu ="False" header="False"/>  
+      <record model="ir.actions.report.xml" id="wizard_hp_report_kpis_setting">
+        	<field name="report_type">oo-ods</field>
+      </record> 
+      
+      <report id="wizard_hp_report_kpis_aggregate" string="wizard_hp_report_kpis_aggregate" model="wizard.hp.report.kpis" name="wizard_hp_report_kpis_aggregate" rml="hpusa_kpis_manufacturing/report/aggregate.ods" menu ="False" header="False"/>  
+      <record model="ir.actions.report.xml" id="wizard_hp_report_kpis_aggregate">
+        	<field name="report_type">oo-ods</field>
+      </record>
+
+	<report id="wizard_hp_report_kpis_aggregate_year" string="wizard_hp_report_kpis_aggregate_year" model="wizard.hp.report.kpis" name="wizard_hp_report_kpis_aggregate_year" rml="hpusa_kpis_manufacturing/report/aggregate_year.ods" menu ="False" header="False"/>  
+      <record model="ir.actions.report.xml" id="wizard_hp_report_kpis_aggregate_year">
+        	<field name="report_type">oo-ods</field>
+      </record>
+
+      
+    </data>
+</openerp>

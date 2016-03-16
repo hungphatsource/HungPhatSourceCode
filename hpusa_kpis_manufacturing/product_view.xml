@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+	<data>		
+		<record model="ir.ui.view" id="hpusa_kpis_product_normal_form_view">
+            <field name="name">hp.kpis.product.normal.form</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_normal_form_view" />
+            <field name="priority">18</field>
+            <field name="arch" type="xml">
+               	<field name="type" position="before">
+               		<field name="_3d_difficulty_level"/>
+                    <field name="_3d_design_times"/>
+               		<field name="casting_times"/>
+               		<field name="casting_type"/> 
+               		<field name="ass_difficulty_level"/>
+               		<field name="setting_difficulty_level"/>
+               	</field>
+            </field>
+        </record>     
+	</data>
+</openerp>

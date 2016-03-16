@@ -1,0 +1,1 @@
+import hpusa_manufacturing_loss

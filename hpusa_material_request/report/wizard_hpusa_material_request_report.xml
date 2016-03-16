@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+
+      <report id="material_request_detail" string="Material Request Detail" model="wizard.hpusa.material.request.report" name="material_request_detail" rml="hpusa_material_request/report/material_request_detail.ods" menu ="False" header="False"/>  
+      <record model="ir.actions.report.xml" id="material_request_detail">
+        	<field name="report_type">oo-xls</field>
+      </record>            
+      
+      <!--hpusa 08-07-2015 -->
+      <report id="material_request_summary" string="Material Reques Summary" model="wizard.hpusa.material.request.report" name="material_request_summary" rml="hpusa_material_request/report/material_request_summary.ods" menu ="False" header="False"/>  
+      <record model="ir.actions.report.xml" id="material_request_summary">
+        	<field name="report_type">oo-xls</field>
+      </record> 
+                   
+    </data>
+</openerp>

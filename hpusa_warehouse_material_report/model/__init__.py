@@ -1,0 +1,1 @@
+import default_stock_report

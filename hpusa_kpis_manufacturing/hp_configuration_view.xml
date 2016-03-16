@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+	<data>		
+	
+	<menuitem id="kpis_config" name="Kpis Configuration" parent="mrp.menu_mrp_configuration"
+            groups="mrp.group_mrp_manager" sequence="1"/>
+         <!-- kpis configuration -->    
+		<record id="hpusa_kpis_config_tree" model="ir.ui.view">
+            <field name="name">hpusa.kpis.config.tree</field>
+            <field name="model">hpusa.kpis.config</field>
+            <field name="arch" type="xml">
+             	<tree string="3D" colors="blue:state == 'open';black:state == 'close'">
+                    <field name="name"/>
+                    <field name="manager"/>
+                    <field name="user_id"/>
+                    <field name="start_date"/>
+                    <field name="end_date"/>
+                    <field name="state"/>
+                </tree> 
+            </field>
+        </record> 
+        
+        <record id="hpusa_kpis_config_form" model="ir.ui.view">
+            <field name="name">hpusa.kpis.config.form</field>
+            <field name="model">hpusa.kpis.config</field>
+            <field name="arch" type="xml">
+                <form string="3D" version="7.0">
+	                <header>
+	                	<button name="action_close" states="open" class="oe_read_only oe_highlight" string="Close" type="object"/>
+	                	<button name="action_open" states="close" class="oe_read_only" string="Open" type="object"/>
+	                	<field name="state" widget="statusbar" statusbar_visible="open,close"/>
+	                </header>
+	                <sheet>
+	                   <group col="5">
+	                       <group colspan="3" col="3">
+	                            <field name="name" colspan="3"/>
+	                            <field name="manager" colspan="3"/>
+	                            <field name="user_id" readonly="1" colspan="3"/>
+	                       </group>
+	                       <group colspan="2">
+	                           <field name="start_date"/>  
+	                           <field name="end_date"/>   
+	                           <field name="hp_create_date" readonly="1"/>  
+	                           <field name="company_id" readonly="1"/>      
+	                       </group>                
+	                   </group>
+	                </sheet>
+	                <div class="oe_chatter">
+	                    <field name="message_follower_ids" widget="mail_followers"/>
+	                    <field name="message_ids" widget="mail_thread"/>
+	                </div>
+                </form>
+           </field>
+        </record>  
+        
+        <record id="hpusa_kpis_config_3d_tree" model="ir.ui.view">
+            <field name="name">hpusa.kpis.config.3d.tree</field>
+            <field name="model">hpusa.kpis.config.3d</field>
+            <field name="inherit_id" ref="hpusa_kpis_config_tree"/>
+            <field name="arch" type="xml">
+                <field name="user_id" position="after">
+                	<field name="standard_point"/>
+                </field>
+            </field>
+        </record>
+        <!-- kpis configuration -->   
+        
+        <!-- 3d kpis configuration -->   
+        
+        <record id="hpusa_kpis_config_3d_form" model="ir.ui.view">
+            <field name="name">hpusa.kpis.config.3d.form</field>
+            <field name="model">hpusa.kpis.config.3d</field>
+            <field name="inherit_id" ref="hpusa_kpis_config_form"/>
+            <field name="arch" type="xml">
+            	<field name="user_id" readonly="1" colspan="3" position="after">
+            		<field name="standard_point" colspan="3"/>
+            	</field>
+                <group col="5" position="after">
+                	<notebook>
+                		<page string="Setup Difficulty">
+                			<field name="line_id_level" nolabel="1"  attrs="{'readonly': [('state', '!=','open')]}">
+	                           <tree editable="bottom">
+	                               <field name="sequence"/>
+	                               <field name="name" string="Difficulty Level"/>
+	                               <field name="coefficient"/>
+	                           </tree>
+	                       </field>
+                		</page>
+                	</notebook>
+                	<notebook>
+                		<page string="Setup Time Coefficient">
+                			<field name="line_id_times" nolabel="1"  attrs="{'readonly': [('state', '!=','open')]}">
+	                           <tree editable="bottom">
+	                               <field name="sequence"/>
+	                               <field name="name" string="Times"/>
+	                               <field name="coefficient"/>
+	                           </tree>
+	                       </field>
+                		</page>
+                	</notebook>
+                </group>
+            </field>
+        </record>
+        
+        <record id="action_hpusa_kpis_config_3d" model="ir.actions.act_window">
+            <field name="name">3D Design Configuration</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">hpusa.kpis.config.3d</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('type','=','3d')]</field>
+            <field name="help" type="html">
+              <p class="oe_view_nocontent_create">
+                Click to define a new 3D Design Configuration
+                </p>
+            </field>
+        </record>
+        <record id="action_hpusa_kpis_config_3d_tree" model="ir.actions.act_window.view">
+            <field eval="1" name="sequence"/>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="hpusa_kpis_config_3d_tree"/>
+            <field name="act_window_id" ref="action_hpusa_kpis_config_3d"/>
+        </record>
+        <record id="action_hpusa_kpis_config_3d_form" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence"/>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="hpusa_kpis_config_3d_form"/>
+            <field name="act_window_id" ref="action_hpusa_kpis_config_3d"/>
+        </record>
+        <menuitem id="menu_action_hpusa_kpis_config_3d" name="3D Design Configuration" parent="kpis_config" action="action_hpusa_kpis_config_3d" sequence="1"/>
+        <!-- 3d kpis configuration -->   
+        
+        <!-- casting kpis configuration --> 
+        <record id="hpusa_kpis_config_casting_tree" model="ir.ui.view">
+            <field name="name">hpusa.kpis.config.casting.tree</field>
+            <field name="model">hpusa.kpis.config.casting</field>
+            <field name="inherit_id" ref="hpusa_kpis_config_tree"/>
+            <field name="arch" type="xml">
+                <field name="user_id" position="after">
+                	<field name="standard_date_gold"/>
+                	<field name="standard_date_platinum"/>
+                </field>
+            </field>
+        </record>
+          
+        <record id="hpusa_kpis_config_casting_form" model="ir.ui.view">
+            <field name="name">hpusa.kpis.config.casting.form</field>
+            <field name="model">hpusa.kpis.config.casting</field>
+            <field name="inherit_id" ref="hpusa_kpis_config_form"/>
+            <field name="arch" type="xml">
+            	<field name="user_id" readonly="1" colspan="3" position="after">
+            		<field name="standard_date_gold" colspan="3"/>
+                	<field name="standard_date_platinum" colspan="3"/>
+            	</field>
+                <group col="5" position="after">
+                	<notebook>
+                		<page string="Setup Difficulty">
+                			<field name="line_ids" nolabel="1"  attrs="{'readonly': [('state', '!=','open')]}">
+	                           <tree editable="bottom">
+	                               <field name="sequence"/>
+	                               <field name="name" string="Times"/>
+	                               <field name="coefficient_gold"/>
+	                               <field name="coefficient_pt"/>
+	                           </tree>
+	                       </field>
+                		</page>
+                	</notebook>
+                </group>
+            </field>
+        </record>
+        
+        <record id="action_hpusa_kpis_config_casting" model="ir.actions.act_window">
+            <field name="name">Casting Standard Configuration</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">hpusa.kpis.config.casting</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('type','=','casting')]</field>
+            <field name="help" type="html">
+              <p class="oe_view_nocontent_create">
+                Click to define a new Casting Standard Configuration
+                </p>
+            </field>
+        </record>
+        <record id="action_hpusa_kpis_config_casting_tree" model="ir.actions.act_window.view">
+            <field eval="1" name="sequence"/>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="hpusa_kpis_config_casting_tree"/>
+            <field name="act_window_id" ref="action_hpusa_kpis_config_casting"/>
+        </record>
+        <record id="action_hpusa_kpis_config_casting_form" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence"/>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="hpusa_kpis_config_casting_form"/>
+            <field name="act_window_id" ref="action_hpusa_kpis_config_casting"/>
+        </record>
+        <menuitem id="menu_action_hpusa_kpis_config_casting" name="Casting Standard Configuration" parent="kpis_config" action="action_hpusa_kpis_config_casting" sequence="2"/>
+        <!-- casting kpis configuration --> 
+        
+        <!-- assembling kpis configuration --> 
+        
+        <record id="hpusa_kpis_config_assembling_tree" model="ir.ui.view">
+            <field name="name">hpusa.kpis.config.assembling.tree</field>
+            <field name="model">hpusa.kpis.config.assembling</field>
+            <field name="inherit_id" ref="hpusa_kpis_config_tree"/>
+            <field name="arch" type="xml">
+                <field name="user_id" position="after">
+                	<field name="standard_date"/>
+                </field>
+            </field>
+        </record>
+        
+        <record id="hpusa_kpis_config_assembling_form" model="ir.ui.view">
+            <field name="name">hpusa.kpis.config.assembling.form</field>
+            <field name="model">hpusa.kpis.config.assembling</field>
+            <field name="inherit_id" ref="hpusa_kpis_config_form"/>
+            <field name="arch" type="xml">
+            	<field name="user_id" readonly="1" colspan="3" position="after">
+            		<field name="standard_date" colspan="3"/>
+            	</field>
+                <group col="5" position="after">
+                	<notebook>
+                		<page string="Setup Difficulty">
+                			<field name="line_ids" nolabel="1"  attrs="{'readonly': [('state', '!=','open')]}">
+	                           <tree editable="bottom">
+	                               <field name="sequence"/>
+	                               <field name="name" string="Difficulty Level"/>
+	                               <field name="coefficient"/>
+	                               <field name="times"/>
+	                           </tree>
+	                       </field>
+                		</page>
+                	</notebook>
+                </group>
+            </field>
+        </record>
+        
+        <record id="action_hpusa_kpis_config_assembling" model="ir.actions.act_window">
+            <field name="name">Assembling Standard Configuration</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">hpusa.kpis.config.assembling</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('type','=','assembling')]</field>
+            <field name="help" type="html">
+              <p class="oe_view_nocontent_create">
+                Click to define a new Assembling Standard Configuration
+                </p>
+            </field>
+        </record>
+        <record id="action_hpusa_kpis_config_assembling_tree" model="ir.actions.act_window.view">
+            <field eval="1" name="sequence"/>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="hpusa_kpis_config_assembling_tree"/>
+            <field name="act_window_id" ref="action_hpusa_kpis_config_assembling"/>
+        </record>
+        <record id="action_hpusa_kpis_config_assembling_form" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence"/>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="hpusa_kpis_config_assembling_form"/>
+            <field name="act_window_id" ref="action_hpusa_kpis_config_assembling"/>
+        </record>
+        <menuitem id="menu_action_hpusa_kpis_config_assembling" name="Assembling Standard Configuration" parent="kpis_config" action="action_hpusa_kpis_config_assembling" sequence="3"/>
+         <!-- assembling kpis configuration --> 
+         
+          <!-- setting kpis configuration --> 
+        
+         <record id="hpusa_kpis_config_setting_tree" model="ir.ui.view">
+            <field name="name">hpusa.kpis.config.setting.tree</field>
+            <field name="model">hpusa.kpis.config.setting</field>
+            <field name="inherit_id" ref="hpusa_kpis_config_tree"/>
+            <field name="arch" type="xml">
+                <field name="user_id" position="after">
+                	<field name="standard_point_date"/>
+                </field>
+            </field>
+        </record>
+        
+        <record id="hpusa_kpis_config_setting_form" model="ir.ui.view">
+            <field name="name">hpusa.kpis.config.setting.form</field>
+            <field name="model">hpusa.kpis.config.setting</field>
+            <field name="inherit_id" ref="hpusa_kpis_config_form"/>
+            <field name="arch" type="xml">
+            	<field name="user_id" readonly="1" colspan="3" position="after">
+            		<field name="standard_point_date" colspan="3"/>
+            	</field>
+                <group col="5" position="after">
+                	<notebook>
+                		<page string="Setup Difficulty">
+                			<field name="line_ids" nolabel="1"  attrs="{'readonly': [('state', '!=','open')]}">
+	                           <tree editable="bottom">
+	                               <field name="sequence"/>
+	                               <field name="name" string="Difficulty Level"/>
+	                               <field name="coefficient"/>
+	                               <field name="description"/>
+	                           </tree>
+	                       </field>
+                		</page>
+                	</notebook>
+                </group>
+            </field>
+        </record>
+        
+        <record id="action_hpusa_kpis_config_setting" model="ir.actions.act_window">
+            <field name="name">Setting Standard Configuration</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">hpusa.kpis.config.setting</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('type','=','setting')]</field>
+            <field name="help" type="html">
+              <p class="oe_view_nocontent_create">
+                Click to define a new Setting Standard Configuration
+                </p>
+            </field>
+        </record>
+        <record id="action_hpusa_kpis_config_setting_tree" model="ir.actions.act_window.view">
+            <field eval="1" name="sequence"/>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="hpusa_kpis_config_setting_tree"/>
+            <field name="act_window_id" ref="action_hpusa_kpis_config_setting"/>
+        </record>
+        <record id="action_hpusa_kpis_config_setting_form" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence"/>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="hpusa_kpis_config_setting_form"/>
+            <field name="act_window_id" ref="action_hpusa_kpis_config_setting"/>
+        </record>
+        <menuitem id="menu_action_hpusa_kpis_config_setting" name="Setting Standard Configuration" parent="kpis_config" action="action_hpusa_kpis_config_setting" sequence="4"/>
+        <!-- setting kpis configuration --> 
+	</data>
+</openerp>

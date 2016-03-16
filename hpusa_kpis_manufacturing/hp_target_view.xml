@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+	<data>		
+	
+		<menuitem id="kpis_config_target" name="Kpis Configuration Target" parent="kpis_config"
+	            groups="mrp.group_mrp_manager" sequence="10"/>
+	            
+	            
+	     <record id="hpusa_kpis_target_tree" model="ir.ui.view">
+	            <field name="name">hpusa.kpis.target.tree</field>
+	            <field name="model">hpusa.kpis.target</field>
+	            <field name="arch" type="xml">
+	             	<tree string="Target">
+	                    <field name="name"/>
+	                    <field name="user_id"/>
+	                    <field name="company_id"/>
+	                    <field name="hp_create_date"/>
+	                </tree> 
+	            </field>
+	      </record> 
+	      
+	      <record id="hpusa_kpis_target_form" model="ir.ui.view">
+            <field name="name">hpusa.kpis.target.form</field>
+            <field name="model">hpusa.kpis.target</field>
+            <field name="arch" type="xml">
+                <form string="Target" version="7.0">
+	                <sheet>
+	                   <group col="5">
+	                       <group colspan="3" col="3">
+	                            <field name="name" colspan="3"/>	                            
+	                            <field name="user_id" readonly="1" colspan="3"/>
+	                            <field name="company_id" readonly="1" colspan="3"/>
+	                       </group>
+	                       <group colspan="2">  
+	                           <field name="hp_create_date" readonly="1"/>  
+	                       </group>                
+	                   </group>
+	                </sheet>
+	                <div class="oe_chatter">
+	                    <field name="message_follower_ids" widget="mail_followers"/>
+	                    <field name="message_ids" widget="mail_thread"/>
+	                </div>
+                </form>
+           </field>
+        </record>
+        
+        
+        <record id="hpusa_kpis_target_3d_form" model="ir.ui.view">
+            <field name="name">hpusa.kpis.target.3d.form</field>
+            <field name="model">hpusa.kpis.target.3d</field>
+            <field name="inherit_id" ref="hpusa_kpis_target_form"/>
+            <field name="arch" type="xml">
+				<group col="5" position="after">
+					<field name="line_ids" nolabel="1">
+                         <tree editable="bottom">
+                             <field name="sequence"/>
+                             <field name="level"/>
+                             <field name="target"/>
+                             <field name="coefficient_day"/>
+                         </tree>
+                     </field>
+				</group>
+           </field>
+        </record>
+        <record id="action_hpusa_kpis_target_3d" model="ir.actions.act_window">
+            <field name="name">3D Design Target</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">hpusa.kpis.target.3d</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('type','=','3d')]</field>
+            <field name="help" type="html">
+              <p class="oe_view_nocontent_create">
+                Click to define a new 3D Design Target
+                </p>
+            </field>
+        </record>
+        <record id="action_hpusa_kpis_target_3d_tree" model="ir.actions.act_window.view">
+            <field eval="1" name="sequence"/>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="hpusa_kpis_target_tree"/>
+            <field name="act_window_id" ref="action_hpusa_kpis_target_3d"/>
+        </record>
+        <record id="action_hpusa_kpis_target_3d_form" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence"/>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="hpusa_kpis_target_3d_form"/>
+            <field name="act_window_id" ref="action_hpusa_kpis_target_3d"/>
+        </record>
+        <menuitem id="menu_action_hpusa_kpis_target_3d_tree" name="3D Design Target" parent="kpis_config_target" action="action_hpusa_kpis_target_3d" sequence="1"/>
+        
+        
+        <record id="hpusa_kpis_target_casting_form" model="ir.ui.view">
+            <field name="name">hpusa.kpis.target.casting.form</field>
+            <field name="model">hpusa.kpis.target.casting</field>
+            <field name="inherit_id" ref="hpusa_kpis_target_form"/>
+            <field name="arch" type="xml">
+				<group col="5" position="after">
+					<field name="line_ids" nolabel="1">
+                         <tree editable="bottom">
+                             <field name="sequence"/>
+                             <field name="casting_type"/>
+                             <field name="target"/>
+                             <field name="day_month"/>
+                             <field name="total"/>
+                         </tree>
+                     </field>
+				</group>
+           </field>
+        </record>
+        <record id="action_hpusa_kpis_target_casting" model="ir.actions.act_window">
+            <field name="name">Casting Target</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">hpusa.kpis.target.casting</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('type','=','casting')]</field>
+            <field name="help" type="html">
+              <p class="oe_view_nocontent_create">
+                Click to define a new Casting Target
+                </p>
+            </field>
+        </record>
+        <record id="action_hpusa_kpis_target_casting_tree" model="ir.actions.act_window.view">
+            <field eval="1" name="sequence"/>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="hpusa_kpis_target_tree"/>
+            <field name="act_window_id" ref="action_hpusa_kpis_target_casting"/>
+        </record>
+        <record id="action_hpusa_kpis_target_casting_form" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence"/>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="hpusa_kpis_target_casting_form"/>
+            <field name="act_window_id" ref="action_hpusa_kpis_target_casting"/>
+        </record>
+        <menuitem id="menu_action_hpusa_kpis_target_casting_tree" name="Casting Target" parent="kpis_config_target" action="action_hpusa_kpis_target_casting" sequence="2"/>
+        
+        
+        <record id="hpusa_kpis_target_assembling_form" model="ir.ui.view">
+            <field name="name">hpusa.kpis.target.assembling.form</field>
+            <field name="model">hpusa.kpis.target.assembling</field>
+            <field name="inherit_id" ref="hpusa_kpis_target_form"/>
+            <field name="arch" type="xml">
+				<group col="5" position="after">
+					<field name="line_ids" nolabel="1">
+                         <tree editable="bottom">
+                             <field name="sequence"/>
+                             <field name="level"/>
+                             <field name="target"/>
+                             <field name="day_month"/>
+                             <field name="total"/>
+                         </tree>
+                     </field>
+				</group>
+           </field>
+        </record>
+        <record id="action_hpusa_kpis_target_assembling" model="ir.actions.act_window">
+            <field name="name">Assembling Target</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">hpusa.kpis.target.assembling</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('type','=','assembling')]</field>
+            <field name="help" type="html">
+              <p class="oe_view_nocontent_create">
+                Click to define a new Assembling Target
+                </p>
+            </field>
+        </record>
+        <record id="action_hpusa_kpis_target_assembling_tree" model="ir.actions.act_window.view">
+            <field eval="1" name="sequence"/>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="hpusa_kpis_target_tree"/>
+            <field name="act_window_id" ref="action_hpusa_kpis_target_assembling"/>
+        </record>
+        <record id="action_hpusa_kpis_target_assembling_form" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence"/>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="hpusa_kpis_target_assembling_form"/>
+            <field name="act_window_id" ref="action_hpusa_kpis_target_assembling"/>
+        </record>
+        <menuitem id="menu_action_hpusa_kpis_target_assembling_tree" name="Assembling Target" parent="kpis_config_target" action="action_hpusa_kpis_target_assembling" sequence="3"/>
+        
+        
+        <record id="hpusa_kpis_target_setting_form" model="ir.ui.view">
+            <field name="name">hpusa.kpis.target.setting.form</field>
+            <field name="model">hpusa.kpis.target.setting</field>
+            <field name="inherit_id" ref="hpusa_kpis_target_form"/>
+            <field name="arch" type="xml">
+				<group col="5" position="after">
+					<field name="line_ids" nolabel="1">
+                         <tree editable="bottom">
+                             <field name="sequence"/>
+                             <field name="level"/>
+                             <field name="target"/>
+                             <field name="day_month"/>
+                             <field name="total"/>
+                         </tree>
+                     </field>
+				</group>
+           </field>
+        </record>
+        
+        <record id="action_hpusa_kpis_target_setting" model="ir.actions.act_window">
+            <field name="name">Setting Target</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">hpusa.kpis.target.setting</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[('type','=','setting')]</field>
+            <field name="help" type="html">
+              <p class="oe_view_nocontent_create">
+                Click to define a new Setting Target
+                </p>
+            </field>
+        </record>
+        <record id="action_hpusa_kpis_target_setting_tree" model="ir.actions.act_window.view">
+            <field eval="1" name="sequence"/>
+            <field name="view_mode">tree</field>
+            <field name="view_id" ref="hpusa_kpis_target_tree"/>
+            <field name="act_window_id" ref="action_hpusa_kpis_target_setting"/>
+        </record>
+        <record id="action_hpusa_kpis_target_setting_form" model="ir.actions.act_window.view">
+            <field eval="2" name="sequence"/>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="hpusa_kpis_target_setting_form"/>
+            <field name="act_window_id" ref="action_hpusa_kpis_target_setting"/>
+        </record>
+        <menuitem id="menu_action_hpusa_kpis_target_setting_tree" name="Setting Target" parent="kpis_config_target" action="action_hpusa_kpis_target_setting" sequence="4"/>
+        
+	</data>
+</openerp>

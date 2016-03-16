@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+    
+        <record id="mrp_production_form_view_inherit" model="ir.ui.view">
+            <field name="name">mrp.production.form.inherit</field>
+            <field name="model">mrp.production</field>
+            <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
+            <field name="arch" type="xml">
+            	<xpath expr="//form/sheet/notebook/page[@string='Scheduled Products']" position="after">
+                    <page string="Material Requition">
+                        <button name="action_update" 
+                            string="Update" type="object"/>
+                        <field name="bom_lines" >
+                            <tree string="Production Work Centers" editable="bottom">
+                                <field name="product_id"/>
+                                <field name="product_qty"/>
+                                <field name="product_uom"/>
+                            </tree>
+                        </field>
+                    </page>
+                </xpath>
+			</field>
+        </record>
+    </data>
+</openerp>

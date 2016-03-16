@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+    
+        <record id="view_report_hpusa_configuration" model="ir.ui.view">
+            <field name="name">hpusa.report.configuration.view</field>
+            <field name="model">hpusa.report.configuration</field>
+            <field name="arch" type="xml">
+               <form version="7.0" string="hpusa report configuration">
+               <sheet>
+               <group>
+               			<field name="name"/>
+                		<field name="stock"/>
+                		<field name="production"/>
+                		<field name="raw_category"/>
+                		<field name="diamond_category"  />	
+               </group>
+               </sheet>
+			</form>
+            </field>
+        </record>
+  <record id="report_tree_view" model="ir.ui.view">
+            <field name="name">report.routing.view</field>
+            <field name="model">hpusa.report.configuration</field>
+            <field name="arch" type="xml">
+                <tree string="routing">
+                	<field name="name" />
+                   		<field name="stock" widget="many2one_tags"/>
+                		<field name="production" widget="many2one_tags"/>
+                
+                </tree>
+            </field>
+        </record>
+  		<record id="report_search_view" model="ir.ui.view">
+            <field name="name">report.routing.search</field>
+            <field name="model">hpusa.report.configuration</field>
+            <field name="arch" type="xml">
+                <search string="routing">
+                    <field name="stock" string="Routing" filter_domain="['|',('name','ilike',self),('code','ilike',self)]" widget="many2one_tags"/>
+                </search>
+            </field>
+        </record>
+   <record id="hpusa_report_action" model="ir.actions.act_window">
+            <field name="name">Year</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">hpusa.report.configuration</field>
+            <field name="view_type">form</field>
+            <field name="view_id" ref="report_tree_view"/>
+            <field name="search_view_id" ref="report_search_view"/>
+        </record>
+  <menuitem  action = "hpusa_report_action" id="rphpusa"  name="Hpusa Report Configuration" sequence="11"  parent="stock.menu_stock_configuration"/>
+ </data>
+</openerp>
