@@ -288,9 +288,9 @@
         <td>
         </td>
         <td>
-           <para style="terp_default_8"><b> Invoice No:</b> [[ o.number ]]</para>
-           <para style="terp_default_8"><b> Invoice Date:</b> [[ o.date_invoice ]]</para>
-           <para style="terp_default_8"><b> Sales Representative: </b> [[ o.user_id.name]]</para>
+           <para style="terp_default_9"><b> Invoice No:</b> [[ o.number ]]</para>
+           <para style="terp_default_9"><b> Invoice Date:</b> [[ o.date_invoice ]]</para>
+           <para style="terp_default_9"><b> Sales Representative: </b> [[ o.user_id.name]]</para>
         </td>
 	<td><para></para></td>
        </tr>
@@ -320,7 +320,7 @@
 	          <td>  <para style="terp_default_9"><b>[[ (o.partner_id and o.partner_id.name) or '' ]]</b> </para></td>
           </tr>
           <tr>
-	          <td ><para style="terp_default_9"><b>Customer Id:</b></para>   </td>
+	          <td ><para style="terp_default_9"><b>Customer Code No:</b></para>   </td>
 	          <td> &#160;  </td>
 	          <td>  <para style="terp_default_9"> [[(o.partner_id.id) or '' ]] </para> </td>
           </tr>
@@ -527,6 +527,26 @@
           </td>
     </tr>
     </blockTable>
+    
+    <blockTable colWidths="308.0,85,170" style="Table11"> 
+     <tr>
+        <td>
+           <para style="terp_default_9">&#160;&#160;&#160;&#160;___________________________________________________________________________________________________________________________</para>
+        </td>
+        <td> </td>
+        <td> </td> 
+       </tr>   
+    </blockTable>
+    
+    <blockTable>
+			<tr><td><para style="terp_tblheader_Details_Centre"><font color="black">CUSTOMER</font></para></td>
+				<td><para style="terp_tblheader_Details_Centre"><font color="black">SALESPERSON</font></para></td>
+			</tr>
+			<tr>
+				<td><para style="terp_default_8" alignment="CENTER"><font color="black">(Sign, full name)</font></para></td>
+				<td><para style="terp_default_8" alignment="CENTER"><font color="black">(Sign, full name)</font></para></td>
+			</tr>
+		</blockTable>	
     <spacer length="40"></spacer>
     <blockTable colWidths="308.0,85,170" style="Table11"> 
      <tr>
