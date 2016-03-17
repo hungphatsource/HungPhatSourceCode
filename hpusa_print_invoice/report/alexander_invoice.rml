@@ -320,7 +320,7 @@
 	          <td>  <para style="terp_default_9"><b>[[ (o.partner_id and o.partner_id.name) or '' ]]</b> </para></td>
           </tr>
           <tr>
-	          <td ><para style="terp_default_9"><b>Customer Id:</b></para>   </td>
+	          <td ><para style="terp_default_9"><b>Customer ID:</b></para>   </td>
 	          <td> &#160;  </td>
 	          <td>  <para style="terp_default_9"> [[(o.partner_id.id) or '' ]] </para> </td>
           </tr>
