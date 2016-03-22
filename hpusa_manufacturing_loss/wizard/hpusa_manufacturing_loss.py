@@ -2010,8 +2010,8 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                 'loss_24k':'',
                                 'loss_limit_24k':'',
                                 'loss_over_24k':'',
-                                'net_weight':'',
-                                'percent':'',
+                                'net_weight':'-',
+                                'percent':'-',
                                 })
 
 
@@ -2100,8 +2100,8 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                 'loss_24k':sum_loss_24k,
                                 'loss_limit_24k':sum_loss_limit_24k,
                                 'loss_over_24k':sum_loss_over_24k,
-                                 'net_weight':'',
-                                'percent':'',
+                                'net_weight':'-',
+                                'percent':'-',
                                 })
 
     #================================== PLATINUM =============================================
@@ -2507,8 +2507,8 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                 'loss_24k':'',
                                 'loss_limit_24k':'',
                                 'loss_over_24k':'',
-                                'net_weight':'',
-                                'percent':'',
+                                'net_weight':'-',
+                                'percent':'-',
                                 })
 
             sum_metal_delivery = 0
@@ -2546,8 +2546,8 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                 'loss_24k':'',
                                 'loss_limit_24k':'',
                                 'loss_over_24k':'',
-                                'net_weight':'',
-                                'percent':'',
+                                 'net_weight':'-',
+                                'percent':'-',
                                 })
                 sum_metal_delivery +=item['metal_delivery']
                 sum_metal_24k_delivery+=item['metal_24k_delivery']
@@ -2584,8 +2584,8 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                 'loss_24k':'',
                                 'loss_limit_24k':'',
                                 'loss_over_24k':'',
-                                'net_weight':'',
-                                'percent':'',
+                                'net_weight':'-',
+                                'percent':'-',
                                 })
 
 
