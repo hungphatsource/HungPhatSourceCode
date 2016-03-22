@@ -1689,27 +1689,27 @@ class inventory_report(osv.osv):
             + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
             - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3)))
             as loss,
-            round(round(coalesce(sum(tab1.qty),0),3)
-            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) ) * wk.percent /100) 
+            (round(round(coalesce(sum(tab1.qty),0),3)
+            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) ) ))* wk.percent /100
             as loss_limit,
             round(coalesce(sum(tab1.qty),0),3)
             + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
             - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3)))
-             -  round(round(coalesce(sum(tab1.qty),0),3)
-            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) ) * wk.percent /100) 
+             -  ((round(round(coalesce(sum(tab1.qty),0),3)
+            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) ) ))* wk.percent /100)
              as loss_over,
-            round(coalesce(sum(tab1.qty),0),3)
+           ( round(coalesce(sum(tab1.qty),0),3)
             + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
-            - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3)))
+            - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3))))
             * coeff_24k as loss_24k,
-              round(round(coalesce(sum(tab1.qty),0),3)
-            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) ) * wk.percent /100) 
+              ((round(round(coalesce(sum(tab1.qty),0),3)
+            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) ) ))* wk.percent /100)
             *coeff_24k as loss_limit_24k,
-             round(coalesce(sum(tab1.qty),0),3)
+             (round(coalesce(sum(tab1.qty),0),3)
             + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
             - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3)))
-             -  round(round(coalesce(sum(tab1.qty),0),3)
-            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) ) * wk.percent /100) 
+             -  ((round(round(coalesce(sum(tab1.qty),0),3)
+            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) ) ))* wk.percent /100))
             *coeff_24k as loss_over_24k
             from mrp_production_workcenter_line mpwl
              left join mrp_workcenter as wk on(wk.id = mpwl.workcenter_id)
