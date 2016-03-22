@@ -2049,14 +2049,14 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                 'diamond_return_gr': item['diamond_return_gr'],
                                 'finish_delivery': item['finish_delivery'],
                                 'finish_return': item['finish_return'],
-                                'loss_weight': round(float(item['loss_weight'] or 0.0),2),
-                                'loss': round(float(item['loss'] or 0.0),2),
-                                'loss_limit':round(float(item['loss_limit'] or 0.0),2),
-                                'loss_over':round(float(item['loss_over'] or 0.0),2),
-                                'loss_24k':round(float(item['loss_24k'] or 0.0),2),
-                                'loss_limit_24k':round(float(item['loss_limit_24k'] or 0.0),2),
-                                'loss_over_24k':round(float(item['loss_over_24k'] or 0.0),2),
-                                'net_weight':round(float(item['net_weight'] or 0.0),2),
+                                'loss_weight': round(float(item['loss_weight'] or 0.0),3),
+                                'loss': round(float(item['loss'] or 0.0),3),
+                                'loss_limit':round(float(item['loss_limit'] or 0.0),3),
+                                'loss_over':round(float(item['loss_over'] or 0.0),3),
+                                'loss_24k':round(float(item['loss_24k'] or 0.0),3),
+                                'loss_limit_24k':round(float(item['loss_limit_24k'] or 0.0),3),
+                                'loss_over_24k':round(float(item['loss_over_24k'] or 0.0),3),
+                                'net_weight':round(float(item['net_weight'] or 0.0),3),
                                 'percent':item['percent'] ,
                                 })
                 sum_metal_delivery +=item['metal_delivery']
@@ -2069,13 +2069,13 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                 sum_diamond_return_gr +=item['metal_delivery']
                 sum_finish_delivery+=item['finish_delivery']
                 sum_finish_return +=item['finish_return']
-                sum_loss_weight+= round(float(item['loss_weight'] or 0.0),2)
-                sum_loss +=round(float(item['loss'] or 0.0),2)
-                sum_loss_limit += round(float(item['loss_limit'] or 0.0),2)
-                sum_loss_over += round(float(item['loss_over'] or 0.0),2)
-                sum_loss_24k += round(float(item['loss_24k'] or 0.0),2)
-                sum_loss_limit_24k += round(float(item['loss_limit_24k'] or 0.0),2)
-                sum_loss_over_24k += round(float(item['loss_over_24k'] or 0.0),2)
+                sum_loss_weight+= round(float(item['loss_weight'] or 0.0),3)
+                sum_loss +=round(float(item['loss'] or 0.0),3)
+                sum_loss_limit += round(float(item['loss_limit'] or 0.0),3)
+                sum_loss_over += round(float(item['loss_over'] or 0.0),3)
+                sum_loss_24k += round(float(item['loss_24k'] or 0.0),3)
+                sum_loss_limit_24k += round(float(item['loss_limit_24k'] or 0.0),3)
+                sum_loss_over_24k += round(float(item['loss_over_24k'] or 0.0),3)
                 sequence +=1
 
             arr.append({
@@ -2336,7 +2336,6 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                      WHERE mp.id = mpwl.production_id
                                      AND mp.product_id = pp.id
                                      AND pp.metal_class = 'platinum'
-                                     
                                      )
                                      AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
                                      AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
@@ -2540,7 +2539,7 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                 'finish_delivery': item['finish_delivery'],
                                 'finish_return': item['finish_return'],
                                  'loss_weight': '-',
-                                'loss': round(float(item['loss'] or 0.0),2),
+                                'loss': round(float(item['loss'] or 0.0),3),
                                 'loss_limit':'',
                                 'loss_over':'',
                                 'loss_24k':'',
@@ -2559,7 +2558,7 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                 sum_diamond_return_gr +=item['metal_delivery']
                 sum_finish_delivery+=item['finish_delivery']
                 sum_finish_return +=item['finish_return']
-                sum_loss +=round(float(item['loss'] or 0.0),2)
+                sum_loss +=round(float(item['loss'] or 0.0),3)
                 sequence +=1
 
             arr.append({
