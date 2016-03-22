@@ -1618,27 +1618,27 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
             + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
             - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3)))
             as loss,
-            round(round(coalesce(sum(tab1.qty),0),3)
-            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) ) * wk.percent /100) 
+            (round(round(coalesce(sum(tab1.qty),0),3)
+            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) ) ))* wk.percent /100
             as loss_limit,
             round(coalesce(sum(tab1.qty),0),3)
             + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
             - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3)))
-             -  round(round(coalesce(sum(tab1.qty),0),3)
-            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) ) * wk.percent /100) 
+             -  ((round(round(coalesce(sum(tab1.qty),0),3)
+            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) ) ))* wk.percent /100)
              as loss_over,
-            round(coalesce(sum(tab1.qty),0),3)
+           ( round(coalesce(sum(tab1.qty),0),3)
             + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
-            - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3)))
+            - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3))))
             * coeff_24k as loss_24k,
-              round(round(coalesce(sum(tab1.qty),0),3)
-            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) ) * wk.percent /100) 
+              ((round(round(coalesce(sum(tab1.qty),0),3)
+            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) ) ))* wk.percent /100)
             *coeff_24k as loss_limit_24k,
-             round(coalesce(sum(tab1.qty),0),3)
+             (round(coalesce(sum(tab1.qty),0),3)
             + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
             - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3)))
-             -  round(round(coalesce(sum(tab1.qty),0),3)
-            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) ) * wk.percent /100) 
+             -  ((round(round(coalesce(sum(tab1.qty),0),3)
+            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) ) ))* wk.percent /100))
             *coeff_24k as loss_over_24k
             from mrp_production_workcenter_line mpwl
              left join mrp_workcenter as wk on(wk.id = mpwl.workcenter_id)
@@ -1646,7 +1646,7 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
             left join product_product as pp on (pp.id = mp.product_id)
             left join
             --- JOIN METAL DELIVERY  ---
-                (SELECT mpwl.id as mpwl_id,
+                (SELECT mpwl.id as mpwl_id,    
                 mpwl.name as mpwl_name,
                                 coalesce (SUM(sm.product_qty),0) as qty ,
                                 coalesce(SUM(sm.product_qty * coeff_24k),0) as qty_24k
