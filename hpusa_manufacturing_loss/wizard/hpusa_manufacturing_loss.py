@@ -1614,31 +1614,29 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
             ((round(coalesce(sum(tab6.weight_gr),0),3)
             -round(coalesce(sum(tab6.weight_gr)/sum(tab6.weight_gr)*sum(diamond.weight_gr),0),3))) as loss_weight,
             pp.coeff_24k as coeff_24k,
+           wk.percent as percent,
+            mp.metal_in_product as net_weight,
             round(coalesce(sum(tab1.qty),0),3)
             + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
             - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3)))
             as loss,
-            (round(round(coalesce(sum(tab1.qty),0),3)
-            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) ) ))* wk.percent /100
+            mp.metal_in_product * wk.percent /100
             as loss_limit,
             round(coalesce(sum(tab1.qty),0),3)
             + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
             - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3)))
-             -  ((round(round(coalesce(sum(tab1.qty),0),3)
-            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) ) ))* wk.percent /100)
+             -  ( mp.metal_in_product * wk.percent /100)
              as loss_over,
            ( round(coalesce(sum(tab1.qty),0),3)
             + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
             - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3))))
             * coeff_24k as loss_24k,
-              ((round(round(coalesce(sum(tab1.qty),0),3)
-            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) ) ))* wk.percent /100)
+               ( mp.metal_in_product* wk.percent /100)
             *coeff_24k as loss_limit_24k,
              (round(coalesce(sum(tab1.qty),0),3)
             + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
             - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3)))
-             -  ((round(round(coalesce(sum(tab1.qty),0),3)
-            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) ) ))* wk.percent /100))
+             -  ( mp.metal_in_product* wk.percent /100))
             *coeff_24k as loss_over_24k
             from mrp_production_workcenter_line mpwl
              left join mrp_workcenter as wk on(wk.id = mpwl.workcenter_id)
@@ -1949,7 +1947,7 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                 ) as mrp
                 GROUP BY mrp.id
                 ) as diamond ON(diamond.id = mpwl.production_id)
-                group by mp.name,mpwl.date_planned, mpwl.name,pp.coeff_24k,wk.percent
+                group by mp.name,mpwl.date_planned, mpwl.name,pp.coeff_24k,wk.percent, mp.metal_in_product
                 having coalesce(sum(tab1.qty),0)
                 +coalesce(sum(tab1.qty_24k),0)+ coalesce(sum(tab2.qty),0)
                 +coalesce(sum(tab2.qty_24k),0)+ coalesce(sum(tab3.weight_ct),0)
@@ -2012,6 +2010,8 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                 'loss_24k':'',
                                 'loss_limit_24k':'',
                                 'loss_over_24k':'',
+                                'net_weight':'',
+                                'percent':'',
                                 })
 
 
@@ -2056,6 +2056,8 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                 'loss_24k':round(float(item['loss_24k'] or 0.0),2),
                                 'loss_limit_24k':round(float(item['loss_limit_24k'] or 0.0),2),
                                 'loss_over_24k':round(float(item['loss_over_24k'] or 0.0),2),
+                                'net_weight':round(float(item['net_weight'] or 0.0),2),
+                                'percent':item['percent'] ,
                                 })
                 sum_metal_delivery +=item['metal_delivery']
                 sum_metal_24k_delivery+=item['metal_24k_delivery']
@@ -2098,6 +2100,8 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                 'loss_24k':sum_loss_24k,
                                 'loss_limit_24k':sum_loss_limit_24k,
                                 'loss_over_24k':sum_loss_over_24k,
+                                 'net_weight':'',
+                                'percent':'',
                                 })
 
     #================================== PLATINUM =============================================
