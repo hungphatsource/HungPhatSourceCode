@@ -1747,7 +1747,7 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  product_product pp
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
-                                 AND pp.metal_class = 'platium'
+                                 AND pp.metal_class = 'gold'
                                  )
                                  AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
                 AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
@@ -2047,377 +2047,392 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
 
         sql_platinum = '''
                 SELECT
-                mp.name,
-                mpwl.date_planned actual_date,
-                mpwl.name line_name,
-                round(coalesce(sum(tab1.qty),0),3) as metal_delivery,
-                coalesce(sum(tab1.qty_24k),0) as metal_24k_delivery,
-                round(coalesce(sum(tab2.qty),0),3) as metal_return,
-                coalesce(sum(tab2.qty_24k),0) as metal_24k_return,
-                round(coalesce(sum(tab3.weight_ct),0),3) as diamond_delivery_ct,
-                round(coalesce(sum(tab3.weight_gr),0),3) as diamond_delivery_gr,
-                round(coalesce(sum(tab4.weight_ct),0),3) as diamond_return_ct,
-                round(coalesce(sum(tab4.weight_gr),0),3) as diamond_return_gr,
-                round(coalesce(sum(tab5.weight_gr),0),3) as finish_delivery,
-                round(coalesce(sum(tab6.weight_gr),0),3) as finish_return,
-                round(coalesce(sum(diamond.weight_gr),0),3) as diamond_weight,
-                pp.coeff_24k as coeff_24k,
-                (coalesce(sum(tab1.qty_24k),0)
-                +(round(coalesce(sum(tab5.weight_gr),0),3)
-                -round(coalesce(sum(diamond.weight_gr),0),3))*pp.coeff_24k)
-                -(coalesce(sum(tab2.qty_24k),0)
-                +((round(coalesce(sum(tab6.weight_gr),0),3)
-                -round(coalesce(sum(diamond.weight_gr),0),3))*pp.coeff_24k) ) as loss
-                from mrp_production_workcenter_line mpwl
-                left join mrp_production as mp on(mp.id = mpwl.production_id)
-                left join product_product as pp on (pp.id = mp.product_id)
+            mp.name,
+            mpwl.date_planned actual_date,
+            mpwl.name line_name,
+            round(coalesce(sum(tab1.qty),0),3) as metal_delivery,
+            coalesce(sum(tab1.qty_24k),0) as metal_24k_delivery,
+            round(coalesce(sum(tab2.qty),0),3) as metal_return,
+            coalesce(sum(tab2.qty_24k),0) as metal_24k_return,
+            round(coalesce(sum(tab3.weight_ct),0),3) as diamond_delivery_ct,
+            round(coalesce(sum(tab3.weight_gr),0),3) as diamond_delivery_gr,
+            round(coalesce(sum(tab4.weight_ct),0),3) as diamond_return_ct,
+            round(coalesce(sum(tab4.weight_gr),0),3) as diamond_return_gr,
+            round(coalesce(sum(tab5.weight_gr),0),3) as finish_delivery,
+            round(coalesce(sum(tab6.weight_gr),0),3) as finish_return,
+            round(coalesce(sum(diamond.weight_gr),0),3) as diamond_weight,
+              round(coalesce(sum(tab1.qty),0),3) -  round(coalesce(sum(tab2.qty),0),3)  +(round(coalesce(sum(tab5.weight_gr),0),3)
+            -round(coalesce(sum(tab5.weight_gr)/sum(tab5.weight_gr)*sum(diamond.weight_gr),0),3)) -
+            ((round(coalesce(sum(tab6.weight_gr),0),3)
+            -round(coalesce(sum(tab6.weight_gr)/sum(tab6.weight_gr)*sum(diamond.weight_gr),0),3))) as loss_weight,
+            pp.coeff_24k as coeff_24k,
+           wk.percent as percent,
+            mp.metal_in_product as net_weight,
+            round(coalesce(sum(tab1.qty),0),3)
+            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
+            - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3)))
+            as loss,
+            mp.metal_in_product * wk.percent /100
+            as loss_limit,
+            round(coalesce(sum(tab1.qty),0),3)
+            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
+            - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3)))
+             -  ( mp.metal_in_product * wk.percent /100)
+             as loss_over,
+           ( round(coalesce(sum(tab1.qty),0),3)
+            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
+            - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3))))
+            * coeff_24k as loss_24k,
+               ( mp.metal_in_product* wk.percent /100)
+            *coeff_24k as loss_limit_24k,
+             (round(coalesce(sum(tab1.qty),0),3)
+            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
+            - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3)))
+             -  ( mp.metal_in_product* wk.percent /100))
+            *coeff_24k as loss_over_24k
+            from mrp_production_workcenter_line mpwl
+             left join mrp_workcenter as wk on(wk.id = mpwl.workcenter_id)
+            left join mrp_production as mp on(mp.id = mpwl.production_id)
+            left join product_product as pp on (pp.id = mp.product_id)
+            left join
+            --- JOIN METAL DELIVERY  ---
+                (SELECT mpwl.id as mpwl_id,    
+                mpwl.name as mpwl_name,
+                                coalesce (SUM(sm.product_qty),0) as qty ,
+                                coalesce(SUM(sm.product_qty * coeff_24k),0) as qty_24k
+                                FROM stock_move sm,
+                                stock_picking sp,
+                                product_product pp,
+                                mrp_production_workcenter_line mpwl,
+                                mrp_production mp
+                                WHERE sp.hp_transfer_type='delivery'
+                                --AND sm.date >= to_date('%s','YYYY-MM-DD')
+                                --AND sm.date < to_date('%s','YYYY-MM-DD')
+                                AND sm.state = 'done'
+                                AND pp.hp_type ='metal'
+                                AND pp.metal_class = 'platinum'
+                                AND sm.product_id =pp.id
+                                AND sm.picking_id= sp.id
+                                AND sp.wo_delivery_id = mpwl.id
+                                AND mpwl.production_id = mp.id
+                                AND sp.receiver =%s -- Employee
+                                AND sp.wo_delivery_id IN (
+                                 SELECT mpwl.id
+                                 FROM mrp_production_workcenter_line mpwl,
+                                 mrp_production mp,
+                                 product_product pp
+                                 WHERE mp.id = mpwl.production_id
+                                 AND mp.product_id = pp.id
+                                 AND pp.metal_class = 'platinum'
+                                
+                                 --AND employee_id=1
+                                 )
+                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
+                                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
+                GROUP BY mpwl.id,mpwl.name) as tab1 ON(tab1.mpwl_id = mpwl.id)
+                left join ------------------- JOIN METAL RETURN -----------------------
+                (SELECT mp.id mrp_id , mp.name mrp_name,mpwl.id as mpwl_id,mpwl.name mpwl_name,
+                                coalesce (SUM(sm.product_qty),0) as qty ,
+                                coalesce(SUM(sm.product_qty * coeff_24k),0) as qty_24k
+                                FROM stock_move sm,
+                                stock_picking sp,
+                                product_product pp,
+                                mrp_production_workcenter_line mpwl,
+                                mrp_production mp
+                                WHERE sp.hp_transfer_type='return'
+                                --AND sm.date >= to_date('%s','YYYY-MM-DD')
+                                --AND sm.date < to_date('%s','YYYY-MM-DD')
+                                AND sm.state = 'done'
+                                AND pp.hp_type ='metal'
+                                AND pp.metal_class = 'platinum'
+                                AND sm.product_id =pp.id
+                                AND sm.picking_id= sp.id
+                                AND sp.wo_return_id = mpwl.id
+                                AND mpwl.production_id = mp.id
+                                AND sp.shipper =%s -- Employee
+                                AND sp.wo_return_id IN (
+                                  SELECT mpwl.id
+                                 FROM mrp_production_workcenter_line mpwl,
+                                 mrp_production mp,
+                                 product_product pp
+                                 WHERE mp.id = mpwl.production_id
+                                 AND mp.product_id = pp.id
+                                 AND pp.metal_class = 'platinum'
+                                 --AND employee_id=1
+                                 )
+                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
+                                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
+                GROUP BY mp.id, mp.name ,mpwl.id,mpwl.name)
+                as tab2 ON(tab2.mpwl_id = mpwl.id)
+
+                LEFT JOIN
+--- DIAMOND DELIVERY  ---
+                (SELECT mp.id mp_id,mp.name mp_name,mpwl.id mpwl_id, mpwl.name mpwl_name,
+                                coalesce (SUM(sm.weight_mo),0) as weight_ct ,
+                                coalesce(SUM(sm.weight_mo /5),0) as weight_gr
+                                FROM stock_move sm ,
+                                stock_picking sp,
+                                product_product pp,
+                                mrp_production mp,
+                                mrp_production_workcenter_line mpwl
+                                WHERE sp.hp_transfer_type='delivery'
+                                --AND sm.date >= to_date('%s','YYYY-MM-DD')
+                                --AND sm.date < to_date('%s','YYYY-MM-DD')
+                                AND sm.state = 'done'
+                                AND pp.hp_type ='diamonds'
+                                AND sm.product_id =pp.id
+                                AND sm.picking_id= sp.id
+                                AND mp.id = mpwl.production_id
+                                AND mpwl.id = sp.wo_delivery_id
+                                AND sp.receiver = %s
+                                AND sp.wo_delivery_id IN (
+                                SELECT mpwl.id
+                                 FROM mrp_production_workcenter_line mpwl,
+                                 mrp_production mp,
+                                 product_product pp
+                                 WHERE mp.id = mpwl.production_id
+                                 AND mp.product_id = pp.id
+                                 AND pp.metal_class = 'platinum'
+                                 )
+                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
+                                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
+                GROUP BY mp.id,mp.name,mpwl.id, mpwl.name)
+                as tab3 ON(tab3.mpwl_id = mpwl.id)
+
+                LEFT JOIN(
+                -- DIAMOND RETURN ---
+                SELECT mpwl.id as mpwl_id, mpwl.name mpwl_name,
+                                coalesce (SUM(sm.weight_mo),0) as weight_ct ,
+                                coalesce(SUM(sm.weight_mo /5),0) as weight_gr
+                                FROM stock_move sm ,
+                                stock_picking sp,
+                                product_product pp,
+                                mrp_production mp,
+                                mrp_production_workcenter_line mpwl
+                                WHERE sp.hp_transfer_type='return'
+                                --AND sm.date >= to_date('%s','YYYY-MM-DD')
+                                --AND sm.date < to_date('%s','YYYY-MM-DD')
+                                AND sm.state = 'done'
+                                AND pp.hp_type ='diamonds'
+                                AND sm.product_id =pp.id
+                                AND sm.picking_id= sp.id
+                                AND mp.id = mpwl.production_id
+                                AND mpwl.id = sp.wo_return_id
+                                AND sp.shipper = %s
+                                AND sp.wo_return_id IN (
+                                  SELECT mpwl.id
+                                 FROM mrp_production_workcenter_line mpwl,
+                                 mrp_production mp,
+                                 product_product pp
+                                 WHERE mp.id = mpwl.production_id
+                                 AND mp.product_id = pp.id
+                                 AND pp.metal_class = 'platinum'
+                                 )
+                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
+                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
+                GROUP BY mpwl.id, mpwl.name
+                ) as tab4 ON(tab4.mpwl_id = mpwl.id)
+                --- FINISH DELIVERY ---
+                LEFT JOIN
+                (SELECT mpwl.id as mpwl_id, mpwl.name as mpwl_name,
+                                coalesce (SUM(sm.product_qty),0) as qty ,
+                                coalesce(SUM(sm.weight_mo),0) as weight_gr
+                                FROM stock_move sm ,
+                                stock_picking sp,
+                                product_product pp,
+                                mrp_production mp,
+                                mrp_production_workcenter_line mpwl
+                                WHERE sp.hp_transfer_type='delivery'
+                                --AND sm.date >= to_date('%s','YYYY-MM-DD')
+                                --AND sm.date < to_date('%s','YYYY-MM-DD')
+                                AND sm.state = 'done'
+                                AND pp.hp_type ='finish_product'
+                                AND pp.metal_class = 'platinum'
+                                AND sm.product_id =pp.id
+                                AND sm.picking_id= sp.id
+                                AND mp.id= mpwl.production_id
+                                AND mpwl.id= sp.wo_delivery_id
+                                AND sp.receiver = %s
+                                AND sp.wo_delivery_id IN (
+                                  SELECT mpwl.id
+                                 FROM mrp_production_workcenter_line mpwl,
+                                 mrp_production mp,
+                                 product_product pp
+                                 WHERE mp.id = mpwl.production_id
+                                 AND mp.product_id = pp.id
+                                 AND pp.metal_class = 'platinum'
+                                 )
+                                 AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
+                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
+                GROUP BY mpwl.id, mpwl.name)
+                as tab5 ON(tab5.mpwl_id = mpwl.id)
+                --- FINISH RETURN ---
+                left join (
+                SELECT mpwl.id as mpwl_id, mpwl.name as mpwl_name,
+                                coalesce (SUM(sm.product_qty),0) as qty ,
+                                coalesce(SUM(sm.weight_mo),0) as weight_gr
+                                FROM stock_move sm ,
+                                stock_picking sp,
+                                product_product pp,
+                                mrp_production mp,
+                                mrp_production_workcenter_line mpwl
+                                WHERE sp.hp_transfer_type='return'
+                                --AND sm.date >= to_date('%s','YYYY-MM-DD')
+                                --AND sm.date < to_date('%s','YYYY-MM-DD')
+                                AND sm.state = 'done'
+                                AND pp.hp_type ='finish_product'
+                                AND pp.metal_class = 'platinum'
+                                AND sm.product_id =pp.id
+                                AND sm.picking_id= sp.id
+                                AND mp.id= mpwl.production_id
+                                AND mpwl.id= sp.wo_return_id
+                                AND sp.shipper = %s
+                                AND sp.wo_return_id IN (
+                                  SELECT mpwl.id
+                                 FROM mrp_production_workcenter_line mpwl,
+                                 mrp_production mp,
+                                 product_product pp
+                                 WHERE mp.id = mpwl.production_id
+                                 AND mp.product_id = pp.id
+                                 AND pp.metal_class = 'platinum'   
+                                 )
+                                 AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
+                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
+                GROUP BY mpwl.id, mpwl.name
+                ) as tab6 ON(tab6.mpwl_id = mpwl.id)
                 left join
-                --- JOIN METAL DELIVERY  ---
-                    (SELECT mpwl.id as mpwl_id,
-                    mpwl.name as mpwl_name,
-                                    coalesce (SUM(sm.product_qty),0) as qty ,
-                                    coalesce(SUM(sm.product_qty * coeff_24k),0) as qty_24k
-                                    FROM stock_move sm,
-                                    stock_picking sp,
-                                    product_product pp,
-                                    mrp_production_workcenter_line mpwl,
-                                    mrp_production mp
-                                    WHERE sp.hp_transfer_type='delivery'
-                                    AND sm.date >= to_date('%s','YYYY-MM-DD')
-                                    AND sm.date < to_date('%s','YYYY-MM-DD')
-                                    AND sm.state = 'done'
-                                    AND pp.hp_type ='metal'
-                                    AND pp.metal_class = 'platinum'
-                                    AND sm.product_id =pp.id
-                                    AND sm.picking_id= sp.id
-                                    AND sp.wo_delivery_id = mpwl.id
-                                    AND mpwl.production_id = mp.id
-                                    AND sp.receiver =%s -- Employee
-                                    AND sp.wo_delivery_id IN (
-                                    SELECT mpwl.id
-                                     FROM mrp_production_workcenter_line mpwl,
-                                     mrp_production mp,
-                                     product_product pp
-                                     WHERE mp.id = mpwl.production_id
-                                     AND mp.product_id = pp.id
-                                     AND pp.metal_class = 'platinum'
-                                     --AND employee_id=1
-                                     )
-                                     AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                                     AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
-                    GROUP BY mpwl.id,mpwl.name) as tab1 ON(tab1.mpwl_id = mpwl.id)
-                    left join ------------------- JOIN METAL RETURN -----------------------
-                    (SELECT mp.id mrp_id , mp.name mrp_name,mpwl.id as mpwl_id,mpwl.name mpwl_name,
-                                    coalesce (SUM(sm.product_qty),0) as qty ,
-                                    coalesce(SUM(sm.product_qty * coeff_24k),0) as qty_24k
-                                    FROM stock_move sm,
-                                    stock_picking sp,
-                                    product_product pp,
-                                    mrp_production_workcenter_line mpwl,
-                                    mrp_production mp
-                                    WHERE sp.hp_transfer_type='return'
-                                    AND sm.date >= to_date('%s','YYYY-MM-DD')
-                                    AND sm.date < to_date('%s','YYYY-MM-DD')
-                                    AND sm.state = 'done'
-                                    AND pp.hp_type ='metal'
-                                    AND pp.metal_class = 'platinum'
-                                    AND sm.product_id =pp.id
-                                    AND sm.picking_id= sp.id
-                                    AND sp.wo_return_id = mpwl.id
-                                    AND mpwl.production_id = mp.id
-                                    AND sp.shipper =%s -- Employee
-                                    AND sp.wo_return_id IN (
-                                     SELECT mpwl.id
-                                     FROM mrp_production_workcenter_line mpwl,
-                                     mrp_production mp,
-                                     product_product pp
-                                     WHERE mp.id = mpwl.production_id
-                                     AND mp.product_id = pp.id
-                                     AND pp.metal_class = 'platinum'
-                                     
-                                     --AND employee_id=1
-                                     )
-                                     AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                                     AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
-                    GROUP BY mp.id, mp.name ,mpwl.id,mpwl.name)
-                    as tab2 ON(tab2.mpwl_id = mpwl.id)
+                --- DIAMOND IN FINISH PRODUCT ---
+                (select mrp.id as id, coalesce(sum (weight_ct),0) as weight_ct, coalesce(sum(weight_gr),0) as weight_gr
+                from(
+                SELECT mp.id as id ,mp.name  as name,
+                                coalesce (SUM(sm.weight_mo),0) as weight_ct ,
+                                coalesce(SUM(sm.weight_mo /5),0) as weight_gr
+                                FROM stock_move sm ,
+                                stock_picking sp,
+                                product_product pp,
+                                mrp_production mp,
+                                mrp_production_workcenter_line mpwl
+                                WHERE sp.hp_transfer_type='delivery'
+                                --AND sm.date >= to_date('%s','YYYY-MM-DD')
+                                --AND sm.date < to_date('%s','YYYY-MM-DD')
+                                AND sm.state = 'done'
+                                AND pp.hp_type ='diamonds'
+                                AND sm.product_id =pp.id
+                                AND sm.picking_id= sp.id
+                                AND mp.id = mpwl.production_id
+                                AND sp.wo_delivery_id = mpwl.id
+                                AND sp.wo_delivery_id IN (
+                                  SELECT mpwl.id
+                                 FROM mrp_production_workcenter_line mpwl,
+                                 mrp_production mp,
+                                 product_product pp
+                                 WHERE mp.id = mpwl.production_id
+                                 AND mp.product_id = pp.id
+                                 AND pp.metal_class = 'platinum'
+                                 )
+                                 AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
+                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
+                GROUP BY mp.id,mp.name
+                UNION ALL
+                -- TINH TRONG LUONG DIAMOND TRA VE
+                SELECT mp.id as id,mp.name as name,
+                                coalesce (-SUM(sm.weight_mo),0) as weight_ct ,
+                                coalesce(-SUM(sm.weight_mo /5),0) as weight_gr
+                                FROM stock_move sm ,
+                                stock_picking sp,
+                                product_product pp,
+                                mrp_production mp,
+                                mrp_production_workcenter_line mpwl
+                                WHERE sp.hp_transfer_type='return'
+                                --AND sm.date >= to_date('%s','YYYY-MM-DD')
+                                --AND sm.date < to_date('%s','YYYY-MM-DD')
+                                AND sm.state = 'done'
+                                AND pp.hp_type ='diamonds'
+                                AND sm.product_id =pp.id
+                                AND sm.picking_id= sp.id
+                                AND mp.id = mpwl.production_id
+                                AND sp.wo_return_id = mpwl.id
+                                AND sp.wo_return_id IN (
+                                  SELECT mpwl.id
+                                 FROM mrp_production_workcenter_line mpwl,
+                                 mrp_production mp,
+                                 product_product pp
+                                 WHERE mp.id = mpwl.production_id
+                                 AND mp.product_id = pp.id
+                                 AND pp.metal_class = 'platinum'
+                                 )
+                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
+                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
+                GROUP BY mp.id,mp.name
+                UNION ALL
+                -- TINH TRONG LUONG DIAMOND BE, MAT
+                SELECT mp.id as id,mp.name as name,
+                                coalesce (-SUM(sm.weight_mo),0) as weight_ct ,
+                                coalesce(-SUM(sm.weight_mo /5),0) as weight_gr
+                                FROM stock_move sm ,
+                                stock_picking sp,
+                                product_product pp,
+                                mrp_production mp,
+                                mrp_production_workcenter_line mpwl
+                                WHERE sp.hp_transfer_type='return'
+                                --AND sm.date >= to_date('%s','YYYY-MM-DD')
+                                --AND sm.date < to_date('%s','YYYY-MM-DD')
+                                AND sm.state = 'done'
+                                AND pp.hp_type ='diamonds'
+                                AND sm.product_id =pp.id
+                                AND sm.picking_id= sp.id
+                                AND mp.id = mpwl.production_id
+                                AND sp.wo_lost_id = mpwl.id
+                                AND sp.shipper = %s
+                                AND sp.wo_lost_id IN (
+                                SELECT mpwl.id
+                                 FROM mrp_production_workcenter_line mpwl,
+                                 mrp_production mp,
+                                 product_product pp
+                                 WHERE mp.id = mpwl.production_id
+                                 AND mp.product_id = pp.id
+                                 AND pp.metal_class = 'platinum'
+                                 )
+                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
+                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
+                GROUP BY mp.id, mp.name
+                ) as mrp
+                GROUP BY mrp.id
+                ) as diamond ON(diamond.id = mpwl.production_id)
+                group by mp.name,mpwl.date_planned, mpwl.name,pp.coeff_24k,wk.percent, mp.metal_in_product
+                having coalesce(sum(tab1.qty),0)
+                +coalesce(sum(tab1.qty_24k),0)+ coalesce(sum(tab2.qty),0)
+                +coalesce(sum(tab2.qty_24k),0)+ coalesce(sum(tab3.weight_ct),0)
+                +coalesce(sum(tab3.weight_gr),0)+ coalesce(sum(tab4.weight_ct),0)
+                +coalesce(sum(tab4.weight_gr),0)+ coalesce(sum(tab5.weight_gr),0)
+                +coalesce(sum(tab6.weight_gr),0)<>0
+                order by mp.name,mpwl.name ;
 
-                    LEFT JOIN
-    --- DIAMOND DELIVERY  ---
-                    (SELECT mp.id mp_id,mp.name mp_name,mpwl.id mpwl_id, mpwl.name mpwl_name,
-                                    coalesce (SUM(sm.weight_mo),0) as weight_ct ,
-                                    coalesce(SUM(sm.weight_mo /5),0) as weight_gr
-                                    FROM stock_move sm ,
-                                    stock_picking sp,
-                                    product_product pp,
-                                    mrp_production mp,
-                                    mrp_production_workcenter_line mpwl
-                                    WHERE sp.hp_transfer_type='delivery'
-                                    AND sm.date >= to_date('%s','YYYY-MM-DD')
-                                    AND sm.date < to_date('%s','YYYY-MM-DD')
-                                    AND sm.state = 'done'
-                                    AND pp.hp_type ='diamonds'
-                                    AND sm.product_id =pp.id
-                                    AND sm.picking_id= sp.id
-                                    AND mp.id = mpwl.production_id
-                                    AND mpwl.id = sp.wo_delivery_id
-                                    AND sp.receiver = %s
-                                    AND sp.wo_delivery_id IN (
-                                     SELECT mpwl.id
-                                     FROM mrp_production_workcenter_line mpwl,
-                                     mrp_production mp,
-                                     product_product pp
-                                     WHERE mp.id = mpwl.production_id
-                                     AND mp.product_id = pp.id
-                                     AND pp.metal_class = 'platinum'
-                                     
-                                     )
-                                     AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                                     AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
-                    GROUP BY mp.id,mp.name,mpwl.id, mpwl.name)
-                    as tab3 ON(tab3.mpwl_id = mpwl.id)
-
-                    LEFT JOIN(
-                    -- DIAMOND RETURN ---
-                    SELECT mpwl.id as mpwl_id, mpwl.name mpwl_name,
-                                    coalesce (SUM(sm.weight_mo),0) as weight_ct ,
-                                    coalesce(SUM(sm.weight_mo /5),0) as weight_gr
-                                    FROM stock_move sm ,
-                                    stock_picking sp,
-                                    product_product pp,
-                                    mrp_production mp,
-                                    mrp_production_workcenter_line mpwl
-                                    WHERE sp.hp_transfer_type='return'
-                                    AND sm.date >= to_date('%s','YYYY-MM-DD')
-                                    AND sm.date < to_date('%s','YYYY-MM-DD')
-                                    AND sm.state = 'done'
-                                    AND pp.hp_type ='diamonds'
-                                    AND sm.product_id =pp.id
-                                    AND sm.picking_id= sp.id
-                                    AND mp.id = mpwl.production_id
-                                    AND mpwl.id = sp.wo_return_id
-                                    AND sp.shipper = %s
-                                    AND sp.wo_return_id IN (
-                                     SELECT mpwl.id
-                                     FROM mrp_production_workcenter_line mpwl,
-                                     mrp_production mp,
-                                     product_product pp
-                                     WHERE mp.id = mpwl.production_id
-                                     AND mp.product_id = pp.id
-                                     AND pp.metal_class = 'platinum'
-                                    
-                                     )
-                                     AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                                     AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
-                    GROUP BY mpwl.id, mpwl.name
-                    ) as tab4 ON(tab4.mpwl_id = mpwl.id)
-                    --- FINISH DELIVERY ---
-                    LEFT JOIN
-                    (SELECT mpwl.id as mpwl_id, mpwl.name as mpwl_name,
-                                    coalesce (SUM(sm.product_qty),0) as qty ,
-                                    coalesce(SUM(sm.weight_mo),0) as weight_gr
-                                    FROM stock_move sm ,
-                                    stock_picking sp,
-                                    product_product pp,
-                                    mrp_production mp,
-                                    mrp_production_workcenter_line mpwl
-                                    WHERE sp.hp_transfer_type='delivery'
-                                    AND sm.date >= to_date('%s','YYYY-MM-DD')
-                                    AND sm.date < to_date('%s','YYYY-MM-DD')
-                                    AND sm.state = 'done'
-                                    AND pp.hp_type ='finish_product'
-                                    AND pp.metal_class = 'platinum'
-                                    AND sm.product_id =pp.id
-                                    AND sm.picking_id= sp.id
-                                    AND mp.id= mpwl.production_id
-                                    AND mpwl.id= sp.wo_delivery_id
-                                    AND sp.receiver = %s
-                                    AND sp.wo_delivery_id IN (
-                                     SELECT mpwl.id
-                                     FROM mrp_production_workcenter_line mpwl,
-                                     mrp_production mp,
-                                     product_product pp
-                                     WHERE mp.id = mpwl.production_id
-                                     AND mp.product_id = pp.id
-                                     AND pp.metal_class = 'platinum'
-                                    
-                                     )
-                                     AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                                     AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
-                    GROUP BY mpwl.id, mpwl.name)
-                    as tab5 ON(tab5.mpwl_id = mpwl.id)
-                    --- FINISH RETURN ---
-                    left join (
-                    SELECT mpwl.id as mpwl_id, mpwl.name as mpwl_name,
-                                    coalesce (SUM(sm.product_qty),0) as qty ,
-                                    coalesce(SUM(sm.weight_mo),0) as weight_gr
-                                    FROM stock_move sm ,
-                                    stock_picking sp,
-                                    product_product pp,
-                                    mrp_production mp,
-                                    mrp_production_workcenter_line mpwl
-                                    WHERE sp.hp_transfer_type='return'
-                                    AND sm.date >= to_date('%s','YYYY-MM-DD')
-                                    AND sm.date < to_date('%s','YYYY-MM-DD')
-                                    AND sm.state = 'done'
-                                    AND pp.hp_type ='finish_product'
-                                    AND pp.metal_class = 'platinum'
-                                    AND sm.product_id =pp.id
-                                    AND sm.picking_id= sp.id
-                                    AND mp.id= mpwl.production_id
-                                    AND mpwl.id= sp.wo_return_id
-                                    AND sp.shipper = %s
-                                    AND sp.wo_return_id IN (
-                                     SELECT mpwl.id
-                                     FROM mrp_production_workcenter_line mpwl,
-                                     mrp_production mp,
-                                     product_product pp
-                                     WHERE mp.id = mpwl.production_id
-                                     AND mp.product_id = pp.id
-                                     AND pp.metal_class = 'platinum'
-                                     )
-                                     AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                                     AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
-                    GROUP BY mpwl.id, mpwl.name
-                    ) as tab6 ON(tab6.mpwl_id = mpwl.id)
-                    left join
-                    --- DIAMOND IN FINISH PRODUCT ---
-                    (select mrp.id as id, coalesce(sum (weight_ct),0) as weight_ct, coalesce(sum(weight_gr),0) as weight_gr
-                    from(
-                    SELECT mp.id as id ,mp.name  as name,
-                                    coalesce (SUM(sm.weight_mo),0) as weight_ct ,
-                                    coalesce(SUM(sm.weight_mo /5),0) as weight_gr
-                                    FROM stock_move sm ,
-                                    stock_picking sp,
-                                    product_product pp,
-                                    mrp_production mp,
-                                    mrp_production_workcenter_line mpwl
-                                    WHERE sp.hp_transfer_type='delivery'
-                                    --AND sm.date >= to_date('%s','YYYY-MM-DD')
-                                    --AND sm.date < to_date('%s','YYYY-MM-DD')
-                                    AND sm.state = 'done'
-                                    AND pp.hp_type ='diamonds'
-                                    AND sm.product_id =pp.id
-                                    AND sm.picking_id= sp.id
-                                    AND mp.id = mpwl.production_id
-                                    AND sp.wo_delivery_id = mpwl.id
-                                    AND sp.wo_delivery_id IN (
-                                     SELECT mpwl.id
-                                     FROM mrp_production_workcenter_line mpwl,
-                                     mrp_production mp,
-                                     product_product pp
-                                     WHERE mp.id = mpwl.production_id
-                                     AND mp.product_id = pp.id
-                                     AND pp.metal_class = 'platinum'
-                                     
-                                     )
-                                     AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                                     AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
-                    GROUP BY mp.id,mp.name
-                    UNION ALL
-                    -- TINH TRONG LUONG DIAMOND TRA VE
-                    SELECT mp.id as id,mp.name as name,
-                                    coalesce (-SUM(sm.weight_mo),0) as weight_ct ,
-                                    coalesce(-SUM(sm.weight_mo /5),0) as weight_gr
-                                    FROM stock_move sm ,
-                                    stock_picking sp,
-                                    product_product pp,
-                                    mrp_production mp,
-                                    mrp_production_workcenter_line mpwl
-                                    WHERE sp.hp_transfer_type='return'
-                                    --AND sm.date >= to_date('%s','YYYY-MM-DD')
-                                    --AND sm.date < to_date('%s','YYYY-MM-DD')
-                                    AND sm.state = 'done'
-                                    AND pp.hp_type ='diamonds'
-                                    AND sm.product_id =pp.id
-                                    AND sm.picking_id= sp.id
-                                    AND mp.id = mpwl.production_id
-                                    AND sp.wo_return_id = mpwl.id
-                                    AND sp.wo_return_id IN (
-                                     SELECT mpwl.id
-                                     FROM mrp_production_workcenter_line mpwl,
-                                     mrp_production mp,
-                                     product_product pp
-                                     WHERE mp.id = mpwl.production_id
-                                     AND mp.product_id = pp.id
-                                     AND pp.metal_class = 'platinum'
-                                    
-                                     )
-                                     AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                                     AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
-                    GROUP BY mp.id,mp.name
-                    UNION ALL
-                    -- TINH TRONG LUONG DIAMOND BE, MAT
-                    SELECT mp.id as id,mp.name as name,
-                                    coalesce (-SUM(sm.weight_mo),0) as weight_ct ,
-                                    coalesce(-SUM(sm.weight_mo /5),0) as weight_gr
-                                    FROM stock_move sm ,
-                                    stock_picking sp,
-                                    product_product pp,
-                                    mrp_production mp,
-                                    mrp_production_workcenter_line mpwl
-                                    WHERE sp.hp_transfer_type='return'
-                                    --AND sm.date >= to_date('%s','YYYY-MM-DD')
-                                    --AND sm.date < to_date('%s','YYYY-MM-DD')
-                                    AND sm.state = 'done'
-                                    AND pp.hp_type ='diamonds'
-                                    AND sm.product_id =pp.id
-                                    AND sm.picking_id= sp.id
-                                    AND mp.id = mpwl.production_id
-                                    AND sp.wo_lost_id = mpwl.id
-                                    AND sp.shipper = %s
-                                    AND sp.wo_lost_id IN (
-                                     SELECT mpwl.id
-                                     FROM mrp_production_workcenter_line mpwl,
-                                     mrp_production mp,
-                                     product_product pp
-                                     WHERE mp.id = mpwl.production_id
-                                     AND mp.product_id = pp.id
-                                     AND pp.metal_class = 'platinum'
-                                     
-                                     )
-                                     AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                                     AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
-                    GROUP BY mp.id, mp.name
-                    ) as mrp
-                    GROUP BY mrp.id
-                    ) as diamond ON(diamond.id = mpwl.production_id)
-                    group by mp.name,mpwl.date_planned, mpwl.name,pp.coeff_24k
-                    having coalesce(sum(tab1.qty),0)
-                    +coalesce(sum(tab1.qty_24k),0)+ coalesce(sum(tab2.qty),0)
-                    +coalesce(sum(tab2.qty_24k),0)+ coalesce(sum(tab3.weight_ct),0)
-                    +coalesce(sum(tab3.weight_gr),0)+ coalesce(sum(tab4.weight_ct),0)
-                    +coalesce(sum(tab4.weight_gr),0)+ coalesce(sum(tab5.weight_gr),0)
-                    +coalesce(sum(tab6.weight_gr),0)<>0
-                    order by mp.name,mpwl.name ;
-
-
-
-                ''' %(date_from,date_to,
-                      employee_id,
-                      date_from,date_to,
-                      date_from,date_to,
-                      employee_id,
-                      date_from,date_to,
-                      date_from,date_to,
-                      employee_id,
-                      date_from,date_to,
-                      date_from,date_to,
-                      employee_id,
-                      date_from,date_to,
-                      date_from,date_to,
-                      employee_id,
-                      date_from,date_to,
-                      date_from,date_to,
-                      employee_id,
-                      date_from,date_to,
-                      date_from,date_to,
-                      date_from,date_to,
-                      date_from,date_to,
-                      date_from,date_to,
-                      date_from,date_to,
-                      employee_id,
-                      date_from,date_to)
+            ''' %(date_from,date_to,
+                  employee_id,
+                  date_from,date_to,
+                  date_from,date_to,
+                  employee_id,
+                  date_from,date_to,
+                  date_from,date_to,
+                  employee_id,
+                  date_from,date_to,
+                  date_from,date_to,
+                  employee_id,
+                  date_from,date_to,
+                  date_from,date_to,
+                  employee_id,
+                  date_from,date_to,
+                  date_from,date_to,
+                  employee_id,
+                  date_from,date_to,
+                  date_from,date_to,
+                  date_from,date_to,
+                  date_from,date_to,
+                  date_from,date_to,
+                  date_from,date_to,
+                  employee_id,
+                  date_from,date_to)
         if employee_id:
             cr.execute(sql_platinum)
             print sql_platinum
@@ -2460,6 +2475,11 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
             sum_finish_delivery=0
             sum_finish_return=0
             sum_loss =0
+            sum_loss_limit = 0
+            sum_loss_over = 0
+            sum_loss_24k = 0
+            sum_loss_limit_24k = 0
+            sum_loss_over_24k = 0
             for item in result_platinum:
 
                 arr.append({
@@ -2477,15 +2497,15 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                 'diamond_return_gr': item['diamond_return_gr'],
                                 'finish_delivery': item['finish_delivery'],
                                 'finish_return': item['finish_return'],
-                                 'loss_weight': '-',
+                                'loss_weight': round(float(item['loss_weight'] or 0.0),3),
                                 'loss': round(float(item['loss'] or 0.0),3),
-                                'loss_limit':'',
-                                'loss_over':'',
-                                'loss_24k':'',
-                                'loss_limit_24k':'',
-                                'loss_over_24k':'',
-                                 'net_weight':'-',
-                                'percent':'-',
+                                'loss_limit':round(float(item['loss_limit'] or 0.0),3),
+                                'loss_over':round(float(item['loss_over'] or 0.0),3),
+                                'loss_24k':round(float(item['loss_24k'] or 0.0),3),
+                                'loss_limit_24k':round(float(item['loss_limit_24k'] or 0.0),3),
+                                'loss_over_24k':round(float(item['loss_over_24k'] or 0.0),3),
+                                'net_weight':round(float(item['net_weight'] or 0.0),3),
+                                'percent':item['percent'] ,
                                 })
                 sum_metal_delivery +=item['metal_delivery']
                 sum_metal_24k_delivery+=item['metal_24k_delivery']
@@ -2498,10 +2518,14 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                 sum_finish_delivery+=item['finish_delivery']
                 sum_finish_return +=item['finish_return']
                 sum_loss +=round(float(item['loss'] or 0.0),3)
+                sum_loss_limit += round(float(item['loss_limit'] or 0.0),3)
+                sum_loss_over += round(float(item['loss_over'] or 0.0),3)
+                sum_loss_24k += round(float(item['loss_24k'] or 0.0),3)
+                sum_loss_limit_24k += round(float(item['loss_limit_24k'] or 0.0),3)
+                sum_loss_over_24k += round(float(item['loss_over_24k'] or 0.0),3)
                 sequence +=1
 
-            arr.append({
-                                'sequence':'-',
+            arr.append({'sequence':'-',
                                 'mrp_name': 'Total',
                                 'line_name': '-',
                                 'actual_date': '-',
@@ -2515,13 +2539,13 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                 'diamond_return_gr': sum_diamond_return_gr,
                                 'finish_delivery': sum_finish_delivery,
                                 'finish_return': sum_finish_return,
-                                 'loss_weight': '-',
+                                'loss_weight': sum_loss_weight,
                                 'loss': sum_loss,
-                                'loss_limit':'',
-                                'loss_over':'',
-                                'loss_24k':'',
-                                'loss_limit_24k':'',
-                                'loss_over_24k':'',
+                                'loss_limit':sum_loss_limit,
+                                'loss_over':sum_loss_over,
+                                'loss_24k':sum_loss_24k,
+                                'loss_limit_24k':sum_loss_limit_24k,
+                                'loss_over_24k':sum_loss_over_24k,
                                 'net_weight':'-',
                                 'percent':'-',
                                 })
