@@ -1,1 +1,0 @@
-import hpusa_vinvoice_number
