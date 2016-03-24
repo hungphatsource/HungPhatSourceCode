@@ -1616,9 +1616,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  AND pp.metal_class = 'gold'
                                 
                                  --AND employee_id=1
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mpwl.id,mpwl.name) as tab1 ON(tab1.mpwl_id = mpwl.id)
                 left join ------------------- JOIN METAL RETURN -----------------------
                 (SELECT mp.id mrp_id , mp.name mrp_name,mpwl.id as mpwl_id,mpwl.name mpwl_name,
