@@ -1538,7 +1538,7 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
         sql = '''
             SELECT
             mp.name,
-            mpwl.date_planned actual_date,
+            mp.mo_date actual_date,
             mpwl.name line_name,
             round(coalesce(sum(tab1.qty),0),3) as metal_delivery,
             coalesce(sum(tab1.qty_24k),0) as metal_24k_delivery,
@@ -2051,7 +2051,7 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
         sql_platinum = '''
                 SELECT
             mp.name,
-            mpwl.date_planned actual_date,
+           mp.mo_date actual_date,
             mpwl.name line_name,
             round(coalesce(sum(tab1.qty),0),3) as metal_delivery,
             coalesce(sum(tab1.qty_24k),0) as metal_24k_delivery,
