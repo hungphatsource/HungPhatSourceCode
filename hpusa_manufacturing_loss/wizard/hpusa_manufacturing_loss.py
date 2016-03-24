@@ -1889,7 +1889,7 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                 ) as mrp
                 GROUP BY mrp.id
                 ) as diamond ON(diamond.id = mpwl.production_id)
-                group by mp.name,mpwl.date_planned, mpwl.name,pp.coeff_24k,wk.percent, mp.metal_in_product
+                group by mp.name,mp.mo_date , mpwl.name,pp.coeff_24k,wk.percent, mp.metal_in_product
                 having coalesce(sum(tab1.qty),0)
                 +coalesce(sum(tab1.qty_24k),0)+ coalesce(sum(tab2.qty),0)
                 +coalesce(sum(tab2.qty_24k),0)+ coalesce(sum(tab3.weight_ct),0)
@@ -2402,7 +2402,7 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                 ) as mrp
                 GROUP BY mrp.id
                 ) as diamond ON(diamond.id = mpwl.production_id)
-                group by mp.name,mpwl.date_planned, mpwl.name,pp.coeff_24k,wk.percent, mp.metal_in_product
+                group by mp.name,mp.mo_date , mpwl.name,pp.coeff_24k,wk.percent, mp.metal_in_product
                 having coalesce(sum(tab1.qty),0)
                 +coalesce(sum(tab1.qty_24k),0)+ coalesce(sum(tab2.qty),0)
                 +coalesce(sum(tab2.qty_24k),0)+ coalesce(sum(tab3.weight_ct),0)
