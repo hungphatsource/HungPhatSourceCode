@@ -38,7 +38,7 @@ class hpusa_reportddp_wizard(osv.osv):
             'company_id': fields.many2many('res.company','company_rel','ddp_id_rel','ddp_company_rel','Company'),
             'check_order_date':fields.boolean('Date Order'),
             'check_pickup_date': fields.boolean('Pickup Date'),
-            'check_due_date': fields.boolean('Due Date'),                                    
+            'check_due_date': fields.boolean('Due Date'),                                   
      }
     _defaults={  
               'check_order_date':True,
@@ -49,7 +49,7 @@ class hpusa_reportddp_wizard(osv.osv):
     
     def action_export(self, cr, uid, ids, context=None):
         datas = {'ids': context.get('active_ids', [])}
-        res = self.read(cr, uid, ids, ['from_date','to_date','company_id','work_center','status','worker'], context=context)
+        res = self.read(cr, uid, ids, ['from_date','to_date','company_id','work_center','status','worker','customer_id'], context=context)
         res = res and res[0] or {}
         datas['form'] = res
         name = self.pool.get('res.users').browse(cr, uid, uid).partner_id.name
@@ -60,24 +60,33 @@ class hpusa_reportddp_wizard(osv.osv):
         x = 0
         sid = ''
         if this.so_id:
-            sid += '('
-            for item in this.so_id:
-                x = x+1
-                so_id =item.id
-                if x == len(this.so_id):
-                    sid += str(so_id)
-                else:
-                    sid += str(so_id)  + ','
-            sid += ')'
+                sid += '('
+                for item in this.so_id:
+                    x = x+1
+                    so_id =item.id
+                    if x == len(this.so_id):
+                        sid += str(so_id)
+                    else:
+                        sid += str(so_id)  + ','
+                sid += ')'
+        if type == 'data':
+            datas['line']  = self.get_all_data(cr, uid, res['from_date'], res['to_date'], sid, res['work_center'], res['status'], this.worker.id,this.company_id,this.check_order_date,this.check_pickup_date,this.check_due_date, context=None)
+            datas['line1']  = self.get_all_data_detail(cr, uid, res['from_date'], res['to_date'], sid, res['work_center'], res['status'], this.worker.id,this.company_id,this.check_order_date,this.check_pickup_date,this.check_due_date, context=None)
+            return {
+                    'type'          : 'ir.actions.report.xml',
+                    'report_name'   : 'export_data_wip_sumary',
+                    'datas'         : datas,
+                    }
+        else:
+            datas['line']  = self.get_all_data(cr, uid, res['from_date'], res['to_date'], sid, res['work_center'], res['status'], this.worker.id,this.company_id,this.check_order_date,this.check_pickup_date,this.check_due_date, context=None)
+            datas['line1']  = self.get_all_data_detail(cr, uid, res['from_date'], res['to_date'], sid, res['work_center'], res['status'], this.worker.id,this.company_id,this.check_order_date,this.check_pickup_date,this.check_due_date, context=None)
+            return {
+                    'type'          : 'ir.actions.report.xml',
+                    'report_name'   : 'export_data_wip_sumary_manager',
+                    'datas'         : datas,
+                    }
+            
         
-        
-        datas['line']  = self.get_all_data(cr, uid, res['from_date'], res['to_date'], sid, res['work_center'], res['status'], this.worker.id,this.company_id,this.check_order_date,this.check_pickup_date,this.check_due_date, context=None)
-        datas['line1']  = self.get_all_data_detail(cr, uid, res['from_date'], res['to_date'], sid, res['work_center'], res['status'], this.worker.id,this.company_id,this.check_order_date,this.check_pickup_date,this.check_due_date, context=None)
-        return {
-                'type'          : 'ir.actions.report.xml',
-                'report_name'   : 'export_data_wip_sumary',
-                'datas'         : datas,
-           }
           
     def get_state (self,cr,uid,status, context=None):
         if status :
@@ -439,8 +448,14 @@ class hpusa_reportddp_wizard(osv.osv):
                             ,he.name_related as employee
                             ,mp.mo_date
                             ,mp.description
+                            ,re.name as customer_name
+                            , re.phone 
+                            , re.mobile
+                            , cr.name as crm_name
                             from mrp_production mp
                             left join sale_order as so on(mp.so_id=so.id)
+                            left join res_partner as re on (re.id = so.partner_id)
+                            left join crm_vip_program as cr on (cr.id = re.vip_program_id)
                             -- sale order
                             left join 
                             (select 
@@ -483,6 +498,9 @@ class hpusa_reportddp_wizard(osv.osv):
                         arr.append({                                        
                                     'sequence':sequence,
                                     'company_id':company_name,
+                                    'customer_name': item['customer_name'],
+                                    'mobile_phone':str(item['phone'])+ ','+str(item['mobile']),
+                                    'crm_name' : item['crm_name'],
                                     'customer_name':item['customer_id'],
                                     'so_id':item['name'],
                                     'mo_name': item['mo_name'],
@@ -521,8 +539,14 @@ class hpusa_reportddp_wizard(osv.osv):
                             ,he.name_related as employee
                             ,mp.mo_date
                             ,mp.description
+                            ,re.name as customer_name
+                            , re.phone 
+                            , re.mobile
+                            , cr.name as crm_name
                             from mrp_production mp
                             left join sale_order as so on(mp.so_id=so.id)
+                            left join res_partner as re on (re.id = so.partner_id)
+                            left join crm_vip_program as cr on (cr.id = re.vip_program_id)
                             -- sale order
                             left join 
                             (select 
@@ -566,6 +590,9 @@ class hpusa_reportddp_wizard(osv.osv):
                             arr.append({
                                     'sequence':sequence,
                                     'company_id':company_name,
+                                    'customer_name': item['customer_name'],
+                                    'mobile_phone':str(item['phone'])+ ','+str(item['mobile']),
+                                    'crm_name' : item['crm_name'],
                                     'customer_name':item['customer_id'],
                                     'so_id':item['name'],
                                     'mo_name': item['mo_name'],
@@ -753,6 +780,7 @@ class hpusa_reportddp_wizard(osv.osv):
         return {'value': v}
     
     def onchange_check_due_date(self, cr, uid, ids, check_due_date, context=None):
+
         v = {}
         if check_due_date==True:
             
@@ -760,10 +788,17 @@ class hpusa_reportddp_wizard(osv.osv):
             v['check_pickup_date'] = False
         return {'value': v}
     
+    
+        
 hpusa_reportddp_wizard()
 
 openoffice_report.openoffice_report(
     'report.export_data_wip_sumary',
+    'hpusa.reportddp',
+    parser=hpusa_reportddp_wizard
+)
+openoffice_report.openoffice_report(
+    'report.export_data_wip_sumary_manager',
     'hpusa.reportddp',
     parser=hpusa_reportddp_wizard
 )
