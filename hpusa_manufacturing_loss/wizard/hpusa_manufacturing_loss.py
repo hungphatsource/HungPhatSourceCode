@@ -672,9 +672,10 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'gold'
                                  --AND employee_id=1
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
+                                
                 GROUP BY mpwl.id,mpwl.name) as tab1 ON(tab1.mpwl_id = mpwl.id)
                 left join ------------------- JOIN METAL RETURN -----------------------
                 (SELECT mp.id mrp_id , mp.name mrp_name,mpwl.id as mpwl_id,mpwl.name mpwl_name,
@@ -705,9 +706,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'gold'
                                  --AND employee_id=1
+                                  AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mp.id, mp.name ,mpwl.id,mpwl.name)
                 as tab2 ON(tab2.mpwl_id = mpwl.id)
 
@@ -739,9 +740,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'gold'
+                                  AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mp.id,mp.name,mpwl.id, mpwl.name)
                 as tab3 ON(tab3.mpwl_id = mpwl.id)
 
@@ -773,9 +774,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'gold'
+                                  AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mpwl.id, mpwl.name
                 ) as tab4 ON(tab4.mpwl_id = mpwl.id)
                 --- FINISH DELIVERY ---
@@ -807,9 +808,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'gold'
+                                  AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                 AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mpwl.id, mpwl.name)
                 as tab5 ON(tab5.mpwl_id = mpwl.id)
                 --- FINISH RETURN ---
@@ -841,9 +842,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'gold'   
+                                  AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                 AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mpwl.id, mpwl.name
                 ) as tab6 ON(tab6.mpwl_id = mpwl.id)
                 left join
@@ -875,9 +876,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'gold'
+                                  AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                 AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mp.id,mp.name
                 UNION ALL
                 -- TINH TRONG LUONG DIAMOND TRA VE
@@ -906,9 +907,10 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'gold'
+                                  AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
+
                 GROUP BY mp.id,mp.name
                 UNION ALL
                 -- TINH TRONG LUONG DIAMOND BE, MAT
@@ -938,9 +940,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'gold'
+                                  AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mp.id, mp.name
                 ) as mrp
                 GROUP BY mrp.id
@@ -1046,6 +1048,29 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
 
         if employee_ids:
             sequence = 1
+            arr.append({
+                                  'sequence':'Platinum (Hao hụt platinum)',
+                                            'employee_name': '-',
+                                            'metal_delivery':'-',
+                                            'metal_24k_delivery': '-',
+                                            'metal_return': '-',
+                                            'metal_24k_return': '-',
+                                            'diamond_delivery_ct': '-',
+                                            'diamond_delivery_gr': '-',
+                                            'diamond_return_ct': '-',
+                                            'diamond_return_gr': '-',
+                                            'finish_delivery': '-',
+                                            'finish_return': '-',
+                                            'loss_weight': '-',
+                                            'loss': '-',
+                                            'loss_limit':'',
+                                            'loss_over':'',
+                                            'loss_24k':'',
+                                            'loss_limit_24k':'',
+                                            'loss_over_24k':'',
+                                            'net_weight':'-',
+                                            'percent':'-',
+                                                })
             for employee in employee_ids:
                 employee_id= employee['employee_id']
                 sql_platinum = '''
@@ -1130,9 +1155,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                          AND pp.metal_class = 'platinum'
                                         
                                          --AND employee_id=1
+                                          AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                        AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                          )
-                                        AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                                        AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                         GROUP BY mpwl.id,mpwl.name) as tab1 ON(tab1.mpwl_id = mpwl.id)
                         left join ------------------- JOIN METAL RETURN -----------------------
                         (SELECT mp.id mrp_id , mp.name mrp_name,mpwl.id as mpwl_id,mpwl.name mpwl_name,
@@ -1163,9 +1188,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                          AND mp.product_id = pp.id
                                          AND pp.metal_class = 'platinum'
                                          --AND employee_id=1
+                                          AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                          )
-                                        AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                                        AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                         GROUP BY mp.id, mp.name ,mpwl.id,mpwl.name)
                         as tab2 ON(tab2.mpwl_id = mpwl.id)
         
@@ -1197,9 +1222,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                          WHERE mp.id = mpwl.production_id
                                          AND mp.product_id = pp.id
                                          AND pp.metal_class = 'platinum'
+                                          AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                          )
-                                        AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                                        AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                         GROUP BY mp.id,mp.name,mpwl.id, mpwl.name)
                         as tab3 ON(tab3.mpwl_id = mpwl.id)
         
@@ -1231,9 +1256,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                          WHERE mp.id = mpwl.production_id
                                          AND mp.product_id = pp.id
                                          AND pp.metal_class = 'platinum'
+                                          AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                          )
-                                        AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                        AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                         GROUP BY mpwl.id, mpwl.name
                         ) as tab4 ON(tab4.mpwl_id = mpwl.id)
                         --- FINISH DELIVERY ---
@@ -1265,9 +1290,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                          WHERE mp.id = mpwl.production_id
                                          AND mp.product_id = pp.id
                                          AND pp.metal_class = 'platinum'
+                                          AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                          )
-                                         AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                        AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                         GROUP BY mpwl.id, mpwl.name)
                         as tab5 ON(tab5.mpwl_id = mpwl.id)
                         --- FINISH RETURN ---
@@ -1299,9 +1324,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                          WHERE mp.id = mpwl.production_id
                                          AND mp.product_id = pp.id
                                          AND pp.metal_class = 'platinum'   
+                                          AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                          )
-                                         AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                        AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                         GROUP BY mpwl.id, mpwl.name
                         ) as tab6 ON(tab6.mpwl_id = mpwl.id)
                         left join
@@ -1333,9 +1358,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                          WHERE mp.id = mpwl.production_id
                                          AND mp.product_id = pp.id
                                          AND pp.metal_class = 'platinum'
+                                          AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                          )
-                                         AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                        AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                         GROUP BY mp.id,mp.name
                         UNION ALL
                         -- TINH TRONG LUONG DIAMOND TRA VE
@@ -1364,9 +1389,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                          WHERE mp.id = mpwl.production_id
                                          AND mp.product_id = pp.id
                                          AND pp.metal_class = 'platinum'
+                                          AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                          )
-                                        AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                        AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                         GROUP BY mp.id,mp.name
                         UNION ALL
                         -- TINH TRONG LUONG DIAMOND BE, MAT
@@ -1396,9 +1421,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                          WHERE mp.id = mpwl.production_id
                                          AND mp.product_id = pp.id
                                          AND pp.metal_class = 'platinum'
+                                        AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                          )
-                                        AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                        AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                         GROUP BY mp.id, mp.name
                         ) as mrp
                         GROUP BY mrp.id
@@ -1457,71 +1482,49 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                 sum_loss_24k_pt = 0
                 sum_loss_limit_24k_pt = 0
                 sum_loss_over_24k_pt = 0
-                arr.append({
-                                  'sequence':'Platinum (Hao hụt platinum)',
-                                            'employee_name': '-',
-                                            'metal_delivery':'-',
-                                            'metal_24k_delivery': '-',
-                                            'metal_return': '-',
-                                            'metal_24k_return': '-',
-                                            'diamond_delivery_ct': '-',
-                                            'diamond_delivery_gr': '-',
-                                            'diamond_return_ct': '-',
-                                            'diamond_return_gr': '-',
-                                            'finish_delivery': '-',
-                                            'finish_return': '-',
-                                            'loss_weight': '-',
-                                            'loss': '-',
-                                            'loss_limit':'',
-                                            'loss_over':'',
-                                            'loss_24k':'',
-                                            'loss_limit_24k':'',
-                                            'loss_over_24k':'',
+                if result_platinum :
+                    for item in result_platinum:
+                            sum_metal_delivery_pt +=item['metal_delivery']
+                            sum_metal_24k_delivery_pt+=item['metal_24k_delivery']
+                            sum_metal_return_pt +=item['metal_return']
+                            sum_metal_24k_return_pt +=item['metal_24k_return']
+                            sum_diamond_delivery_ct_pt +=item['diamond_delivery_ct']
+                            sum_diamond_delivery_gr_pt += item['diamond_delivery_gr']
+                            sum_diamond_return_ct_pt +=item['diamond_return_gr']
+                            sum_diamond_return_gr_pt +=item['metal_delivery']
+                            sum_finish_delivery_pt+=item['finish_delivery']
+                            sum_finish_return_pt +=item['finish_return']
+                            sum_loss_weight_pt+= round(float(item['loss_weight'] or 0.0),3)
+                            sum_loss_pt +=round(float(item['loss'] or 0.0),3)
+                            sum_loss_limit_pt += round(float(item['loss_limit'] or 0.0),3)
+                            sum_loss_over_pt += round(float(item['loss_over'] or 0.0),3)
+                            sum_loss_24k_pt += round(float(item['loss_24k'] or 0.0),3)
+                            sum_loss_limit_24k_pt += round(float(item['loss_limit_24k'] or 0.0),3)
+                            sum_loss_over_24k_pt += round(float(item['loss_over_24k'] or 0.0),3)
+                    sequence += 1
+                    arr.append({
+                                            'sequence':sequence,
+                                            'employee_name': employee['employee_name'],
+                                            'metal_delivery': sum_metal_delivery_pt,
+                                            'metal_24k_delivery':sum_metal_24k_delivery_pt,
+                                            'metal_return': sum_metal_return_pt,
+                                            'metal_24k_return': sum_metal_24k_return_pt,
+                                            'diamond_delivery_ct': sum_diamond_delivery_ct_pt,
+                                            'diamond_delivery_gr': sum_diamond_delivery_gr_pt,
+                                            'diamond_return_ct': sum_diamond_return_ct_pt,
+                                            'diamond_return_gr': sum_diamond_return_gr_pt,
+                                            'finish_delivery': sum_finish_delivery_pt,
+                                            'finish_return': sum_finish_return_pt,
+                                            'loss_weight': sum_loss_weight_pt,
+                                            'loss': sum_loss_pt,
+                                            'loss_limit':sum_loss_limit_pt,
+                                            'loss_over':sum_loss_over_pt,
+                                            'loss_24k':sum_loss_24k_pt,
+                                            'loss_limit_24k':sum_loss_limit_24k_pt,
+                                            'loss_over_24k':sum_loss_over_24k_pt,
                                             'net_weight':'-',
                                             'percent':'-',
-                                                })
-                for item in result_platinum:
-                        sum_metal_delivery_pt +=item['metal_delivery']
-                        sum_metal_24k_delivery_pt+=item['metal_24k_delivery']
-                        sum_metal_return_pt +=item['metal_return']
-                        sum_metal_24k_return_pt +=item['metal_24k_return']
-                        sum_diamond_delivery_ct_pt +=item['diamond_delivery_ct']
-                        sum_diamond_delivery_gr_pt += item['diamond_delivery_gr']
-                        sum_diamond_return_ct_pt +=item['diamond_return_gr']
-                        sum_diamond_return_gr_pt +=item['metal_delivery']
-                        sum_finish_delivery_pt+=item['finish_delivery']
-                        sum_finish_return_pt +=item['finish_return']
-                        sum_loss_weight_pt+= round(float(item['loss_weight'] or 0.0),3)
-                        sum_loss_pt +=round(float(item['loss'] or 0.0),3)
-                        sum_loss_limit_pt += round(float(item['loss_limit'] or 0.0),3)
-                        sum_loss_over_pt += round(float(item['loss_over'] or 0.0),3)
-                        sum_loss_24k_pt += round(float(item['loss_24k'] or 0.0),3)
-                        sum_loss_limit_24k_pt += round(float(item['loss_limit_24k'] or 0.0),3)
-                        sum_loss_over_24k_pt += round(float(item['loss_over_24k'] or 0.0),3)
-                sequence += 1
-                arr.append({
-                                        'sequence':sequence,
-                                        'employee_name': employee['employee_name'],
-                                        'metal_delivery': sum_metal_delivery_pt,
-                                        'metal_24k_delivery':sum_metal_24k_delivery_pt,
-                                        'metal_return': sum_metal_return_pt,
-                                        'metal_24k_return': sum_metal_24k_return_pt,
-                                        'diamond_delivery_ct': sum_diamond_delivery_ct_pt,
-                                        'diamond_delivery_gr': sum_diamond_delivery_gr_pt,
-                                        'diamond_return_ct': sum_diamond_return_ct_pt,
-                                        'diamond_return_gr': sum_diamond_return_gr_pt,
-                                        'finish_delivery': sum_finish_delivery_pt,
-                                        'finish_return': sum_finish_return_pt,
-                                        'loss_weight': sum_loss_weight_pt,
-                                        'loss': sum_loss_pt,
-                                        'loss_limit':sum_loss_limit_pt,
-                                        'loss_over':sum_loss_over_pt,
-                                        'loss_24k':sum_loss_24k_pt,
-                                        'loss_limit_24k':sum_loss_limit_24k_pt,
-                                        'loss_over_24k':sum_loss_over_24k_pt,
-                                        'net_weight':'-',
-                                        'percent':'-',
-                                        })
+                                            })
 
 
         return arr
@@ -1646,9 +1649,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'gold'
                                  --AND employee_id=1
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mp.id, mp.name ,mpwl.id,mpwl.name)
                 as tab2 ON(tab2.mpwl_id = mpwl.id)
 
@@ -1680,9 +1683,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'gold'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mp.id,mp.name,mpwl.id, mpwl.name)
                 as tab3 ON(tab3.mpwl_id = mpwl.id)
 
@@ -1714,9 +1717,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'gold'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mpwl.id, mpwl.name
                 ) as tab4 ON(tab4.mpwl_id = mpwl.id)
                 --- FINISH DELIVERY ---
@@ -1748,9 +1751,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'gold'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                 AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mpwl.id, mpwl.name)
                 as tab5 ON(tab5.mpwl_id = mpwl.id)
                 --- FINISH RETURN ---
@@ -1782,9 +1785,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'gold'   
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                 AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mpwl.id, mpwl.name
                 ) as tab6 ON(tab6.mpwl_id = mpwl.id)
                 left join
@@ -1816,9 +1819,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'gold'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                 AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                 AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mp.id,mp.name
                 UNION ALL
                 -- TINH TRONG LUONG DIAMOND TRA VE
@@ -1847,9 +1850,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'gold'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mp.id,mp.name
                 UNION ALL
                 -- TINH TRONG LUONG DIAMOND BE, MAT
@@ -1879,9 +1882,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'gold'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mp.id, mp.name
                 ) as mrp
                 GROUP BY mrp.id
@@ -2126,9 +2129,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  AND pp.metal_class = 'platinum'
                                 
                                  --AND employee_id=1
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mpwl.id,mpwl.name) as tab1 ON(tab1.mpwl_id = mpwl.id)
                 left join ------------------- JOIN METAL RETURN -----------------------
                 (SELECT mp.id mrp_id , mp.name mrp_name,mpwl.id as mpwl_id,mpwl.name mpwl_name,
@@ -2159,9 +2162,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'platinum'
                                  --AND employee_id=1
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mp.id, mp.name ,mpwl.id,mpwl.name)
                 as tab2 ON(tab2.mpwl_id = mpwl.id)
 
@@ -2193,9 +2196,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'platinum'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mp.id,mp.name,mpwl.id, mpwl.name)
                 as tab3 ON(tab3.mpwl_id = mpwl.id)
 
@@ -2227,9 +2230,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'platinum'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mpwl.id, mpwl.name
                 ) as tab4 ON(tab4.mpwl_id = mpwl.id)
                 --- FINISH DELIVERY ---
@@ -2261,9 +2264,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'platinum'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                 AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mpwl.id, mpwl.name)
                 as tab5 ON(tab5.mpwl_id = mpwl.id)
                 --- FINISH RETURN ---
@@ -2294,10 +2297,10 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  product_product pp
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
-                                 AND pp.metal_class = 'platinum'   
+                                 AND pp.metal_class = 'platinum'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')   
                                  )
-                                 AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mpwl.id, mpwl.name
                 ) as tab6 ON(tab6.mpwl_id = mpwl.id)
                 left join
@@ -2329,9 +2332,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'platinum'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                 AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mp.id,mp.name
                 UNION ALL
                 -- TINH TRONG LUONG DIAMOND TRA VE
@@ -2360,9 +2363,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'platinum'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mp.id,mp.name
                 UNION ALL
                 -- TINH TRONG LUONG DIAMOND BE, MAT
@@ -2392,9 +2395,9 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'platinum'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mp.id, mp.name
                 ) as mrp
                 GROUP BY mrp.id

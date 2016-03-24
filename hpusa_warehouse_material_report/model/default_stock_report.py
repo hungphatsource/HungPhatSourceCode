@@ -1744,9 +1744,9 @@ class inventory_report(osv.osv):
                                  AND pp.metal_class = 'gold'
                                 
                                  --AND employee_id=1
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mpwl.id,mpwl.name) as tab1 ON(tab1.mpwl_id = mpwl.id)
                 left join ------------------- JOIN METAL RETURN -----------------------
                 (SELECT mp.id mrp_id , mp.name mrp_name,mpwl.id as mpwl_id,mpwl.name mpwl_name,
@@ -1776,9 +1776,9 @@ class inventory_report(osv.osv):
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'gold'
                                  --AND employee_id=1
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mp.id, mp.name ,mpwl.id,mpwl.name)
                 as tab2 ON(tab2.mpwl_id = mpwl.id)
 
@@ -1809,9 +1809,9 @@ class inventory_report(osv.osv):
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'gold'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mp.id,mp.name,mpwl.id, mpwl.name)
                 as tab3 ON(tab3.mpwl_id = mpwl.id)
 
@@ -1842,9 +1842,9 @@ class inventory_report(osv.osv):
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'gold'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mpwl.id, mpwl.name
                 ) as tab4 ON(tab4.mpwl_id = mpwl.id)
                 --- FINISH DELIVERY ---
@@ -1875,9 +1875,9 @@ class inventory_report(osv.osv):
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'gold'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                 AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mpwl.id, mpwl.name)
                 as tab5 ON(tab5.mpwl_id = mpwl.id)
                 --- FINISH RETURN ---
@@ -1907,10 +1907,11 @@ class inventory_report(osv.osv):
                                  product_product pp
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
-                                 AND pp.metal_class = 'gold'   
+                                 AND pp.metal_class = 'gold'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')   
                                  )
-                                 AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
+
                 GROUP BY mpwl.id, mpwl.name
                 ) as tab6 ON(tab6.mpwl_id = mpwl.id)
                 left join
@@ -1942,9 +1943,9 @@ class inventory_report(osv.osv):
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'gold'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                 AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mp.id,mp.name
                 UNION ALL
                 -- TINH TRONG LUONG DIAMOND TRA VE
@@ -1973,9 +1974,9 @@ class inventory_report(osv.osv):
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'gold'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mp.id,mp.name
                 UNION ALL
                 -- TINH TRONG LUONG DIAMOND BE, MAT
@@ -2004,9 +2005,9 @@ class inventory_report(osv.osv):
                                  WHERE mp.id = mpwl.production_id
                                  AND mp.product_id = pp.id
                                  AND pp.metal_class = 'gold'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
                                  )
-                                AND mpwl.date_planned >= to_date('%s','YYYY-MM-DD')
-                AND mpwl.date_planned < to_date('%s','YYYY-MM-DD')
                 GROUP BY mp.id, mp.name
                 ) as mrp
                 GROUP BY mrp.id
@@ -2046,9 +2047,9 @@ class inventory_report(osv.osv):
         if len(results)>=1:
             for result in results:
                 if(result['loss_24k']!=None):
-                    weight_loss += float(result['loss_24k'])
-                    loss_limit += float(result['loss_limit_24k'])
-                    loss_over += float(result['loss_over_24k'])
+                    weight_loss += round(float(result['loss_24k']or 0.0),3)
+                    loss_limit += round(float(result['loss_limit_24k']or 0.0),3)
+                    loss_over += round(float(result['loss_over_24k']or 0.0),3)
         
             arr.append({'weight_loss':weight_loss,
                         'loss_limit': loss_limit,
