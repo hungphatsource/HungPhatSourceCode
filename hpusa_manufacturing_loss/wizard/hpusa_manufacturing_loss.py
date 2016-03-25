@@ -1021,7 +1021,11 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                     sum_loss_limit_24k += round(float(item['loss_limit_24k'] or 0.0),3)
                     sum_loss_over_24k += round(float(item['loss_over_24k'] or 0.0),3)
                 sequence += 1
-                arr.append({
+                check = sum_metal_delivery + sum_metal_24k_delivery + sum_metal_return + sum_metal_24k_return +sum_diamond_delivery_ct +sum_diamond_delivery_gr 
+                +sum_diamond_return_ct +sum_diamond_return_gr + sum_finish_delivery+sum_finish_return+ sum_loss_weight + sum_loss+sum_loss_limit+sum_loss_over
+                +sum_loss_24k + sum_loss_limit_24k +sum_loss_over_24k
+                if  check :
+                    arr.append({
                                 'sequence':sequence,
                                 'employee_name': employee['employee_name'],
                                 'metal_delivery': sum_metal_delivery,
@@ -1502,7 +1506,11 @@ class wizard_hpusa_manufacturing_loss_report(osv.osv):
                             sum_loss_limit_24k_pt += round(float(item['loss_limit_24k'] or 0.0),3)
                             sum_loss_over_24k_pt += round(float(item['loss_over_24k'] or 0.0),3)
                     sequence += 1
-                    arr.append({
+                    check1 = sum_metal_delivery_pt + sum_metal_24k_delivery_pt + sum_metal_return_pt +sum_metal_24k_return_pt +sum_diamond_delivery_ct_pt
+                    +sum_diamond_delivery_gr_pt +sum_diamond_return_ct_pt +sum_diamond_return_gr_pt +sum_finish_delivery_pt +sum_finish_return_pt
+                    +sum_loss_weight_pt +sum_loss_pt +sum_loss_limit_pt +sum_loss_over_pt +sum_loss_24k_pt +sum_loss_limit_24k_pt +sum_loss_over_24k_pt
+                    if check1 :
+                        arr.append({
                                             'sequence':sequence,
                                             'employee_name': employee['employee_name'],
                                             'metal_delivery': sum_metal_delivery_pt,
