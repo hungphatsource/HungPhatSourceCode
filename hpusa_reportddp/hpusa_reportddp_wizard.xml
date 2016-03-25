@@ -100,6 +100,6 @@
             <field name="target">new</field>
         </record>
   
-  <menuitem action="action_reportddp_manager" id="manager"  name="WIP Report Manager" sequence="101" groups="base.group_user" parent="hpusa_manufacturing.hpusa_report"/>
+  <menuitem action="action_reportddp_manager" id="manager"  name="WIP Report Manager" sequence="101" groups="base.group_sale_manager" parent="hpusa_manufacturing.hpusa_report"/>
  </data>
 </openerp>
