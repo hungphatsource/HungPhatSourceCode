@@ -153,6 +153,8 @@ class inventory_report(osv.osv):
         gold_start = 0
         gold_in = 0
         gold_out =0
+        gold_in_pro = 0
+        gold_out_pro = 0
         gold_pending = 0 
         gold_finish = 0
         gold_ship_to_us = 0
@@ -177,8 +179,8 @@ class inventory_report(osv.osv):
         
         if result_production:
             gold_start+= float(result_production[0]['qty_24k'] or 0)
-            gold_in += float(result_production[0]['qty_in'] or 0)
-            gold_out += float(result_production[0]['qty_out'] or 0)
+            gold_in_pro += float(result_production[0]['qty_in'] or 0)
+            gold_out_pro += float(result_production[0]['qty_out'] or 0)
             
         #=== Get Manufacturing Order Loss ===#
             
@@ -186,7 +188,8 @@ class inventory_report(osv.osv):
         
         if mo_info:
             gold_finish += mo_info[0]['net_weight']
-            gold_pending = gold_out- gold_in -  gold_finish - weight_loss
+            # Gold Pending 
+            gold_pending = self.gold_pending(cr, uid)
             ship_infor =  self.export_manufacturing_loss_sumary_ship(cr,uid,date_start,date_end)
             gold_ship_to_us =  ship_infor[0]['net_weight']
             
@@ -2412,4 +2415,15 @@ class inventory_report(osv.osv):
                             })
         return arr
         
+    def gold_pending(self , cr, uid):
+        arr = []
+        gold_pending =0
+        sql = '''select mrp.metal_used as metal from mrp_production mrp where mrp.finished_weight = 0 and mrp.state = 'ready' or mrp.state = 'in_production' '''
+        print sql
+        cr.execute(sql)
+        result = cr.dictfetchall()
+        for item in result:
+            if item['metal']:
+                gold_pending += item['metal']
+        return gold_pending
 inventory_report()
