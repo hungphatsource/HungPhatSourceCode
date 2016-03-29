@@ -22,6 +22,7 @@ class wizard_hpusa_report(osv.osv_memory):
             
             # Hpusa configure 04-06-2015
             #'so_id': fields.many2one('sale.order','Sale Order'),
+           'tracking_number_id':fields.many2one('hpusa.trackingnumber', 'Tracking Number'),
             'so_id': fields.many2many('sale.order','sale_order_hpusa_report', 'wizard_hpusa_report_id', 'so_id','Sale Orders'),
             # Hpusa configure 04-06-2015
             'content':fields.html('Content')  ,
@@ -35,7 +36,7 @@ class wizard_hpusa_report(osv.osv_memory):
     }
     def action_print(self, cr, uid, ids, context = None):
         datas = {'ids': context.get('active_ids', [])}
-        res = self.read(cr, uid, ids, ['date_from','date_to','so_id','location_id'], context=context)
+        res = self.read(cr, uid, ids, ['date_from','date_to','tracking_number_id','so_id','location_id'], context=context)
         res = res and res[0] or {}
         datas['form'] = res
         name = self.pool.get('res.users').browse(cr, uid, uid).partner_id.name
@@ -53,7 +54,13 @@ class wizard_hpusa_report(osv.osv_memory):
            }
 
         if type == 'manufacturing_detail':
-            datas['line'] = self.print_manufacturing_detail(cr, uid, res['date_from'], res['date_to'],res['so_id'])
+            this = self.browse(cr, uid, ids,context = None)[0]
+            that = self.pool.get('sale.order.track').search(cr, uid, [('shipping_id','=',this.tracking_number_id.id )], context = None)
+            so_ids = self.pool.get('sale.order.track').browse( cr, uid, that, context = None)
+            so_id = []
+            for soid in so_ids:
+                so_id.append( soid.so_id.id)
+            datas['line'] = self.print_manufacturing_detail(cr, uid, res['date_from'], res['date_to'],so_id)
             return {
                 'type'          : 'ir.actions.report.xml',
                 'report_name'   : 'manufacturing_detail',
@@ -69,14 +76,19 @@ class wizard_hpusa_report(osv.osv_memory):
            }
 
         if type == 'v_invoice':
-            datas['line'] = self.manufacturing_v_invoice(cr, uid, res['date_from'], res['date_to'],res['so_id'])
+            datas['line'] = self.manufacturing_v_invoice(cr, uid, res['date_from'], res['date_to'],res['tracking_number_id'])
             return {
                 'type'          : 'ir.actions.report.xml',
                 'report_name'   : 'manufacturing_v_invoice',
                 'datas'         : datas,
            }
 
-    def manufacturing_v_invoice(self, cr, uid, date_form, date_to,so_id):
+    def manufacturing_v_invoice(self, cr, uid, date_form, date_to,tracking_number_id):
+        this = self.pool.get('sale.order.track').search(cr, uid, [('shipping_id','=',tracking_number_id[0] )], context = None)
+        so_ids = self.pool.get('sale.order.track').browse( cr, uid, this, context = None)
+        so_id = []
+        for soid in so_ids:
+            so_id.append( soid.so_id.id)
         pricelist_obj = self.pool.get('product.pricelist')
         product_uom = self.pool.get('product.uom')
         manufacturing = self.print_manufacturing_detail(cr, uid, date_form, date_to,so_id)

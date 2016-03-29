@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+    
+        <record id="view_tracking" model="ir.ui.view">
+            <field name="name">hpusa.trackingnumber</field>
+            <field name="model">hpusa.trackingnumber</field>
+            <field name="arch" type="xml">
+               <form version="7.0" string="Tracking number">
+                	<sheet>
+                		<group col  = "3">
+                	<h2>Number Track<field name="name"/></h2>
+                		</group>
+                		<group>
+                		<button   string="Tracking" type="object" class="oe_highlight"/>
+                		</group>
+                	<group>
+	                	<group>
+	                			<field name="create_date"/>
+		                        <field name="scheduled_date"/>
+		                        <field name="date_of_tranfer"/>
+		                        <field name="received_date"/>
+		                </group>
+		                <group>        
+		                        <field name="company"/>
+		                        <field name="delivery_method"/>
+		                        <field name="shipment_weight"/>
+		                        <field name="shipping_cost"/>
+		                        <field name="number_of_packages"/>
+		                        <field name="delivery_address"/>
+		                        <field name="received_address"/>
+		                        <field name="priority"/>
+		                        <field name="source_doccument"/>
+		                        
+		           		</group>	
+		           		
+               		</group> 
+               		<group>
+               		<notebook>
+		                        <page string="Product">
+		                        <field name="shipping_product">
+		                        <tree>
+			                        <field name = "so_id" String = "SO Name"></field>
+			                          <field name = "date_order" String = "Date"></field>
+			                            <field name = "partner_shipping" String = "Delivery Shipping"></field>
+			                              <field name = "customer_name" String = "Customer"></field>
+		                              </tree>
+		                                </field>
+		                       
+		                        </page>
+		                        </notebook>
+               		</group>
+              </sheet>
+                 <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+			</form>
+            </field>
+        </record>
+        
+     <record id="view_sale_track" model="ir.ui.view">
+            <field name="name">hpusa.trackingnumber</field>
+            <field name="model">sale.order.track</field>
+            <field name="arch" type="xml">
+               <form version="7.0" string="Sale Track">
+                	<sheet>
+                		
+		                <group>        
+		                     	<field name = "so_id" String = "SO Name" on_change = "onchange_data(so_id,context)"></field>
+			                          <field name = "date_order" String = "Date"></field>
+			                            <field name = "partner_shipping" String = "Delivery Shipping"></field>
+			                              <field name = "customer_name" String = "Customer"></field>
+		                        
+		           		</group>	
+		           		
+               		
+              </sheet>
+			</form>
+            </field>
+        </record>
+  <record id="tracking_tree_view" model="ir.ui.view">
+            <field name="name">tracking.routing.view</field>
+            <field name="model">hpusa.trackingnumber</field>
+            <field name="arch" type="xml">
+                <tree string="routing">
+                    <field name="name"/>
+	                 <field name="create_date"/>
+		                        <field name="scheduled_date"/>
+		                        <field name="date_of_tranfer"/>
+		                        <field name="received_date"/>
+		                        <field name="company"/>
+		                        <field name="delivery_method"/>
+		                        <field name="shipment_weight"/>
+		                        <field name="shipping_cost"/>
+		                        <field name="number_of_packages"/>
+		                        <field name="delivery_address"/>
+		                        <field name="received_address"/>
+		                        <field name="priority"/>
+		                        <field name="source_doccument"/>
+	            	
+                </tree>
+            </field>
+        </record>
+  		<record id="tracking_search_view" model="ir.ui.view">
+            <field name="name">tracking.routing.search</field>
+            <field name="model">hpusa.trackingnumber</field>
+            <field name="arch" type="xml">
+                <search string="routing">
+                    <field name="name" string="Routing" filter_domain="['|',('name','ilike',self),('code','ilike',self)]"/>
+                </search>
+            </field>
+        </record>
+         <!-- record model="ir.actions.act_window" id="hpusa_planning_action">
+        <field name="name">planning</field>
+        <field name="res_model">hpusa.manufacturing.planning</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">tree,form</field>
+    </record-->
+   <record id="hpusa_tracking_action" model="ir.actions.act_window">
+            <field name="name">Tracking</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">hpusa.trackingnumber</field>
+            <field name="view_type">form</field>
+             <field name="view_id" ref="tracking_tree_view"/>
+            <field name="search_view_id" ref="tracking_search_view"/>
+        </record >
+  <menuitem  id="tracking"  name="Tracking Number" sequence="10"  groups="base.group_user"/>
+ <menuitem  id="tracking_namber"  name="Tracking Number" sequence="1"  parent="hpusa_trackingnumber.tracking" groups="base.group_user"/>
+  <menuitem  action = "hpusa_tracking_action" id="hpusa_trackingnumber"  name="Tracking Number" sequence="12"  parent="hpusa_trackingnumber.tracking_namber" groups="base.group_user"/>
+ </data>
+</openerp>
