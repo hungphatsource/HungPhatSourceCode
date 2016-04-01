@@ -159,7 +159,9 @@ class wizard_hpusa_report(osv.osv_memory):
                 else:
                     sale_price = product_obj.list_price
                 setting_price = product_uom._compute_price(cr, uid, product_obj.uom_id.id, product_obj.setting_price, to_uom_id=uom[0])
-                standard_price = product_uom._compute_price(cr, uid, product_obj.uom_id.id, product_obj.standard_price, to_uom_id=uom[0])
+                # caculate Standar_price
+                if  product_obj.hp_type =='diamonds':
+                    standard_price = product_uom._compute_price(cr, uid, product_obj.uom_id.id, product_obj.standard_price, to_uom_id=uom[0])
                 
                 setting_price = currency_obj.compute(cr, uid,
                                     3, pricelist.currency_id.id,
@@ -185,8 +187,6 @@ class wizard_hpusa_report(osv.osv_memory):
                     item['gold_cost'] = ''
                 #item['price'] = str((product_obj.standard_price or 0.0) )
                 item['price'] = str(round((float(standard_price or 0.0)),2) )
-
-                item['total_amount'] =''
                 item['setting_price'] = str(setting_price or 0.0)
                 item['total_amount'] = str( round((float(standard_price or 0.0)) * (float(item['qty_real'] or 0.0)),2))           
                 item['total_setting'] = str(((setting_price or 0.0) * float(item['qty_real'] or 0.0)) )
@@ -195,8 +195,12 @@ class wizard_hpusa_report(osv.osv_memory):
                 item['cost_price'] = ''
                 #item['sale_price'] = ''
                 item['qty_bom']= self.get_bom_qty(cr, uid, parrent_product_id, product_obj.id, context=None)
-                cost_price+= round(float(item['total_amount']) + float(item['total_setting']),2)
-                sum_mrp_cost += round(float(item['total_amount']) + float(item['total_setting']),2)
+                if item['total_cost']:
+                    cost_price+= round(float(item['total_amount']) + float(item['total_setting'])+ float(item['total_cost']) ,2)
+                    sum_mrp_cost += round(float(item['total_amount']) + float(item['total_setting'])+ float(item['total_cost']) ,2)
+                else:
+                    cost_price+= round(float(item['total_amount']) + float(item['total_setting']) ,2)
+                    sum_mrp_cost += round(float(item['total_amount']) + float(item['total_setting']) ,2)
                 # hpusa 03-06-2015
                 
                 #item['cost_price'] = str(standard_price or 0.0)
