@@ -1,0 +1,297 @@
+<?xml version="1.0"?>
+<document filename="Trust Receipt Report.pdf">
+  <template pageSize="(842.0,595.0)" title="Trust Receipt Report" author="OpenERP S.A.(sales@openerp.com)" allowSplitting="20">
+    <pageTemplate id="first">
+      <frame id="first" x1="28.0" y1="28.0" width="800" height="539"/>
+    </pageTemplate>   
+  </template>
+  <stylesheet>
+   <blockTableStyle id="Table444">
+      
+      <blockBackground colorName="#EE4C8C" start="2,0" stop="2,0"/>
+     
+    </blockTableStyle>
+      <blockTableStyle id="Table1">
+	      <blockAlignment value="LEFT"/>
+	      <blockValign value="TOP"/>
+      </blockTableStyle>
+      
+      <blockTableStyle id="Table_Detail">
+            <blockAlignment value="LEFT"/>
+            <blockValign value="TOP"/>
+            
+            <blockValign value="BOTTOM" start="0,-1" stop="1,-1"/>
+            
+            <lineStyle kind="LINEBELOW" colorName="#cccccc" start="0,-1" stop="2,-1"/>
+       </blockTableStyle>
+      
+      <blockTableStyle id="Table12">
+	      <blockAlignment value="LEFT"/>
+	      <blockValign value="TOP"/>
+          <blockBackground colorName="#E1E1E1" start="0,0" stop="2,0"/>
+      </blockTableStyle>
+      
+      <blockTableStyle id="Table4">
+	      <blockAlignment value="LEFT"/>
+	      <blockValign value="TOP"/>
+          <lineStyle kind="LINEBEFORE" colorName="#000000" start="0,0" stop="15,-1"/>
+          <lineStyle kind="LINEAFTER" colorName="#000000" start="0,0" stop="15,-1"/>
+          <lineStyle kind="LINEABOVE" colorName="#000000" start="0,0" stop="15,-1"/>
+          <lineStyle kind="LINEBELOW" colorName="#000000" start="0,0" stop="15,-1"/>
+    </blockTableStyle>
+          <blockTableStyle id="Table3">
+	      <blockAlignment value="LEFT"/>
+	      <blockValign value="TOP"/>
+	      
+	      <lineStyle kind="LINEABOVE" colorName="#000000" start="0,0" stop="5,0"/>
+	
+    </blockTableStyle>
+	    <blockTableStyle id="Table44">
+          <blockAlignment  value="CENTER"/>
+          <blockValign value="MIDDLE"/>
+          <lineStyle kind="LINEBEFORE" colorName="#000000" start="0,0" stop="15,-1"/>
+          <lineStyle kind="LINEAFTER" colorName="#000000" start="0,0" stop="15,-1"/>
+          <lineStyle kind="LINEABOVE" colorName="#000000" start="0,0" stop="15,-1"/>
+          <lineStyle kind="LINEBELOW" colorName="#000000" start="0,0" stop="15,-1"/>
+          
+          <blockBackground colorName="#EE4C8C" start="0,0" stop="15,0"/>
+     
+    </blockTableStyle>
+    
+    <paraStyle name="Report_Body_Table_content_Center" textColor="#EE4C8C" fontName="DejaVuSerif" fontSize="13.0" leading="10" alignment="CENTER" spaceBefore="10.0" spaceAfter="10.0"/>
+    <paraStyle name="terp_tblheader_Details_Centre" fontName="Helvetica-Bold" textColor="#FFFFFF" fontSize="7.0" leading="11" alignment="CENTER" spaceBefore="0.0" spaceAfter="0.0"/>
+    <paraStyle name="terp_default_Bold_8" fontName="Helvetica-Bold" fontSize="8.0" leading="10" alignment="LEFT" spaceBefore="0.0" spaceAfter="0.0"/>
+    <paraStyle name="Report_Body_Table_content_Detail_Center"  textColor="#EE4C8C" fontName="DejaVuSerif" fontSize="13.0" leading="10" alignment="CENTER" spaceBefore="4.0" spaceAfter="8.0"/>
+    <paraStyle name="terp_default_8" fontName="Helvetica" fontSize="8.0" leading="10" alignment="LEFT" spaceBefore="0.0" spaceAfter="0.0"/>
+    <paraStyle name="terp_default_8_Right" fontName="Helvetica" fontSize="8.0" leading="10" alignment="RIGHT" spaceBefore="0.0" spaceAfter="0.0"/>
+    <paraStyle name="terp_default_8_Center" fontName="Helvetica" fontSize="9.0" leading="10" alignment="CENTER" spaceBefore="0.0" spaceAfter="0.0"/>
+    <paraStyle name="terp_tblheader_Details_Right" fontName="Helvetica-Bold" textColor="#FFFFFF" fontSize="8.0" leading="11" alignment="RIGHT" spaceBefore="0.0" spaceAfter="0.0"/>
+   
+  </stylesheet>
+    <story>
+        <para style="terp_default_1">[[ repeatIn(objects,'o') ]] </para>
+        <blockTable colWidths="550" style="Table1">
+            <tr>
+                <td>
+                    <para style="Report_Body_Table_content_Center">THÔNG BÁO HOA HỒNG CHO ĐẠI DIỆN ỦY QUYỀN VÀ CỘNG TÁC VIÊN<br/></para>
+                    <para style="Report_Body_Table_content_Detail_Center">[[ o.period_id.name ]]<br/></para>
+                </td>
+            </tr>
+        </blockTable>
+        
+        <para style="terp_default_1"><font color="white">s</font></para>
+        <blockTable colWidths="680" style="Table3">
+            <tr>
+                <td>
+                    <para style="Report_Body_Report_Sub_Title_Left_Bold"></para>
+                </td>
+            </tr>
+        </blockTable>
+        <blockTable colWidths="100,275,100,275" style="Table1">
+            <tr>
+                <td>
+                    <para style="terp_default_Bold_8">Tên ĐDUQ(CTV):</para>
+                </td>
+                <td>
+                    <para style="terp_default_Bold_8">[[ o.salesperson_id.partner_id.name ]]</para>
+                </td>
+                <td>
+                    <para style="terp_default_Bold_8">Thời gian bắt đầu:</para>
+                </td>
+                <td>
+                    <para style="terp_default_Bold_8">[[ o.period_id.date_start ]]</para>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <para style="terp_default_Bold_8">Mã số:</para>
+                </td>
+                <td>
+                    <para style="terp_default_Bold_8">[[ o.salesperson_id.code ]]</para>
+                </td>
+                <td>
+                    <para style="terp_default_Bold_8">Thời gian kết thúc:</para>
+                </td>
+                <td>
+                    <para style="terp_default_Bold_8">[[ o.period_id.date_stop ]]</para>
+                </td>
+            </tr>
+             <tr>
+                <td>
+                    <para style="terp_default_Bold_8">Phone:</para>
+                </td>
+                <td>
+                    <para style="terp_default_Bold_8">[[ o.salesperson_id.partner_id.phone ]]</para>
+                </td>
+                <td>
+                    <para style="terp_default_Bold_8"></para>
+                </td>
+                <td>
+                    <para style="terp_default_Bold_8"></para>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <para style="terp_default_Bold_8">Email:</para>
+                </td>
+                <td>
+                    <para style="terp_default_Bold_8">[[ o.salesperson_id.partner_id.email ]]</para>
+                </td>
+                <td>
+                    <para style="terp_default_Bold_8"></para>
+                </td>
+                <td>
+                    <para style="terp_default_Bold_8"></para>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <para style="terp_default_Bold_8">Địa chỉ:</para>
+                </td>
+                <td>
+                    <para style="terp_default_Bold_8">[[ o.salesperson_id.partner_id and o.salesperson_id.partner_id.street]]   [[ o.salesperson_id.partner_id and o.salesperson_id.partner_id.state_id.name]]   [[ o.salesperson_id.partner_id and o.salesperson_id.partner_id.country_id.name]]</para>
+                </td>
+                <td>
+                    <para style="terp_default_Bold_8"></para>
+                </td>
+                <td>
+                    <para style="terp_default_Bold_8"></para>
+                </td>
+            </tr>
+        </blockTable>
+     <para style="Report_Body_Table_content_Center"></para>
+     <blockTable colWidths="40,55.0,70.0,70.0,35,80.0,60,80.0,60.0,60,80,80,60" repeatRows="1" style="Table44">
+      <tr>
+        <td>
+          <para style="terp_tblheader_Details_Centre"><b>MÃ ĐƠN HÀNG</b></para>
+        </td>
+       
+       <td>
+          <para style="terp_tblheader_Details_Centre"><b>NGÀY MUA</b></para>
+        </td>
+       
+        <td>
+          <para style="terp_tblheader_Details_Centre"><b>MÃ SẢN PHẨM</b></para>
+        </td> 
+        <td>
+          <para style="terp_tblheader_Details_Centre"><b>TÊN SẢN PHẨM</b></para>
+        </td>  
+        <td>
+          <para style="terp_tblheader_Details_Centre"><b>SỐ LƯỢNG</b></para>
+        </td>  
+        <td>
+          <para style="terp_tblheader_Details_Centre"><b>ĐƠN GIÁ</b></para>
+        </td>  
+        <td>
+          <para style="terp_tblheader_Details_Centre"><b>GIẢM GIÁ</b></para>
+        </td>         
+        <td>
+          <para style="terp_tblheader_Details_Centre"><b>THÀNH TIỀN</b></para>
+        </td>
+       
+        <td>
+           <para style="terp_tblheader_Details_Centre"><b>HOA HỒNG CƠ BẢN</b></para>
+        </td>
+        <td>
+           <para style="terp_tblheader_Details_Centre"><b>HOA HỒNG KHÍCH LỆ</b></para>
+        </td>
+        <td>
+           <para style="terp_tblheader_Details_Centre"><b>ĐÃ THANH TOÁN</b></para>
+        </td>
+        <td>
+           <para style="terp_tblheader_Details_Centre"><b>CÔNG NỢ</b></para>
+        </td>
+        <td>
+           <para style="terp_tblheader_Details_Centre"><b>NGÀY HẾT HẠN TT</b></para>
+        </td>
+      </tr>
+    </blockTable>   
+    <section>
+        <para style="terp_default_1">[[repeatIn(o.worksheet_lines,'line')]]</para>
+     <blockTable colWidths="40,55.0,70.0,70.0,35,80.0,60,80.0,60.0,60,80,80,60" repeatRows="1" style="Table4">
+      <tr>
+        <td>
+          <para style="terp_default_8">[[ line.so.name ]] </para>
+        </td>
+       
+       <td>
+          <para style="terp_default_8">[[ line.so.date_order ]]</para>
+        </td>
+       
+        <td>
+          <para style="terp_default_8">[[ line.product_name.default_code ]] </para>
+        </td> 
+        <td>
+          <para style="terp_default_8">[[ line.product_name.name ]]</para>
+        </td>  
+        <td>
+          <para style="terp_default_8_Right">[[ line.product_quantity ]]</para>
+        </td>  
+        <td>
+          <para style="terp_default_8_Right">[[ line.invoice_amt ]]</para>
+        </td>  
+        <td>
+          <para style="terp_default_8_Right">[[ formatLang(line.discount or 0,digits=get_digits(dp='Account'))]]</para>
+        </td>         
+        <td>
+          <para style="terp_default_8_Right">[[ formatLang(line.amount or 0 ,digits=get_digits(dp='Account'))]]</para>
+        </td>
+       
+        <td>
+           <para style="terp_default_8_Right">[[ formatLang(line.commission_amt or 0 ,digits=get_digits(dp='Account'))]]</para>
+        </td>
+        <td>
+           <para style="terp_default_8_Right">[[ formatLang(line.adjust_amt  or 0,digits=get_digits(dp='Account'))]]</para>
+        </td>
+        <td>
+           <para style="terp_default_8_Right">[[ formatLang(line.invoice_id.amount_total - line.invoice_id.residual,digits=get_digits(dp='Account'))]]</para>
+        </td>
+        <td>
+           <para style="terp_default_8_Right">[[ formatLang(line.invoice_id.residual,digits=get_digits(dp='Account'))]]</para>
+        </td>
+        <td>
+           <para style="terp_default_8">[[ line.last_pay_date ]]</para>
+        </td>
+      </tr>
+    </blockTable>   
+    </section>
+    <para style="Report_Body_Table_content_Center"></para>
+    <blockTable colWidths="430,100,150,65" style="Table444">
+        <tr>
+            <td>
+                <para style="terp_default_8_Center"></para>
+            </td>
+            <td hieght="1cm">
+                <para style="terp_default_8_Center">Tổng hoa hồng</para>
+            </td>
+            <td>
+                <para style="terp_tblheader_Details_Right"> [[formatLang(o.amount_total, digits=get_digits(dp='Account'), currency_obj=company.currency_id) ]]</para>
+            </td>
+            <td>
+                <para style="terp_default_8_Center"></para>
+            </td>
+        </tr>
+    </blockTable>
+    <para style="Report_Body_Table_content_Center"></para>
+     <blockTable colWidths="375,375" style="Table1">
+        <tr>
+            <td>
+                <para style="terp_default_8_Center"><b>Hồ Chí Minh, Ngày ..... Tháng ...... Năm ......</b></para>
+            </td>
+            <td>
+               <para style="terp_default_8_Center"><b>Hồ Chí Minh, Ngày ..... Tháng ...... Năm ......</b></para>
+            </td>
+        </tr>
+         <tr>
+            <td>
+                <para style="terp_default_8_Center"><b>Người lập thông báo</b></para>
+            </td>
+            <td>
+               <para style="terp_default_8_Center"><b>Giám Đốc</b></para>
+            </td>
+        </tr>
+     </blockTable>
+    
+  </story>
+</document>
+

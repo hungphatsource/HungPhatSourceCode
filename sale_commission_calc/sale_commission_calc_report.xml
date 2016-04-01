@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+      <report header='True' auto="False" id="hpsua_report_commission" model="commission.worksheet" name="hpsua_report_commission"
+                rml="sale_commission_calc/report/notify_commission.rml" string="Notify Commission"
+                usage="default"/>
+                
+      <report id="commission_summary"
+            string="Commission Summary" 
+            model="sale.order" 
+            name="commission_summary" 
+            rml="sale_commission_calc/report/commission_summary.ods"
+            menu ="False"
+            header="False"/>
+            
+       <record model="ir.actions.report.xml" id="commission_summary">
+        	<field name="report_type">oo-ods</field>
+        </record>    
+        
+        <report id="liabilities"
+            string="Liabilities" 
+            model="sale.order" 
+            name="liabilities" 
+            rml="sale_commission_calc/report/liabilities.ods"
+            menu ="False"
+            header="False"/>
+            
+       <record model="ir.actions.report.xml" id="liabilities">
+        	<field name="report_type">oo-ods</field>
+        </record>         
+        
+        
+        <report id="commission_detail"
+            string="Commission Detail" 
+            model="sale.order" 
+            name="commission_detail" 
+            rml="sale_commission_calc/report/commission_detail.ods"
+            menu ="False"
+            header="False"/>
+            
+       <record model="ir.actions.report.xml" id="commission_detail">
+        	<field name="report_type">oo-ods</field>
+        </record>              
+                    
+    </data>
+</openerp>
