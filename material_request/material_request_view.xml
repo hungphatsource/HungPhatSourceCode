@@ -81,6 +81,6 @@
                 </p>
             </field>
         </record>
-        <menuitem id="material_request_menu" name="Material Request" parent="base.menu_product" action="action_material_request"/>
+        <menuitem id="material_request_menu" name="Material Request" parent="mrp.menu_mrp_bom" action="action_material_request"/>
     </data>
 </openerp>
