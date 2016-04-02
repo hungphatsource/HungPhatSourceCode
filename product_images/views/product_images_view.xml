@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openerp>
+    <data>
+	
+        <record id="view_product_image_form" model="ir.ui.view">
+            <field name="name">product.images.form</field>
+            <field name="model">product.images</field>
+            <field name="arch" type="xml">
+                <form  version="7.0" string="Product Images">
+                <group>
+	                	<group>
+	                			<style>
+	                			img[name = "file"]{
+	                			width : 500px;
+	                			height : 280px;
+	                			margin-left: 0px;
+	                			}
+	                			</style>
+	                		<input type="button" class="oe_highlight" value="Zoom In" onclick="changesizein()"></input >
+	                		
+	                		<script>
+	                			function changesizein(){
+	                				var height = $( ".oe_form_field_image" ).find( "[name= 'file']" ).height();
+	                				var width =  $( ".oe_form_field_image" ).find( "[name= 'file']" ).width();
+	                				var heights = height +20;
+	                				var widths =  width +20;
+	                				$( ".oe_form_field_image" ).find( "[name= 'file']" ).css({"width":widths, "height": heights});
+	                				
+	                				
+								}
+								function changesizeout(){
+									var height = $( ".oe_form_field_image" ).find( "[name= 'file']" ).height();
+	                				var width =  $( ".oe_form_field_image" ).find( "[name= 'file']" ).width();
+	                				var heights = height - 20;
+	                				var widths =  width - 20;
+	                				$( ".oe_form_field_image" ).find( "[name= 'file']" ).css({"width": widths, "height": heights });
+								}
+	                		</script>
+		                </group>
+		                <group>
+		                <input type="button" class="oe_highlight" value="Zoom Out" onclick="changesizeout()"></input >
+		                </group>
+		              
+               		</group> 
+                    <notebook colspan="4">
+                        <page string="Image">
+                            <group col="6" colspan="4">
+                                <field name="name" colspan="2" />
+                                <field name="extension" colspan="2" />
+                                <field name="link" colspan="2" />
+                            </group>
+                            <group attrs="{'invisible': [('link', '=', False)]}" colspan="4">
+                                <field name="url" colspan="4" widget="url"/>
+                            </group>
+                            <group>
+                                <field name="file" widget="image" nolabel="1" filename="name"
+                                    colspan="4" attrs="{'readonly': [('link', '=', True)]}"/>
+                            </group>
+                        </page>
+                        <page string="Comments">
+                            <group>
+                                <field name="comments" nolabel="1" colspan="4" />
+                        </group>
+                        </page>
+                    </notebook>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_product_image_tree" model="ir.ui.view">
+            <field name="name">product.images.tree</field>
+            <field name="model">product.images</field>
+            <field name="arch" type="xml">
+                <tree string="Product Images">
+                    <field name="name" select="1" />
+                    <field name="comments" select="2" />
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_product_form_img_inh" model="ir.ui.view">
+            <field name="name">product.product.images</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_normal_form_view" />
+            <field name="arch" type="xml">
+                <xpath expr="/form/sheet/notebook" position="inside">
+                    <page string="Images">
+                        <field name="image_ids" nolabel="1" />
+                    </page>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</openerp>
