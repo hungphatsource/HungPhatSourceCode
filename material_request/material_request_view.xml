@@ -8,7 +8,7 @@
             <field name="arch" type="xml">
                 <form string="Person" version="7.0">
                     <header>
-                        <button name="action_button_send_to_manager" type="object" string="Send to manager" states="draft" class="oe_highlight"  groups="base.group_sale_manager"/>
+                        <button name="action_button_send_to_manager" type="object" string="Send to manager" states="draft" class="oe_highlight"  groups="base.group_user"/>
                         <button name="action_button_transfer" type="object" states="waiting" string="Transfer" class="oe_highlight" groups="base.group_user"/>
                         <button name="action_button_set_to_draft" type="object" string="Set to Draft" states="waiting"  groups="base.group_user"/>
                         <field name="state" widget="statusbar" statusbar_visible="draft,waiting,done" />
