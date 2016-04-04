@@ -179,8 +179,8 @@ class inventory_report(osv.osv):
         
         if result_production:
             gold_start+= float(result_production[0]['qty_24k'] or 0)
-            gold_in_pro += float(result_production[0]['qty_in'] or 0)
-            gold_out_pro += float(result_production[0]['qty_out'] or 0)
+            gold_in += float(result_production[0]['qty_in'] or 0)
+            gold_out += float(result_production[0]['qty_out'] or 0)
             
         #=== Get Manufacturing Order Loss ===#
             
