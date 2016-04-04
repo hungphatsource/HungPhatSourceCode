@@ -125,8 +125,7 @@
              <field name="view_id" ref="tracking_tree_view"/>
             <field name="search_view_id" ref="tracking_search_view"/>
         </record >
-  <menuitem  id="tracking"  name="Tracking Number" sequence="10"  groups="base.group_user"/>
- <menuitem  id="tracking_namber"  name="Tracking Number" sequence="1"  parent="hpusa_trackingnumber.tracking" groups="base.group_user"/>
-  <menuitem  action = "hpusa_tracking_action" id="hpusa_trackingnumber"  name="Tracking Number" sequence="12"  parent="hpusa_trackingnumber.tracking_namber" groups="base.group_user"/>
+
+  <menuitem  action = "hpusa_tracking_action" id="hpusa_trackingnumber"  name="Tracking Number" sequence="12"  parent="stock.menu_stock_warehouse_mgmt" groups="base.group_user"/>
  </data>
 </openerp>

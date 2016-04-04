@@ -38,7 +38,8 @@
     'category': 'HPUSA module', # i.e a technical module, not shown in Application install menu
     'url': '',
     'update_xml': [
-        'model/hpusa_trackingnumber.xml'
+        'model/hpusa_trackingnumber.xml',
+        'model/inherit_sale.xml',
              ],
     'installable': True,
     'auto_install': False,

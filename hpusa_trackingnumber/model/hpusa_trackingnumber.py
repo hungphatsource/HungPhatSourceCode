@@ -49,3 +49,9 @@ class inherit_sale(osv.osv):
   
         return {}
 inherit_sale()
+class inherit_sale_order(osv.osv):
+    _inherit  = "product.product"
+    _columns ={
+               'related_product':fields.many2one('product.product','Relate Product'),
+               }
+inherit_sale_order()
