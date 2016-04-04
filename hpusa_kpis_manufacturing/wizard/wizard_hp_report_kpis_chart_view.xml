@@ -9,11 +9,17 @@
             <field name="arch" type="xml">
                 <form string="Report" version="7.0">
 	                <group col="6">
-	                	<field name="option" colspan="3"/>
-	                	<newline/>
-	                	<field name="month" attrs="{'invisible': [('option','!=','month')],'required': [('option','=','month')]}" string="Month" colspan="3"/>
-	                	<field name="month_from" attrs="{'invisible': [('option','!=','year')],'required': [('option','=','year')]}" colspan="3"/>
-	                	<field name="month_to" attrs="{'invisible': [('option','!=','year')],'required': [('option','=','year')]}" colspan="3"/>
+                        <group col="3">
+                            <field name="option" colspan="3"/>
+                            <field name="type_report" colspan="3"/>
+                            <field name="employee_id" attrs="{'invisible': [('type_report','!=','productivity_worker')],'required': [('type_report','=','productivity_worker')]}" colspan="3"/>
+                        </group>
+	                	<group col="3">
+                            <field name="month" attrs="{'invisible': [('option','!=','month')],'required': [('option','=','month')]}" string="Month" colspan="3"/>
+                            <field name="month_from" attrs="{'invisible': [('option','!=','year')],'required': [('option','=','year')]}" colspan="3"/>
+                            <field name="month_to" attrs="{'invisible': [('option','!=','year')],'required': [('option','=','year')]}" colspan="3"/>
+                        </group>
+	                	
 	                </group>    
                 	<footer>
                       <button name="action_view_chart" string="View chart" type="object" class="oe_highlight"/>
@@ -24,19 +30,7 @@
             </field>
         </record>
         
-        <record id="wizard_hp_report_chart_kpis_3d" model="ir.ui.view">
-            <field name="name">wizard.hp.report.chart.kpis.3d.form</field>
-            <field name="model">wizard.hp.report.chart.kpis.3d</field>
-            <field name="inherit_id" ref="wizard_hp_report_chart_kpis"/>
-            <field name="arch" type="xml">
-                <field name="option" colspan="3" position="before">
-               		 <field name="type_report" colspan="3"/>
-               		 <field name="employee_id" attrs="{'invisible': [('type_report','!=','productivity_worker')],'required': [('type_report','=','productivity_worker')]}" colspan="3"/>
-	                 <newline/>
-                </field>
-            </field>
-        </record>
-        
+
         <record id="action_hpusa_report_chart_kpis_3d" model="ir.actions.act_window">
             <field name="name">Report</field>
             <field name="type">ir.actions.act_window</field>
@@ -48,9 +42,10 @@
         <record id="action_hpusa_report_chart_kpis_3d_form" model="ir.actions.act_window.view">
             <field eval="1" name="sequence"/>
             <field name="view_mode">form</field>
-            <field name="view_id" ref="wizard_hp_report_chart_kpis_3d"/>
+            <field name="view_id" ref="wizard_hp_report_chart_kpis"/>
             <field name="act_window_id" ref="action_hpusa_report_chart_kpis_3d"/>
         </record>
+        
         <menuitem id="menu_action_hpusa_report_chart_kpis_3d" name="3D Design Chart" parent="hpusa_report_chart_kpis" action="action_hpusa_report_chart_kpis_3d"  sequence="1"/>
 
 		
@@ -71,18 +66,7 @@
         <menuitem id="menu_action_hpusa_report_chart_kpis_casting" name="Casting Chart" parent="hpusa_report_chart_kpis" action="action_hpusa_report_chart_kpis_casting"  sequence="2"/>
         
         
-        <record id="wizard_hp_report_chart_kpis_assembling" model="ir.ui.view">
-            <field name="name">wizard.hp.report.chart.kpis.assembling.form</field>
-            <field name="model">wizard.hp.report.chart.kpis.assembling</field>
-            <field name="inherit_id" ref="wizard_hp_report_chart_kpis"/>
-            <field name="arch" type="xml">
-                <field name="option" colspan="3" position="before">
-               		 <field name="type_report" colspan="3"/>
-	                 <newline/>
-                </field>
-            </field>
-        </record>
-        
+
         <record id="action_hpusa_report_chart_kpis_assembling" model="ir.actions.act_window">
             <field name="name">Report</field>
             <field name="type">ir.actions.act_window</field>
@@ -94,22 +78,12 @@
         <record id="action_hpusa_report_chart_kpis_assembling_form" model="ir.actions.act_window.view">
             <field eval="1" name="sequence"/>
             <field name="view_mode">form</field>
-            <field name="view_id" ref="wizard_hp_report_chart_kpis_assembling"/>
+            <field name="view_id" ref="wizard_hp_report_chart_kpis"/>
             <field name="act_window_id" ref="action_hpusa_report_chart_kpis_assembling"/>
         </record>
         <menuitem id="menu_action_hpusa_report_chart_kpis_assembling" name="Assembling Chart" parent="hpusa_report_chart_kpis" action="action_hpusa_report_chart_kpis_assembling"  sequence="3"/>
         
-        <record id="wizard_hp_report_chart_kpis_setting" model="ir.ui.view">
-            <field name="name">wizard.hp.report.chart.kpis.setting.form</field>
-            <field name="model">wizard.hp.report.chart.kpis.setting</field>
-            <field name="inherit_id" ref="wizard_hp_report_chart_kpis"/>
-            <field name="arch" type="xml">
-                <field name="option" colspan="3" position="before">
-               		 <field name="type_report" colspan="3"/>
-	                 <newline/>
-                </field>
-            </field>
-        </record>
+
         
         <record id="action_hpusa_report_chart_kpis_setting" model="ir.actions.act_window">
             <field name="name">Report</field>
@@ -122,7 +96,7 @@
         <record id="action_hpusa_report_chart_kpis_setting_form" model="ir.actions.act_window.view">
             <field eval="1" name="sequence"/>
             <field name="view_mode">form</field>
-            <field name="view_id" ref="wizard_hp_report_chart_kpis_setting"/>
+            <field name="view_id" ref="wizard_hp_report_chart_kpis"/>
             <field name="act_window_id" ref="action_hpusa_report_chart_kpis_setting"/>
         </record>
         <menuitem id="menu_action_hpusa_report_chart_kpis_setting" name="Setting Chart" parent="hpusa_report_chart_kpis" action="action_hpusa_report_chart_kpis_setting"  sequence="4"/>

@@ -23,6 +23,14 @@ class wizard_hp_report_chart_kpis(osv.osv_memory):
         'month': fields.many2one('account.period', 'Month'),
         'month_from': fields.many2one('account.period', 'Month From'),
         'month_to': fields.many2one('account.period', 'Month To'),
+
+        'type_report': fields.selection([
+                    ('synthetic', 'Synthetic chart'),
+                    ('productivity', 'Productivity chart'),
+                    ('productivity_worker', 'Productivity chart of worker'),
+                    ('compare', 'Comparing synthesis workers'),
+                    ], 'Chart Type',select=True,required=True),
+        'employee_id': fields.many2one('hr.employee', 'Worker'),
      }
     _defaults={
               'option': 'month'
@@ -34,15 +42,7 @@ class wizard_hp_report_chart_kpis_3d(osv.osv_memory):
     _name = "wizard.hp.report.chart.kpis.3d"
     _table = "wizard_hp_report_chart_kpis"
     _inherit = "wizard.hp.report.chart.kpis" 
-    _columns = {
-        'type_report': fields.selection([
-                    ('synthetic', 'Synthetic chart'),
-                    ('productivity', 'Productivity chart'),
-                    ('productivity_worker', 'Productivity chart of worker'),
-                    ('compare', 'Comparing synthesis workers'),
-                    ], 'Chart Type',select=True,required=True),
-        'employee_id': fields.many2one('hr.employee', 'Worker'),
-    }
+
     def action_view_chart(self, cr, uid, ids, context):
         mod_obj = self.pool.get('ir.model.data')
         act_obj = self.pool.get('ir.actions.act_window')
@@ -196,52 +196,149 @@ class wizard_hp_report_chart_kpis_casting(osv.osv_memory):
     _table = "wizard_hp_report_chart_kpis"
     _inherit = "wizard.hp.report.chart.kpis" 
     
+
     def action_view_chart(self, cr, uid, ids, context):
         obj = self.browse(cr, uid, ids[0], context)
-        _casting_ids = self.pool.get('hp.kpis.view.chart.casting').search(cr, uid, [])
-        if(_casting_ids):
-            self.pool.get('hp.kpis.view.chart.casting').unlink(cr, uid, _casting_ids)
-        if(obj.option == 'month'):
-            date_to = datetime.strptime(obj.month.date_start, '%Y-%m-%d')
-            for i in range(1, 5):
-                #tinh ngay cua tung tuan
-                if(i == 1):
-                    date_from =  date_to    
-                else:
-                    date_from =  date_to + relativedelta(days=1)
-                date_to = date_from + relativedelta(days=6)
-                print date_from, date_to
-                #get report 3d line
-                _casting_report_ids = self.pool.get('hpusa.casting.report.line').search(cr, uid, [('parent_id.report_date','>=',date_from),('parent_id.report_date','<=',date_to),('parent_id.state','=','confirmed')])
-                point = 0
-                qty = 0
-                for _casting_report_id in _casting_report_ids:
-                    line =  self.pool.get('hpusa.casting.report.line').browse(cr, uid, _casting_report_id)
-                    point += line.point
-                    qty += line.complete
-                self.pool.get('hp.kpis.view.chart.casting').create(cr, uid, {'name': 'Week '+str(i),'point': point, 'quantity': qty})
-        else:
-            #get month list
-            month_ids = self.pool.get('account.period').search(cr, uid, [('date_start','>=',obj.month_from.date_start),('date_stop','<=',obj.month_to.date_stop)])
-            for i in month_ids:
-                # month
-                month = self.pool.get('account.period').browse(cr, uid, i, context)
-                if month.date_start != month.date_stop:
+        #open action
+        mod_obj = self.pool.get('ir.model.data')
+        act_obj = self.pool.get('ir.actions.act_window')
+        if obj.type_report == 'synthetic':
+            _casting_ids = self.pool.get('hp.kpis.view.chart.casting').search(cr, uid, [])
+            if(_casting_ids):
+                self.pool.get('hp.kpis.view.chart.casting').unlink(cr, uid, _casting_ids)
+            if(obj.option == 'month'):
+                date_to = datetime.strptime(obj.month.date_start, '%Y-%m-%d')
+                for i in range(1, 5):
+                    #tinh ngay cua tung tuan
+                    if(i == 1):
+                        date_from =  date_to    
+                    else:
+                        date_from =  date_to + relativedelta(days=1)
+                    date_to = date_from + relativedelta(days=6)
+                    print date_from, date_to
                     #get report 3d line
-                    _casting_report_ids = self.pool.get('hpusa.casting.report.line').search(cr, uid, [('parent_id.report_date','>=',month.date_start),('parent_id.report_date','<=',month.date_stop),('parent_id.state','=','confirmed')])
+                    _casting_report_ids = self.pool.get('hpusa.casting.report.line').search(cr, uid, [('parent_id.report_date','>=',date_from),('parent_id.report_date','<=',date_to),('parent_id.state','=','confirmed')])
                     point = 0
                     qty = 0
                     for _casting_report_id in _casting_report_ids:
                         line =  self.pool.get('hpusa.casting.report.line').browse(cr, uid, _casting_report_id)
                         point += line.point
                         qty += line.complete
-                    self.pool.get('hp.kpis.view.chart.casting').create(cr, uid, {'name': month.name,'point': point, 'quantity': qty})
+                    self.pool.get('hp.kpis.view.chart.casting').create(cr, uid, {'name': 'Week '+str(i),'point': point, 'quantity': qty})
+            else:
+                #get month list
+                month_ids = self.pool.get('account.period').search(cr, uid, [('date_start','>=',obj.month_from.date_start),('date_stop','<=',obj.month_to.date_stop)])
+                for i in month_ids:
+                    # month
+                    month = self.pool.get('account.period').browse(cr, uid, i, context)
+                    if month.date_start != month.date_stop:
+                        #get report 3d line
+                        _casting_report_ids = self.pool.get('hpusa.casting.report.line').search(cr, uid, [('parent_id.report_date','>=',month.date_start),('parent_id.report_date','<=',month.date_stop),('parent_id.state','=','confirmed')])
+                        point = 0
+                        qty = 0
+                        for _casting_report_id in _casting_report_ids:
+                            line =  self.pool.get('hpusa.casting.report.line').browse(cr, uid, _casting_report_id)
+                            point += line.point
+                            qty += line.complete
+                        self.pool.get('hp.kpis.view.chart.casting').create(cr, uid, {'name': month.name,'point': point, 'quantity': qty})
+            res = mod_obj.get_object_reference(cr, uid, 'hpusa_kpis_manufacturing', 'action_hp_kpis_view_chart_casting_graph')
+
+        elif obj.type_report == 'productivity' or obj.type_report == 'productivity_worker':
+            _casting_ids = self.pool.get('hp.kpis.view.chart.casting.productivity').search(cr, uid, [])
+            if(_casting_ids):
+                self.pool.get('hp.kpis.view.chart.casting.productivity').unlink(cr, uid, _casting_ids)
+            if obj.option == 'month':
+                date_to = datetime.strptime(obj.month.date_start, '%Y-%m-%d')
+                for i in range(1, 5):
+                    #khoi tao cot cho moi tuan
+                    self.pool.get('hp.kpis.view.chart.casting.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'1', 'point': 0, 'quantity': 0})
+                    self.pool.get('hp.kpis.view.chart.casting.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'2', 'point': 0, 'quantity': 0})
+                    self.pool.get('hp.kpis.view.chart.casting.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'3', 'point': 0, 'quantity': 0})
+                    self.pool.get('hp.kpis.view.chart.casting.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'4', 'point': 0, 'quantity': 0})
+                    #tinh ngay cua tung tuan
+                    if i == 1:
+                        date_from =  date_to  
+                        date_to = date_from + relativedelta(days=6)
+                    else:
+                        date_from =  date_to + relativedelta(days=1)
+                    if i == 4:
+                        date_to = obj.month.date_stop
+                    elif i !=1 :
+                        date_to = date_from + relativedelta(days=7)
+                    #get report 3d line
+                    if(not obj.employee_id):
+                        _casting_report_ids = self.pool.get('hpusa.casting.report.line').search(cr, uid, [('parent_id.report_date','>=',date_from),('parent_id.report_date','<=',date_to),('parent_id.state','=','confirmed')])
+                    else:
+                        _casting_report_ids = self.pool.get('hpusa.casting.report.line').search(cr, uid, [('parent_id.report_date','>=',date_from),('parent_id.report_date','<=',date_to),('worker','=',obj.employee_id.id),('parent_id.state','=','confirmed')])
+                    for _casting_report_id in _casting_report_ids: 
+                        _casting_report = self.pool.get('hpusa.casting.report.line').browse(cr, uid, _casting_report_id)
+                        if _casting_report.product_id.casting_times:
+                            times = _casting_report.product_id.casting_times.name
+                            if times > 3:
+                                self.pool.get('hp.kpis.view.chart.casting.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'4', 'point': _casting_report.point, 'quantity': 1 * _casting_report.complete})
+                            else:
+                                self.pool.get('hp.kpis.view.chart.casting.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type': str(times), 'point': _casting_report.point, 'quantity': 1 * _casting_report.complete})
+            else:
+                month_ids = self.pool.get('account.period').search(cr, uid, [('date_start','>=',obj.month_from.date_start),('date_stop','<=',obj.month_to.date_stop)])
+                for i in month_ids:
+                    # month
+                    month = self.pool.get('account.period').browse(cr, uid, i, context)
+                    if month.date_start != month.date_stop:
+                        self.pool.get('hp.kpis.view.chart.casting.productivity').create(cr, uid, {'name': month.name, 'type':'1', 'point': 0, 'quantity': 0})
+                        self.pool.get('hp.kpis.view.chart.casting.productivity').create(cr, uid, {'name': month.name, 'type':'2', 'point': 0, 'quantity': 0})
+                        self.pool.get('hp.kpis.view.chart.casting.productivity').create(cr, uid, {'name': month.name, 'type':'3', 'point': 0, 'quantity': 0})
+                        self.pool.get('hp.kpis.view.chart.casting.productivity').create(cr, uid, {'name': month.name, 'type':'4', 'point': 0, 'quantity': 0})
+                        #get report 3d line
+                        _casting_report_ids = self.pool.get('hpusa.casting.report.line').search(cr, uid, [('parent_id.report_date','>=',month.date_start),('parent_id.report_date','<=',month.date_stop),('parent_id.state','=','confirmed')])
+                        for _casting_report_id in _casting_report_ids: 
+                            _casting_report = self.pool.get('hpusa.casting.report.line').browse(cr, uid, _casting_report_id)
+                            if _casting_report.product_id._casting_design_times:
+                                times = _casting_report.product_id._casting_design_times.name
+                                if times > 3:
+                                    self.pool.get('hp.kpis.view.chart.casting.productivity').create(cr, uid, {'name': month.name, 'type':'4', 'point': _casting_report.point, 'quantity': 1 * _casting_report.complete})
+                                else:
+                                    self.pool.get('hp.kpis.view.chart.casting.productivity').create(cr, uid, {'name': month.name, 'type': str(times), 'point': _casting_report.point, 'quantity': 1 * _casting_report.complete})        
+            
+            res = mod_obj.get_object_reference(cr, uid, 'hpusa_kpis_manufacturing', 'action_hp_kpis_view_chart_casting_productivity_graph')
+
+        elif obj.type_report == 'compare':
+            _casting_ids = self.pool.get('hp.kpis.view.chart.casting.compare').search(cr, uid, [])
+            if(_casting_ids):
+                self.pool.get('hp.kpis.view.chart.casting.compare').unlink(cr, uid, _casting_ids)
+            if obj.option == 'month':
+                date_to = datetime.strptime(obj.month.date_start, '%Y-%m-%d')
+                for i in range(1, 5):
+                    #tinh ngay cua tung tuan
+                    if i == 1:
+                        date_from =  date_to  
+                        date_to = date_from + relativedelta(days=6)
+                    else:
+                        date_from =  date_to + relativedelta(days=1)
+                    if i == 4:
+                        date_to = obj.month.date_stop
+                    elif i !=1 :
+                        date_to = date_from + relativedelta(days=7)
+                    #get report 3d line
+                    _casting_report_ids = self.pool.get('hpusa.casting.report.line').search(cr, uid, [('parent_id.report_date','>=',date_from),('parent_id.report_date','<=',date_to),('parent_id.state','=','confirmed')])
+                    for _casting_report_id in _casting_report_ids:
+                        _casting_report = self.pool.get('hpusa.casting.report.line').browse(cr, uid, _casting_report_id)
+                        self.pool.get('hp.kpis.view.chart.casting.compare').create(cr, uid, {'name': 'Week '+str(i),'employee_id':_casting_report.worker.id,'point': _casting_report.point, 'quantity': 1 * _casting_report.complete})
                     
-        #open action
-        mod_obj = self.pool.get('ir.model.data')
-        act_obj = self.pool.get('ir.actions.act_window')
-        
-        res = mod_obj.get_object_reference(cr, uid, 'hpusa_kpis_manufacturing', 'action_hp_kpis_view_chart_casting_graph')
+            else:
+                #get month list
+                month_ids = self.pool.get('account.period').search(cr, uid, [('date_start','>=',obj.month_from.date_start),('date_stop','<=',obj.month_to.date_stop)])
+                for i in month_ids:
+                    # month
+                    month = self.pool.get('account.period').browse(cr, uid, i, context)
+                    if month.date_start != month.date_stop:
+                        #get report 3d line
+                        _casting_report_ids = self.pool.get('hpusa.casting.report.line').search(cr, uid, [('parent_id.report_date','>=',month.date_start),('parent_id.report_date','<=',month.date_stop),('parent_id.state','=','confirmed')])
+                        for _casting_report_id in _casting_report_ids:
+                            _casting_report = self.pool.get('hpusa.casting.report.line').browse(cr, uid, _casting_report_id)
+                            self.pool.get('hp.kpis.view.chart.casting.compare').create(cr, uid, {'name': month.name,'employee_id':_casting_report.worker.id,'point': _casting_report.point, 'quantity': 1 * _casting_report.complete})    
+            #open action
+            res = mod_obj.get_object_reference(cr, uid, 'hpusa_kpis_manufacturing', 'action_hp_kpis_view_chart_casting_compare_graph')
+
         id = res and res[1] or False
         result = act_obj.read(cr, uid, [id], context=context)[0]        
         result['target'] = 'current' 
@@ -253,12 +350,8 @@ class wizard_hp_report_chart_kpis_assembling(osv.osv_memory):
     _name = "wizard.hp.report.chart.kpis.assembling"
     _table = "wizard_hp_report_chart_kpis"
     _inherit = "wizard.hp.report.chart.kpis" 
-    _columns = {
-        'type_report': fields.selection([
-                    ('synthetic', 'Synthetic chart'),
-                    ('compare', 'Comparing synthesis workers'),
-                    ], 'Chart Type',select=True,required=True),
-    }
+
+
     def action_view_chart(self, cr, uid, ids, context):
         obj = self.browse(cr, uid, ids[0], context)
         mod_obj = self.pool.get('ir.model.data')
@@ -308,6 +401,85 @@ class wizard_hp_report_chart_kpis_assembling(osv.osv_memory):
             #open action
             res = mod_obj.get_object_reference(cr, uid, 'hpusa_kpis_manufacturing', 'action_hp_kpis_view_chart_assembling_graph')
             
+        elif obj.type_report == 'productivity' or obj.type_report == 'productivity_worker':
+            _assembling_ids = self.pool.get('hp.kpis.view.chart.assembling.productivity').search(cr, uid, [])
+            if(_assembling_ids):
+                self.pool.get('hp.kpis.view.chart.assembling.productivity').unlink(cr, uid, _assembling_ids)
+            if obj.option == 'month':
+                date_to = datetime.strptime(obj.month.date_start, '%Y-%m-%d')
+                for i in range(1, 5):
+                    #khoi tao cot cho moi tuan
+                    self.pool.get('hp.kpis.view.chart.assembling.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'1', 'point': 0, 'quantity': 0})
+                    self.pool.get('hp.kpis.view.chart.assembling.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'2', 'point': 0, 'quantity': 0})
+                    self.pool.get('hp.kpis.view.chart.assembling.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'3', 'point': 0, 'quantity': 0})
+                    self.pool.get('hp.kpis.view.chart.assembling.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'4', 'point': 0, 'quantity': 0})
+                    self.pool.get('hp.kpis.view.chart.assembling.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'5', 'point': 0, 'quantity': 0})
+                    self.pool.get('hp.kpis.view.chart.assembling.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'6', 'point': 0, 'quantity': 0})
+
+                    #tinh ngay cua tung tuan
+                    if i == 1:
+                        date_from =  date_to  
+                        date_to = date_from + relativedelta(days=6)
+                    else:
+                        date_from =  date_to + relativedelta(days=1)
+                    if i == 4:
+                        date_to = obj.month.date_stop
+                    elif i !=1 :
+                        date_to = date_from + relativedelta(days=7)
+                    #get report 3d line
+                    if(not obj.employee_id):
+                        _assembling_report_ids = self.pool.get('hpusa.assembling.report.line').search(cr, uid, [('parent_id.report_date','>=',date_from),('parent_id.report_date','<=',date_to),('parent_id.state','=','confirmed')])
+                    else:
+                        _assembling_report_ids = self.pool.get('hpusa.assembling.report.line').search(cr, uid, [('parent_id.report_date','>=',date_from),('parent_id.report_date','<=',date_to),('worker','=',obj.employee_id.id),('parent_id.state','=','confirmed')])
+                    for _assembling_report_id in _assembling_report_ids: 
+                        _assembling_report = self.pool.get('hpusa.assembling.report.line').browse(cr, uid, _assembling_report_id)
+                        if _assembling_report.product_id.ass_difficulty_level:
+                            level = _assembling_report.product_id.ass_difficulty_level.name
+                            if level == 'I':
+                                self.pool.get('hp.kpis.view.chart.assembling.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'1', 'point': _assembling_report.point, 'quantity': 1 * _assembling_report.complete})
+                            elif level == 'II':
+                                self.pool.get('hp.kpis.view.chart.assembling.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'2', 'point': _assembling_report.point, 'quantity': 1 * _assembling_report.complete})
+                            elif level == 'III':
+                                self.pool.get('hp.kpis.view.chart.assembling.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'3', 'point': _assembling_report.point, 'quantity': 1 * _assembling_report.complete})
+                            elif level == 'IV':
+                                self.pool.get('hp.kpis.view.chart.assembling.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'4', 'point': _assembling_report.point, 'quantity': 1 * _assembling_report.complete})
+                            elif level == 'V':
+                                self.pool.get('hp.kpis.view.chart.assembling.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'5', 'point': _assembling_report.point, 'quantity': 1 * _assembling_report.complete})
+                            elif level == 'VI':
+                                self.pool.get('hp.kpis.view.chart.assembling.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'6', 'point': _assembling_report.point, 'quantity': 1 * _assembling_report.complete})
+            else:
+                month_ids = self.pool.get('account.period').search(cr, uid, [('date_start','>=',obj.month_from.date_start),('date_stop','<=',obj.month_to.date_stop)])
+                for i in month_ids:
+                    # month
+                    month = self.pool.get('account.period').browse(cr, uid, i, context)
+                    if month.date_start != month.date_stop:
+                        self.pool.get('hp.kpis.view.chart.assembling.productivity').create(cr, uid, {'name': month.name, 'type':'1', 'point': 0, 'quantity': 0})
+                        self.pool.get('hp.kpis.view.chart.assembling.productivity').create(cr, uid, {'name': month.name, 'type':'2', 'point': 0, 'quantity': 0})
+                        self.pool.get('hp.kpis.view.chart.assembling.productivity').create(cr, uid, {'name': month.name, 'type':'3', 'point': 0, 'quantity': 0})
+                        self.pool.get('hp.kpis.view.chart.assembling.productivity').create(cr, uid, {'name': month.name, 'type':'4', 'point': 0, 'quantity': 0})
+                        self.pool.get('hp.kpis.view.chart.assembling.productivity').create(cr, uid, {'name': month.name, 'type':'5', 'point': 0, 'quantity': 0})
+                        self.pool.get('hp.kpis.view.chart.assembling.productivity').create(cr, uid, {'name': month.name, 'type':'6', 'point': 0, 'quantity': 0})
+                        #get report 3d line
+                        _assembling_report_ids = self.pool.get('hpusa.assembling.report.line').search(cr, uid, [('parent_id.report_date','>=',month.date_start),('parent_id.report_date','<=',month.date_stop),('parent_id.state','=','confirmed')])
+                        for _assembling_report_id in _assembling_report_ids: 
+                            _assembling_report = self.pool.get('hpusa.assembling.report.line').browse(cr, uid, _casting_report_id)
+                            if _assembling_report.product_id.ass_difficulty_level:
+                                level = _assembling_report.product_id.ass_difficulty_level.name
+                                if level == 'I':
+                                    self.pool.get('hp.kpis.view.chart.assembling.productivity').create(cr, uid, {'name': month.name, 'type':'1', 'point': _assembling_report.point, 'quantity': 1 * _assembling_report.complete})
+                                elif level == 'II':
+                                    self.pool.get('hp.kpis.view.chart.assembling.productivity').create(cr, uid, {'name': month.name, 'type':'2', 'point': _assembling_report.point, 'quantity': 1 * _assembling_report.complete})
+                                elif level == 'III':
+                                    self.pool.get('hp.kpis.view.chart.assembling.productivity').create(cr, uid, {'name': month.name, 'type':'3', 'point': _assembling_report.point, 'quantity': 1 * _assembling_report.complete})
+                                elif level == 'IV':
+                                    self.pool.get('hp.kpis.view.chart.assembling.productivity').create(cr, uid, {'name': month.name, 'type':'4', 'point': _assembling_report.point, 'quantity': 1 * _assembling_report.complete})
+                                elif level == 'V':
+                                    self.pool.get('hp.kpis.view.chart.assembling.productivity').create(cr, uid, {'name': month.name, 'type':'5', 'point': _assembling_report.point, 'quantity': 1 * _assembling_report.complete})
+                                elif level == 'VI':
+                                    self.pool.get('hp.kpis.view.chart.assembling.productivity').create(cr, uid, {'name': month.name, 'type':'6', 'point': _assembling_report.point, 'quantity': 1 * _assembling_report.complete})
+            
+            res = mod_obj.get_object_reference(cr, uid, 'hpusa_kpis_manufacturing', 'action_hp_kpis_view_chart_assembling_productivity_graph')
+
         elif obj.type_report == 'compare':
             _assembling_ids = self.pool.get('hp.kpis.view.chart.assembling.compare').search(cr, uid, [])
             if(_assembling_ids):
@@ -357,12 +529,7 @@ class wizard_hp_report_chart_kpis_setting(osv.osv_memory):
     _name = "wizard.hp.report.chart.kpis.setting"
     _table = "wizard_hp_report_chart_kpis"
     _inherit = "wizard.hp.report.chart.kpis"
-    _columns = {
-        'type_report': fields.selection([
-                    ('synthetic', 'Synthetic chart'),
-                    ('compare', 'Comparing synthesis workers'),
-                    ], 'Chart Type',select=True,required=True),
-    }     
+
     def action_view_chart(self, cr, uid, ids, context):
         obj = self.browse(cr, uid, ids[0], context)
         mod_obj = self.pool.get('ir.model.data')
@@ -411,6 +578,86 @@ class wizard_hp_report_chart_kpis_setting(osv.osv_memory):
                         self.pool.get('hp.kpis.view.chart.setting').create(cr, uid, {'name': month.name,'point': point, 'quantity': qty})
                         
             res = mod_obj.get_object_reference(cr, uid, 'hpusa_kpis_manufacturing', 'action_hp_kpis_view_chart_setting_graph')
+        
+        elif obj.type_report == 'productivity' or obj.type_report == 'productivity_worker':
+            _setting_ids = self.pool.get('hp.kpis.view.chart.setting.productivity').search(cr, uid, [])
+            if(_setting_ids):
+                self.pool.get('hp.kpis.view.chart.setting.productivity').unlink(cr, uid, _setting_ids)
+            if obj.option == 'month':
+                date_to = datetime.strptime(obj.month.date_start, '%Y-%m-%d')
+                for i in range(1, 5):
+                    #khoi tao cot cho moi tuan
+                    self.pool.get('hp.kpis.view.chart.setting.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'1', 'point': 0, 'quantity': 0})
+                    self.pool.get('hp.kpis.view.chart.setting.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'2', 'point': 0, 'quantity': 0})
+                    self.pool.get('hp.kpis.view.chart.setting.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'3', 'point': 0, 'quantity': 0})
+                    self.pool.get('hp.kpis.view.chart.setting.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'4', 'point': 0, 'quantity': 0})
+                    self.pool.get('hp.kpis.view.chart.setting.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'5', 'point': 0, 'quantity': 0})
+                    self.pool.get('hp.kpis.view.chart.setting.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'6', 'point': 0, 'quantity': 0})
+
+                    #tinh ngay cua tung tuan
+                    if i == 1:
+                        date_from =  date_to  
+                        date_to = date_from + relativedelta(days=6)
+                    else:
+                        date_from =  date_to + relativedelta(days=1)
+                    if i == 4:
+                        date_to = obj.month.date_stop
+                    elif i !=1 :
+                        date_to = date_from + relativedelta(days=7)
+                    #get report 3d line
+                    if(not obj.employee_id):
+                        _setting_report_ids = self.pool.get('hpusa.setting.report.line').search(cr, uid, [('parent_id.report_date','>=',date_from),('parent_id.report_date','<=',date_to),('parent_id.state','=','confirmed')])
+                    else:
+                        _setting_report_ids = self.pool.get('hpusa.setting.report.line').search(cr, uid, [('parent_id.report_date','>=',date_from),('parent_id.report_date','<=',date_to),('worker','=',obj.employee_id.id),('parent_id.state','=','confirmed')])
+                    for _setting_report_id in _setting_report_ids: 
+                        _setting_report = self.pool.get('hpusa.setting.report.line').browse(cr, uid, _setting_report_id)
+                        if _setting_report.product_id.setting_difficulty_level:
+                            level = _setting_report.product_id.setting_difficulty_level.name
+                            if level == 'I':
+                                self.pool.get('hp.kpis.view.chart.setting.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'1', 'point': _setting_report.point, 'quantity': 1 * _setting_report.complete})
+                            elif level == 'II':
+                                self.pool.get('hp.kpis.view.chart.setting.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'2', 'point': _setting_report.point, 'quantity': 1 * _setting_report.complete})
+                            elif level == 'III':
+                                self.pool.get('hp.kpis.view.chart.setting.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'3', 'point': _setting_report.point, 'quantity': 1 * _setting_report.complete})
+                            elif level == 'IV':
+                                self.pool.get('hp.kpis.view.chart.setting.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'4', 'point': _setting_report.point, 'quantity': 1 * _setting_report.complete})
+                            elif level == 'V':
+                                self.pool.get('hp.kpis.view.chart.setting.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'5', 'point': _setting_report.point, 'quantity': 1 * _setting_report.complete})
+                            elif level == 'VI':
+                                self.pool.get('hp.kpis.view.chart.setting.productivity').create(cr, uid, {'name': 'Week '+str(i), 'type':'6', 'point': _setting_report.point, 'quantity': 1 * _setting_report.complete})
+            else:
+                month_ids = self.pool.get('account.period').search(cr, uid, [('date_start','>=',obj.month_from.date_start),('date_stop','<=',obj.month_to.date_stop)])
+                for i in month_ids:
+                    # month
+                    month = self.pool.get('account.period').browse(cr, uid, i, context)
+                    if month.date_start != month.date_stop:
+                        self.pool.get('hp.kpis.view.chart.setting.productivity').create(cr, uid, {'name': month.name, 'type':'1', 'point': 0, 'quantity': 0})
+                        self.pool.get('hp.kpis.view.chart.setting.productivity').create(cr, uid, {'name': month.name, 'type':'2', 'point': 0, 'quantity': 0})
+                        self.pool.get('hp.kpis.view.chart.setting.productivity').create(cr, uid, {'name': month.name, 'type':'3', 'point': 0, 'quantity': 0})
+                        self.pool.get('hp.kpis.view.chart.setting.productivity').create(cr, uid, {'name': month.name, 'type':'4', 'point': 0, 'quantity': 0})
+                        self.pool.get('hp.kpis.view.chart.setting.productivity').create(cr, uid, {'name': month.name, 'type':'5', 'point': 0, 'quantity': 0})
+                        self.pool.get('hp.kpis.view.chart.setting.productivity').create(cr, uid, {'name': month.name, 'type':'6', 'point': 0, 'quantity': 0})
+                        #get report 3d line
+                        _setting_report_ids = self.pool.get('hpusa.setting.report.line').search(cr, uid, [('parent_id.report_date','>=',month.date_start),('parent_id.report_date','<=',month.date_stop),('parent_id.state','=','confirmed')])
+                        for _setting_report_id in _assembling_report_ids: 
+                            _setting_report = self.pool.get('hpusa.setting.report.line').browse(cr, uid, _casting_report_id)
+                            if _setting_report.product_id.setting_difficulty_level:
+                                level = _setting_report.product_id.setting_difficulty_level.name
+                                if level == 'I':
+                                    self.pool.get('hp.kpis.view.chart.setting.productivity').create(cr, uid, {'name': month.name, 'type':'1', 'point': _setting_report.point, 'quantity': 1 * _setting_report.complete})
+                                elif level == 'II':
+                                    self.pool.get('hp.kpis.view.chart.setting.productivity').create(cr, uid, {'name': month.name, 'type':'2', 'point': _setting_report.point, 'quantity': 1 * _setting_report.complete})
+                                elif level == 'III':
+                                    self.pool.get('hp.kpis.view.chart.setting.productivity').create(cr, uid, {'name': month.name, 'type':'3', 'point': _setting_report.point, 'quantity': 1 * _setting_report.complete})
+                                elif level == 'IV':
+                                    self.pool.get('hp.kpis.view.chart.setting.productivity').create(cr, uid, {'name': month.name, 'type':'4', 'point': _setting_report.point, 'quantity': 1 * _setting_report.complete})
+                                elif level == 'V':
+                                    self.pool.get('hp.kpis.view.chart.setting.productivity').create(cr, uid, {'name': month.name, 'type':'5', 'point': _setting_report.point, 'quantity': 1 * _setting_report.complete})
+                                elif level == 'VI':
+                                    self.pool.get('hp.kpis.view.chart.setting.productivity').create(cr, uid, {'name': month.name, 'type':'6', 'point': _setting_report.point, 'quantity': 1 * _setting_report.complete})
+            
+            res = mod_obj.get_object_reference(cr, uid, 'hpusa_kpis_manufacturing', 'action_hp_kpis_view_chart_setting_productivity_graph')
+
         else:
             _setting_ids = self.pool.get('hp.kpis.view.chart.setting.compare').search(cr, uid, [])
             if(_setting_ids):

@@ -81,6 +81,9 @@
             <field name="model">hpusa.daily.report.3d</field>
             <field name="inherit_id" ref="hpusa_view_daily_report_form"/>
             <field name="arch" type="xml">
+                <button name="action_set_to_draft" states="cancel" groups="mrp.group_mrp_manager" string="Set To Draft" type="object">
+                    <button name="action_update" string="Update Times" type="object"/>
+                </button>
             	<field name="invoice_manager" colspan="3" position="after">
             		<field name="designer_id"/>
             	</field>
@@ -91,6 +94,7 @@
 	                           <tree editable="bottom">
 	                               <field name="product_id"/>
 	                               <field name="_3d_difficulty_level"/>
+                                   <field name="_3d_design_times"/>
 	                               <field name="complete"/>
 	                               <field name="point"/>
 	                           </tree>
@@ -149,6 +153,9 @@
             <field name="model">hpusa.daily.report.casting</field>
             <field name="inherit_id" ref="hpusa_view_daily_report_form"/>
             <field name="arch" type="xml">
+                <button name="action_set_to_draft" states="cancel" groups="mrp.group_mrp_manager" string="Set To Draft" type="object">
+                    <button name="action_update" string="Update Times" type="object"/>
+                </button>
             	<field name="invoice_manager" colspan="3" position="after">
             		<field name="manager_id"/>
             	</field>
@@ -158,6 +165,7 @@
                 			<field name="line_ids" nolabel="1"  attrs="{'readonly': [('state', '!=','draft')]}">
 	                           <tree editable="bottom">
 	                               <field name="product_id"/>
+                                   <field name="casting_times"/>
 	                               <field name="worker"/>
 	                               <field name="complete"/>
 	                               <field name="point"/>

@@ -51,6 +51,32 @@ class hp_kpis_view_chart_casting(osv.osv):
      }  
 hp_kpis_view_chart_casting()
 
+class hp_kpis_view_chart_casting_productivity(osv.osv):
+    _name = "hp.kpis.view.chart.casting.productivity"
+    _columns = {
+        'name': fields.char('Week/Month'),
+        'type': fields.selection([
+                    ('1', '1 time'),
+                    ('2', '2 times'),
+                    ('3', '3 times'),
+                    ('4', '>3 times'),
+                    ], 'Type',select=True,),
+        'quantity': fields.float('Quantity'),
+        'point': fields.float('Point'),
+     }  
+hp_kpis_view_chart_casting_productivity()
+
+class hp_kpis_view_chart_casting_compare(osv.osv):
+    _name = "hp.kpis.view.chart.casting.compare"
+    _columns = {
+        'name': fields.char('Week/Month'),
+        'employee_id': fields.many2one('hr.employee', 'Worker'),
+        'quantity': fields.float('Quantity'),
+        'point': fields.float('Point'),
+     }  
+hp_kpis_view_chart_casting_productivity()
+
+
 
 class hp_kpis_view_chart_assembling(osv.osv):
     _name = "hp.kpis.view.chart.assembling"
@@ -60,6 +86,23 @@ class hp_kpis_view_chart_assembling(osv.osv):
         'point': fields.float('Point'),
      }  
 hp_kpis_view_chart_assembling()
+
+class hp_kpis_view_chart_assembling_productivity(osv.osv):
+    _name = "hp.kpis.view.chart.assembling.productivity"
+    _columns = {
+        'name': fields.char('Week/Month'),
+        'type': fields.selection([
+                    ('1', 'I'),
+                    ('2', 'II'),
+                    ('3', 'III'),
+                    ('4', 'IV'),
+                    ('5', 'V'),
+                    ('6', 'VI'),
+                    ], 'Type',select=True,),
+        'quantity': fields.float('Quantity'),
+        'point': fields.float('Point'),
+     }  
+hp_kpis_view_chart_assembling_productivity()
 
 class hp_kpis_view_chart_assembling_compare(osv.osv):
     _name = "hp.kpis.view.chart.assembling.compare"
@@ -79,6 +122,23 @@ class hp_kpis_view_chart_setting(osv.osv):
         'point': fields.float('Point'),
      }  
 hp_kpis_view_chart_setting()
+
+class hp_kpis_view_chart_setting_productivity(osv.osv):
+    _name = "hp.kpis.view.chart.setting.productivity"
+    _columns = {
+        'name': fields.char('Week/Month'),
+        'type': fields.selection([
+                    ('1', 'I'),
+                    ('2', 'II'),
+                    ('3', 'III'),
+                    ('4', 'IV'),
+                    ('5', 'V'),
+                    ('6', 'VI'),
+                    ], 'Type',select=True,),
+        'quantity': fields.float('Quantity'),
+        'point': fields.float('Point'),
+     }  
+hp_kpis_view_chart_setting_productivity()
 
 class hp_kpis_view_chart_setting_compare(osv.osv):
     _name = "hp.kpis.view.chart.setting.compare"

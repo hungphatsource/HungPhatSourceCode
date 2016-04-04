@@ -8,6 +8,7 @@ from datetime import datetime
 from datetime import timedelta
 from openerp.addons.pxgo_openoffice_reports import openoffice_report
 from openerp.report import report_sxw
+from openerp import SUPERUSER_ID
 
 class wizard_hp_report_kpis(osv.osv_memory):
     _name = "wizard.hp.report.kpis"
@@ -33,69 +34,264 @@ class wizard_hp_report_kpis(osv.osv_memory):
 
     def action_print(self, cr, uid, ids, context=None):
         datas = {'ids': context.get('active_ids', [])}
-        res = self.read(cr, uid, ids, ['date_from','date_to','type','option','month', 'month_from','month_to'], context=context)
+        res = self.read(cr, SUPERUSER_ID, ids, ['date_from','date_to','type','option','month', 'month_from','month_to'], context=context)
         res = res and res[0] or {}
         datas['form'] = res
-        name = self.pool.get('res.users').browse(cr, uid, uid).partner_id.name
+        name = self.pool.get('res.users').browse(cr, SUPERUSER_ID, uid).partner_id.name
         datas['form']['name'] = name
         datas['model'] = 'wizard.hp.report.kpis'
         type = res['type']
         if type == '3d':
-            datas['line'] = self.print_hp_report_kpis_3d(cr, uid, res['option'], res['date_from'], res['date_to'], res['month'], res['month_from'] ,res['month_to'])
+            datas['line'] = self.print_hp_report_kpis_3d(cr, SUPERUSER_ID, res['option'], res['date_from'], res['date_to'], res['month'], res['month_from'] ,res['month_to'])
+            datas['summary'] = self.summary_3d(cr, SUPERUSER_ID, datas['line']['date_from'], datas['line']['date_to'])
             return {
                 'type'          : 'ir.actions.report.xml',
                 'report_name'   : 'wizard_hp_report_kpis_3d',
                 'datas'         : datas,
            }
         elif type =='casting':
-            datas['line'] = self.print_hp_report_kpis_casting(cr, uid, res['option'], res['date_from'], res['date_to'], res['month'], res['month_from'] ,res['month_to'])
+            datas['line'] = self.print_hp_report_kpis_casting(cr, SUPERUSER_ID, res['option'], res['date_from'], res['date_to'], res['month'], res['month_from'] ,res['month_to'])
+            datas['summary'] = self.summary_casting(cr, SUPERUSER_ID, datas['line']['date_from'], datas['line']['date_to'])
             return {
                 'type'          : 'ir.actions.report.xml',
                 'report_name'   : 'wizard_hp_report_kpis_casting',
                 'datas'         : datas,
                 }
         elif type =='assembling':
-            datas['line'] = self.print_hp_report_kpis_assembling(cr, uid, res['option'], res['date_from'], res['date_to'], res['month'], res['month_from'] ,res['month_to'])
+            datas['line'] = self.print_hp_report_kpis_assembling(cr, SUPERUSER_ID, res['option'], res['date_from'], res['date_to'], res['month'], res['month_from'] ,res['month_to'])
+            datas['summary'] = self.summary_assembling(cr, SUPERUSER_ID, datas['line']['date_from'], datas['line']['date_to'])
             return {
                 'type'          : 'ir.actions.report.xml',
                 'report_name'   : 'wizard_hp_report_kpis_assembling',
                 'datas'         : datas,
                 }
         elif type =='setting':
-            datas['line'] = self.print_hp_report_kpis_setting(cr, uid, res['option'], res['date_from'], res['date_to'], res['month'], res['month_from'] ,res['month_to'])
+            datas['line'] = self.print_hp_report_kpis_setting(cr, SUPERUSER_ID, res['option'], res['date_from'], res['date_to'], res['month'], res['month_from'] ,res['month_to'])
+            datas['summary'] = self.summary_setting(cr, SUPERUSER_ID, datas['line']['date_from'], datas['line']['date_to'])
             return {
                 'type'          : 'ir.actions.report.xml',
                 'report_name'   : 'wizard_hp_report_kpis_setting',
                 'datas'         : datas,
            }
         elif type =='aggregate':
-            if res['option'] == 'month':
-                datas['line'] = self.print_hp_report_kpis_aggregate(cr, uid, res['option'], res['date_from'], res['date_to'], res['month'], res['month_from'] ,res['month_to'])
-                return {
-                    'type'          : 'ir.actions.report.xml',
-                    'report_name'   : 'wizard_hp_report_kpis_aggregate',
-                    'datas'         : datas,
-               }
-            elif res['option'] == 'year':
-                datas['line'] = self.print_hp_report_kpis_aggregate(cr, uid, res['option'], res['date_from'], res['date_to'], res['month'], res['month_from'] ,res['month_to'])
-                return {
-                    'type'          : 'ir.actions.report.xml',
-                    'report_name'   : 'wizard_hp_report_kpis_aggregate_year',
-                    'datas'         : datas,
-                }
-            else:
-                raise osv.except_osv(('Wanning'),('General report supports only the month and year!'))
+            datas['line'] = self.print_hp_report_kpis_aggregate(cr, SUPERUSER_ID, res['option'], res['date_from'], res['date_to'], res['month'], res['month_from'] ,res['month_to'])
+            datas['summary_3d'] = self.summary_3d(cr, SUPERUSER_ID, datas['line']['date_from'], datas['line']['date_to'])
+            datas['summary_casting'] = self.summary_casting(cr, SUPERUSER_ID, datas['line']['date_from'], datas['line']['date_to'])
+            datas['summary_assembling'] = self.summary_assembling(cr, SUPERUSER_ID, datas['line']['date_from'], datas['line']['date_to'])
+            datas['summary_setting'] = self.summary_setting(cr, SUPERUSER_ID, datas['line']['date_from'], datas['line']['date_to'])
+            return {
+                'type'          : 'ir.actions.report.xml',
+                'report_name'   : 'wizard_hp_report_kpis_aggregate',
+                'datas'         : datas,
+           }
+            
+            # else:
+            #     raise osv.except_osv(('Wanning'),('General report supports only the month and year!'))
            
 
+    def summary_3d(self, cr, uid, date_from, date_to):
+        #get target in date_from date_to
+        _3d_target = self.pool.get('hpusa.kpis.target.3d').search(cr, uid, [('type','=','3d'),('date_from','>=', date_from),('date_to', '<=', date_to)])
+        sum_target = 0
+        sum_days = 0
+        sum_total = 0
+        arr_target_tmp = {}
+        for _3d in _3d_target:
+            _3d_object = self.pool.get('hpusa.kpis.target.3d').browse(cr, uid, _3d)
+            for line in _3d_object.line_ids:
+                target = line.target
+                days = line.number_day
+                total = line.total
+                if arr_target_tmp.has_key(line.employee_id.id):
+                    target += arr_target_tmp[line.employee_id.id]['target']
+                    days += arr_target_tmp[line.employee_id.id]['days']
+                    total += arr_target_tmp[line.employee_id.id]['total']
+                arr_target_tmp[line.employee_id.id] = {
+                    'employee': line.employee_id.name,
+                    'target': target,
+                    'days': days,
+                    'total': total,
+                    'notes': line.notes and line.notes or '',
+                }
+        arr_target = []
+        stt = 0
+        for key in arr_target_tmp:
+            stt += 0
+            arr_target_tmp[key]['stt'] = stt
+            arr_target.append(arr_target_tmp[key])
+            sum_target += arr_target_tmp[key]['target']
+            sum_days += arr_target_tmp[key]['days']
+            sum_total += arr_target_tmp[key]['total']
 
+        
+        #get kpi get so luong hoan thanh va so ngay lam viec
+        _3d_ids = self.pool.get('hpusa.daily.report.3d').search(cr, uid, [('type','=','3d'),('report_date','>=',date_from),('report_date','<=',date_to),('state','=','confirmed')])
+        _3d_obj = self.pool.get('hpusa.daily.report.3d').browse(cr, uid, _3d_ids)
+        kpi_arr_temp = {}
+        total_1time = 0
+        total_2times = 0
+        total_3times = 0
+        total_4times = 0
+        total_i = 0
+        total_ii = 0
+        total_iii = 0
+        total_iv = 0
+        total_v = 0
+        total_vi = 0
+        total_target = 0
+        total_tb_sp = 0
+        total_tb = 0
+        total_day_work = 0
+        total_complete = 0
+        total_times = 0
+        total_level = 0
+        total_point = 0
+        for obj in _3d_obj:
+            day_work = 1
+            #count 
+            count_1time = 0
+            count_2times = 0
+            count_3times = 0
+            count_4times = 0
+            count_i = 0
+            count_ii = 0
+            count_iii = 0
+            count_iv = 0
+            count_v = 0
+            count_vi = 0
+            point = 0
+            complete = 0
+            #count 
+            for line in obj.line_ids:
+                #sum_count
+                # lan kpi trung voi lan trong product
+                if line.product_id._3d_design_times and line._3d_design_times.id == line.product_id._3d_design_times.id:
+                    if line.product_id._3d_design_times:
+                        if line.product_id._3d_design_times.name == 1:
+                            count_1time += line.complete
+                        elif line.product_id._3d_design_times.name == 2:
+                            count_2times += line.complete
+                        elif line.product_id._3d_design_times.name == 3:
+                            count_3times += line.complete
+                        elif  line.product_id._3d_design_times.name > 3:
+                            count_4times += line.complete
+
+                    if line.product_id._3d_difficulty_level:
+                        if line.product_id._3d_difficulty_level.name == 'I':
+                            count_i += line.complete
+                        elif line.product_id._3d_difficulty_level.name == 'II':
+                            count_ii += line.complete
+                        elif line.product_id._3d_difficulty_level.name == 'III':
+                            count_iii += line.complete
+                        elif line.product_id._3d_difficulty_level.name == 'IV':
+                            count_iv += line.complete
+                        elif line.product_id._3d_difficulty_level.name == 'V':
+                            count_v += line.complete
+                        elif line.product_id._3d_difficulty_level.name == 'VI':
+                            count_vi += line.complete               
+                    #sum_count
+                    complete += line.complete
+                    point += line.point
+
+            if kpi_arr_temp.has_key(obj.designer_id.id):
+                complete += kpi_arr_temp[obj.designer_id.id]['complete']
+                day_work += kpi_arr_temp[obj.designer_id.id]['day_work']
+                count_1time += kpi_arr_temp[obj.designer_id.id]['count_1time']
+                count_2times += kpi_arr_temp[obj.designer_id.id]['count_2times']
+                count_3times += kpi_arr_temp[obj.designer_id.id]['count_3times']
+                count_4times += kpi_arr_temp[obj.designer_id.id]['count_4times']
+                count_i += kpi_arr_temp[obj.designer_id.id]['count_i']
+                count_ii += kpi_arr_temp[obj.designer_id.id]['count_ii']
+                count_iii += kpi_arr_temp[obj.designer_id.id]['count_iii']
+                count_iv += kpi_arr_temp[obj.designer_id.id]['count_iv']
+                count_v += kpi_arr_temp[obj.designer_id.id]['count_v']
+                count_vi += kpi_arr_temp[obj.designer_id.id]['count_vi']
+                point += kpi_arr_temp[obj.designer_id.id]['point']
             
+            kpi_arr_temp[obj.designer_id.id] = {
+                                                    'name': obj.designer_id.name, 'point': point, 'complete': complete, 'day_work': day_work,
+                                                    'count_1time': count_1time, 'count_2times': count_2times, 'count_3times': count_3times,
+                                                    'count_4times': count_4times, 'count_i': count_i, 'count_ii': count_ii,
+                                                    'count_iii': count_iii, 'count_iv': count_iv, 'count_v': count_v,
+                                                    'count_vi': count_vi, 'tb_sp': day_work and round(complete / day_work, 2)  or 0, 'tb': day_work and round(point / day_work, 2)  or 0
+                                                }
+
+        arr_kpi = []
+        stt = 0
+        for key in kpi_arr_temp:
+            stt = stt + 1
+            #get target
+            emp_target = 0
+            if arr_target_tmp.has_key(key):
+                emp_target = arr_target_tmp[key]['total']
+
+            kpi_arr_temp[key]['target'] = emp_target
+            kpi_arr_temp[key]['percent'] = emp_target and round(kpi_arr_temp[key]['point'] * 100/ emp_target, 2) or 0 
+            kpi_arr_temp[key]['total_time'] = kpi_arr_temp[key]['count_1time'] + kpi_arr_temp[key]['count_2times'] + kpi_arr_temp[key]['count_3times'] + kpi_arr_temp[key]['count_4times']
+            kpi_arr_temp[key]['percent_1'] = kpi_arr_temp[key]['total_time'] > 0 and round(kpi_arr_temp[key]['count_1time'] * 100 / kpi_arr_temp[key]['total_time'] , 2) or 0
+            kpi_arr_temp[key]['percent_2'] = kpi_arr_temp[key]['total_time'] > 0 and round(kpi_arr_temp[key]['count_2times'] * 100 / kpi_arr_temp[key]['total_time'], 2) or 0
+            kpi_arr_temp[key]['percent_3'] = kpi_arr_temp[key]['total_time'] > 0 and round(kpi_arr_temp[key]['count_3times'] * 100 / kpi_arr_temp[key]['total_time'], 2) or 0
+            kpi_arr_temp[key]['percent_4'] = kpi_arr_temp[key]['total_time'] > 0 and round(kpi_arr_temp[key]['count_4times'] * 100 / kpi_arr_temp[key]['total_time'], 2) or 0
+
+            kpi_arr_temp[key]['total_level'] = kpi_arr_temp[key]['count_i'] + kpi_arr_temp[key]['count_ii'] + kpi_arr_temp[key]['count_iii'] + kpi_arr_temp[key]['count_iv'] + kpi_arr_temp[key]['count_v'] + kpi_arr_temp[key]['count_vi']
+            kpi_arr_temp[key]['percent_i'] = kpi_arr_temp[key]['total_level'] > 0 and round(kpi_arr_temp[key]['count_i'] * 100 / kpi_arr_temp[key]['total_level'] , 2) or 0
+            kpi_arr_temp[key]['percent_ii'] = kpi_arr_temp[key]['total_level'] > 0 and round(kpi_arr_temp[key]['count_ii'] * 100 / kpi_arr_temp[key]['total_level'], 2) or 0
+            kpi_arr_temp[key]['percent_iii'] = kpi_arr_temp[key]['total_level'] > 0 and round(kpi_arr_temp[key]['count_iii'] * 100 / kpi_arr_temp[key]['total_level'], 2) or 0
+            kpi_arr_temp[key]['percent_iv'] = kpi_arr_temp[key]['total_level'] > 0 and round(kpi_arr_temp[key]['count_iv'] * 100 / kpi_arr_temp[key]['total_level'], 2) or 0
+            kpi_arr_temp[key]['percent_v'] = kpi_arr_temp[key]['total_level'] > 0 and round(kpi_arr_temp[key]['count_v'] * 100 / kpi_arr_temp[key]['total_level'], 2) or 0
+            kpi_arr_temp[key]['percent_vi'] = kpi_arr_temp[key]['total_level'] > 0 and round(kpi_arr_temp[key]['count_vi'] * 100 / kpi_arr_temp[key]['total_level'], 2) or 0
+            
+
+            kpi_arr_temp[key]['stt'] = stt
+            arr_kpi.append(kpi_arr_temp[key])
+
+            total_target += emp_target
+            total_times += kpi_arr_temp[key]['total_time']
+            total_level += kpi_arr_temp[key]['total_level']
+
+            total_1time += kpi_arr_temp[key]['count_1time']
+            total_2times += kpi_arr_temp[key]['count_2times']
+            total_3times +=  kpi_arr_temp[key]['count_3times']
+            total_4times += kpi_arr_temp[key]['count_4times']
+            total_i += kpi_arr_temp[key]['count_i']
+            total_ii += kpi_arr_temp[key]['count_ii']
+            total_iii +=  kpi_arr_temp[key]['count_iii']
+            total_iv += kpi_arr_temp[key]['count_iv']
+            total_v += kpi_arr_temp[key]['count_v']
+            total_vi += kpi_arr_temp[key]['count_vi']
+            total_tb_sp +=  kpi_arr_temp[key]['tb_sp'] 
+            total_tb +=  kpi_arr_temp[key]['tb'] 
+            total_day_work += kpi_arr_temp[key]['day_work']
+            total_complete += kpi_arr_temp[key]['complete']
+            total_point += kpi_arr_temp[key]['point']
+
+
+        total_percent_target = round(total_target and total_point * 100 / total_target , 2) or 0
+        total_percent_1 = round( total_times and total_1time * 100 / total_times, 2) or 0
+        total_percent_2 = round( total_times and total_2times * 100 / total_times, 2) or 0
+        total_percent_3 = round( total_times and total_3times * 100 / total_times, 2) or 0
+        total_percent_4 = round( total_times and total_4times * 100 / total_times, 2) or 0
+        total_percent_i = round( total_level and total_i * 100 / total_level, 2) or 0
+        total_percent_ii = round( total_level and total_ii * 100 / total_level, 2) or 0
+        total_percent_iii = round( total_level and total_iii * 100 / total_level, 2) or 0
+        total_percent_iv = round( total_level and total_iv * 100 / total_level, 2) or 0
+        total_percent_v = round( total_level and total_v * 100 / total_level, 2) or 0
+        total_percent_vi = round( total_level and total_vi * 100 / total_level, 2) or 0
+
+        result = {}
+        result['target'] = {'res': arr_target, 'sum_target': sum_target, 'sum_days': sum_days, 'sum_total': sum_total}
+        result['kpi'] = {'res': arr_kpi, 'total_1time': total_1time, 'total_2times': total_2times, 'total_3times': total_3times, 'total_4times': total_4times, 'total_i': total_i, 'total_ii': total_ii, 'total_iii': total_iii, 'total_iv': total_iv, 'total_v': total_v, 'total_vi': total_vi, 'total_tb': total_tb, 'total_day_work': total_day_work, 'total_complete': total_complete,
+                        'total_target': total_target, 'total_percent_1': total_percent_1, 'total_percent_2': total_percent_2, 'total_percent_3': total_percent_3, 'total_percent_4': total_percent_4, 'total_percent_i': total_percent_i, 'total_percent_ii': total_percent_ii, 'total_percent_iii': total_percent_iii, 'total_percent_iv': total_percent_iv, 'total_percent_v': total_percent_v, 'total_percent_vi': total_percent_vi,
+                        'total_times': total_times, 'total_level': total_level, 'total_percent_target': total_percent_target, 'total_point': total_point, 'total_tb_sp': total_tb_sp}
+
+        return result
+
+
     def print_hp_report_kpis_3d(self, cr, uid, type, date_from, date_to, month, month_from, month_to):
         #report week
-        
         name_report = ''
         if type == 'month':
             period = self.pool.get('account.period').browse(cr, uid, month[0])
-            print month
             name_report = period.name
             date_from = period.date_start
             date_to = period.date_stop
@@ -133,85 +329,226 @@ class wizard_hp_report_kpis(osv.osv_memory):
             s_total_co = 0
             s_target = 0
             s_compare = 0
-            
+            s_total_co_level = 0
             for line_3d in groups[key]:
-                stt = stt + 1
-                #sale order
-                sale_line = self.pool.get('sale.order.line').search(cr, uid, [('product_id','=',line_3d.product_id.id)])
-                sale_name = ''
-                if(sale_line):
-                    sale_name = self.pool.get('sale.order.line').browse(cr, uid, sale_line[0]).order_id.name
-                #add line report
-                i = 0
-                ii = 0
-                iii = 0
-                iv = 0
-                v = 0
-                vi = 0
-                #% complete
-                if(line_3d.product_id._3d_difficulty_level and line_3d.product_id._3d_difficulty_level.name == 'I'):
-                    i = line_3d.complete
-                elif(line_3d.product_id._3d_difficulty_level and line_3d.product_id._3d_difficulty_level.name == 'II'):
-                    ii = line_3d.complete
-                elif(line_3d.product_id._3d_difficulty_level and line_3d.product_id._3d_difficulty_level.name == 'III'):
-                    iii = line_3d.complete
-                elif(line_3d.product_id._3d_difficulty_level and line_3d.product_id._3d_difficulty_level.name == 'IV'):
-                    iv = line_3d.complete
-                elif(line_3d.product_id._3d_difficulty_level and line_3d.product_id._3d_difficulty_level.name == 'V'):
-                    v = line_3d.complete
-                elif(line_3d.product_id._3d_difficulty_level and line_3d.product_id._3d_difficulty_level.name == 'VI'):
-                    vi = line_3d.complete
-                #get tagert
-                target = 0
-                if(line_3d.product_id._3d_difficulty_level):
-                    tagert_ids = self.pool.get('hpusa.kpis.target.3d.line').search(cr, uid, [('level','=',line_3d.product_id._3d_difficulty_level.id)])
-                    if(tagert_ids):
-                        target = self.pool.get('hpusa.kpis.target.3d.line').browse(cr, uid, tagert_ids[0]).target
-                        
-                coefficient_lv = line_3d.product_id._3d_difficulty_level and line_3d.product_id._3d_difficulty_level.coefficient or 0
-                total_coeff_lv = (i + ii + iii + iv + v + vi) * coefficient_lv # (6)=(4)*(5)
-                #times
-                _3d_times = line_3d.product_id._3d_design_times and line_3d.product_id._3d_design_times.name or 0
-                coefficient_3d_times = line_3d.product_id._3d_design_times and line_3d.product_id._3d_design_times.coefficient or 0
-                compare = 0
-                if target > 0:
-                    compare = (total_coeff_lv * _3d_times * coefficient_3d_times)/target
-                s_i += i
-                s_ii += ii
-                s_iii += iii
-                s_iv += iv
-                s_v += v
-                s_vi += vi
-                s_level += coefficient_lv
-                s_coeff += coefficient_lv
-                s_times += _3d_times
-                s_co_times += coefficient_3d_times
-                s_total_co += total_coeff_lv * _3d_times * coefficient_3d_times
-                s_target += target
-                s_compare += compare
-                arr.append({
-                            'stt'        :  stt,
-                            'date'       :  line_3d.parent_id.report_date,
-                            'employee'   :  employee_name,
-                            'sale_order' :  sale_name,
-                            'i'          :  i,
-                            'ii'         :  ii,
-                            'iii'        :  iii,
-                            'iv'         :  iv,
-                            'v'          :  v,
-                            'vi'         :  vi,
-                            'co_level'   :  coefficient_lv,
-                            'tt_coeff_lv':  total_coeff_lv,
-                            '_3d_times'  :  _3d_times,
-                            'co_3d_times':  coefficient_3d_times,
-                            'total_co'   :  total_coeff_lv * _3d_times * coefficient_3d_times, # (9)=(6)*(7)*(8)
-                            'target_date':  target,
-                            'compare'    :  compare,#(11)=(9)/(10)
-                            })
-            re = {'line': arr, 's_i': s_i, 's_ii': s_ii, 's_iii': s_iii, 's_iv': s_iv, 's_v': s_v, 's_vi': s_vi, 's_level': s_level, 's_coeff': s_coeff, 's_times': s_times, 's_co_times': s_co_times, 's_total_co': s_total_co, 's_target': s_target, 's_compare': s_compare}
+                if line_3d.product_id._3d_design_times and line_3d._3d_design_times.id == line_3d.product_id._3d_design_times.id:
+                    stt = stt + 1
+                    #sale order
+                    sale_line = self.pool.get('sale.order.line').search(cr, uid, [('product_id','=',line_3d.product_id.id)])
+                    sale_name = ''
+                    if(sale_line):
+                        sale_name = self.pool.get('sale.order.line').browse(cr, uid, sale_line[0]).order_id.name
+                    #add line report
+                    i = 0
+                    ii = 0
+                    iii = 0
+                    iv = 0
+                    v = 0
+                    vi = 0
+                    #% complete
+                    if(line_3d.product_id._3d_difficulty_level and line_3d.product_id._3d_difficulty_level.name == 'I'):
+                        i = line_3d.complete
+                    elif(line_3d.product_id._3d_difficulty_level and line_3d.product_id._3d_difficulty_level.name == 'II'):
+                        ii = line_3d.complete
+                    elif(line_3d.product_id._3d_difficulty_level and line_3d.product_id._3d_difficulty_level.name == 'III'):
+                        iii = line_3d.complete
+                    elif(line_3d.product_id._3d_difficulty_level and line_3d.product_id._3d_difficulty_level.name == 'IV'):
+                        iv = line_3d.complete
+                    elif(line_3d.product_id._3d_difficulty_level and line_3d.product_id._3d_difficulty_level.name == 'V'):
+                        v = line_3d.complete
+                    elif(line_3d.product_id._3d_difficulty_level and line_3d.product_id._3d_difficulty_level.name == 'VI'):
+                        vi = line_3d.complete
+                    
+                    
+                            
+                    coefficient_lv = line_3d.product_id._3d_difficulty_level and line_3d.product_id._3d_difficulty_level.coefficient or 0
+                    total_coeff_lv = (i + ii + iii + iv + v + vi) * coefficient_lv # (6)=(4)*(5)
+                    #times
+                    _3d_times = line_3d.product_id._3d_design_times and line_3d.product_id._3d_design_times.name or 0
+                    coefficient_3d_times = line_3d.product_id._3d_design_times and line_3d.product_id._3d_design_times.coefficient or 0
+                    s_i += i
+                    s_ii += ii
+                    s_iii += iii
+                    s_iv += iv
+                    s_v += v
+                    s_vi += vi
+                    s_level += coefficient_lv
+                    s_coeff += coefficient_lv
+                    s_times += _3d_times
+                    s_co_times += coefficient_3d_times
+                    s_total_co_level += total_coeff_lv
+                    s_total_co += total_coeff_lv * _3d_times * coefficient_3d_times
+                    arr.append({
+                                'stt'        :  stt,
+                                'date'       :  line_3d.parent_id.report_date,
+                                'employee'   :  employee_name,
+                                'sale_order' :  sale_name,
+                                'i'          :  i,
+                                'ii'         :  ii,
+                                'iii'        :  iii,
+                                'iv'         :  iv,
+                                'v'          :  v,
+                                'vi'         :  vi,
+                                'co_level'   :  coefficient_lv,
+                                'tt_coeff_lv':  total_coeff_lv,
+                                '_3d_times'  :  _3d_times,
+                                'co_3d_times':  coefficient_3d_times,
+                                'total_co'   :  total_coeff_lv * _3d_times * coefficient_3d_times, # (9)=(6)*(7)*(8)
+                                })
+            re = {'line': arr, 's_i': s_i, 's_ii': s_ii, 's_iii': s_iii, 's_iv': s_iv, 's_v': s_v, 's_vi': s_vi, 's_level': s_level, 's_coeff': s_coeff, 's_times': s_times, 's_co_times': s_co_times, 's_total_co': s_total_co, 's_total_co_level': s_total_co_level}
             result.append(re)
-        return {'name': name_report, 'result': result}
+        return {'name': name_report, 'result': result, 'date_from': date_from, 'date_to': date_to}
     
+
+    def summary_casting(self, cr, uid, date_from, date_to):
+        #get target in date_from date_to
+        _casting_target = self.pool.get('hpusa.kpis.target.casting').search(cr, uid, [('date_from','>=', date_from),('date_to', '<=', date_to)])
+        arr_target = []
+        sum_target = 0
+        sum_days = 0
+        sum_total = 0
+        arr_target_tmp = {}
+        for _casting in _casting_target:
+            _casting_object = self.pool.get('hpusa.kpis.target.casting').browse(cr, uid, _casting)
+            for line in _casting_object.line_ids:
+                target = line.target
+                days = line.day_month
+                total = line.total
+                if arr_target_tmp.has_key(line.employee_id.id):
+                    target += arr_target_tmp[line.employee_id.id]['target']
+                    days += arr_target_tmp[line.employee_id.id]['days']
+                    total += arr_target_tmp[line.employee_id.id]['total']
+                arr_target_tmp[line.employee_id.id] = {
+                    'employee': line.employee_id.name,
+                    'target': target,
+                    'days': days,
+                    'total': total,
+                    'notes': line.notes and line.notes or '',
+                }
+        arr_target = []
+        stt = 0
+        for key in arr_target_tmp:
+            stt += 0
+            arr_target_tmp[key]['stt'] = stt
+            arr_target.append(arr_target_tmp[key])
+            sum_target += arr_target_tmp[key]['target']
+            sum_days += arr_target_tmp[key]['days']
+            sum_total += arr_target_tmp[key]['total']
+        
+        #get kpi get so luong hoan thanh va so ngay lam viec
+        _casting_ids = self.pool.get('hpusa.daily.report.casting').search(cr, uid, [('report_date','>=',date_from),('report_date','<=',date_to),('state','=','confirmed')])
+        _casting_obj = self.pool.get('hpusa.daily.report.casting').browse(cr, uid, _casting_ids)
+        kpi_arr_temp = {}
+        total_1time = 0
+        total_2times = 0
+        total_3times = 0
+        total_4times = 0
+        total_target = 0
+        total_tb = 0
+        total_tb_sp = 0
+        total_day_work = 0
+        total_complete = 0
+        total_times = 0
+        total_point = 0
+        for obj in _casting_obj:
+            
+            #duyet 1 phieu la 1 ngay
+            arr = []
+            for line in obj.line_ids:
+                if line.product_id.casting_times and line.casting_times.id == line.product_id.casting_times.id:
+                #count 
+                    count_1time = 0
+                    count_2times = 0
+                    count_3times = 0
+                    count_4times = 0
+                    #count 
+
+                    #xet employee da co trong pheu roi khong tinh ngay nua
+                    day_work = 0
+                    if line.worker.id not in arr:
+                        day_work = 1
+                    arr.append(line.worker.id)
+
+                    #sum_count
+                    if line.product_id.casting_times:
+                        if line.product_id.casting_times.name == 1:
+                            count_1time += line.complete
+                        elif line.product_id.casting_times.name == 2:
+                            count_2times += line.complete
+                        elif line.product_id.casting_times.name == 3:
+                            count_3times += line.complete
+                        elif  line.product_id.casting_times.name > 3:
+                            count_4times += line.complete
+
+                    #sum_count
+                    complete = line.complete
+                    point = line.point
+
+                    if kpi_arr_temp.has_key(line.worker.id):
+                        complete += kpi_arr_temp[line.worker.id]['complete']
+                        day_work += kpi_arr_temp[line.worker.id]['day_work']
+                        count_1time += kpi_arr_temp[line.worker.id]['count_1time']
+                        count_2times += kpi_arr_temp[line.worker.id]['count_2times']
+                        count_3times += kpi_arr_temp[line.worker.id]['count_3times']
+                        count_4times += kpi_arr_temp[line.worker.id]['count_4times']
+                        point += kpi_arr_temp[line.worker.id]['point']
+
+                    kpi_arr_temp[line.worker.id] = {
+                                                        'name': line.worker.name, 'complete': complete, 'day_work': day_work, 'point': point,
+                                                        'count_1time': count_1time, 'count_2times': count_2times, 'count_3times': count_3times,
+                                                        'count_4times': count_4times, 'tb_sp': day_work and round(complete / day_work, 2)  or 0,
+                                                        'tb': day_work and round(point / day_work, 2)  or 0
+                                                    }
+
+        arr_kpi = []
+        stt = 0
+        for key in kpi_arr_temp:
+            stt = stt + 1
+            #get target
+            emp_target = 0
+            if arr_target_tmp.has_key(key):
+                emp_target = arr_target_tmp[key]['total']
+
+            kpi_arr_temp[key]['target'] = emp_target
+            kpi_arr_temp[key]['percent'] = emp_target and round(kpi_arr_temp[key]['point'] * 100 / emp_target, 2) or 0
+            kpi_arr_temp[key]['total_time'] = kpi_arr_temp[key]['count_1time'] + kpi_arr_temp[key]['count_2times'] + kpi_arr_temp[key]['count_3times'] + kpi_arr_temp[key]['count_4times']
+            kpi_arr_temp[key]['percent_1'] = kpi_arr_temp[key]['total_time'] > 0 and round(kpi_arr_temp[key]['count_1time'] * 100 / kpi_arr_temp[key]['total_time'] , 2) or 0
+            kpi_arr_temp[key]['percent_2'] = kpi_arr_temp[key]['total_time'] > 0 and round(kpi_arr_temp[key]['count_2times'] * 100 / kpi_arr_temp[key]['total_time'], 2) or 0
+            kpi_arr_temp[key]['percent_3'] = kpi_arr_temp[key]['total_time'] > 0 and round(kpi_arr_temp[key]['count_3times'] * 100 / kpi_arr_temp[key]['total_time'], 2) or 0
+            kpi_arr_temp[key]['percent_4'] = kpi_arr_temp[key]['total_time'] > 0 and round(kpi_arr_temp[key]['count_4times'] * 100 / kpi_arr_temp[key]['total_time'], 2) or 0
+
+            kpi_arr_temp[key]['stt'] = stt
+            arr_kpi.append(kpi_arr_temp[key])
+            total_target += emp_target
+            total_times += kpi_arr_temp[key]['total_time']
+
+
+            total_1time += kpi_arr_temp[key]['count_1time']
+            total_2times += kpi_arr_temp[key]['count_2times']
+            total_3times += kpi_arr_temp[key]['count_3times']
+            total_4times += kpi_arr_temp[key]['count_4times']
+            total_tb += kpi_arr_temp[key]['tb']
+            total_tb_sp += kpi_arr_temp[key]['tb_sp']
+            total_day_work +=  kpi_arr_temp[key]['day_work']
+            total_complete += kpi_arr_temp[key]['complete']
+            total_point += kpi_arr_temp[key]['point']
+
+
+        total_percent_target = round(total_target and total_point * 100 / total_target , 2) or 0
+        total_percent_1 = round( total_times and total_1time * 100 / total_times, 2) or 0
+        total_percent_2 = round( total_times and total_2times * 100 / total_times, 2) or 0
+        total_percent_3 = round( total_times and total_3times * 100 / total_times, 2) or 0
+        total_percent_4 = round( total_times and total_4times * 100 / total_times, 2) or 0
+
+        result = {}
+        result['target'] = {'res': arr_target, 'sum_target': sum_target, 'sum_days': sum_days, 'sum_total': sum_total}
+        
+        result['kpi'] = {'res': arr_kpi, 'total_1time': total_1time, 'total_2times': total_2times, 'total_3times': total_3times, 'total_4times': total_4times, 'total_tb':  total_tb, 'total_day_work': total_day_work, 'total_complete': total_complete,
+                        'total_target': total_target, 'total_percent_1': total_percent_1, 'total_percent_2': total_percent_2, 'total_percent_3': total_percent_3, 'total_percent_4': total_percent_4,
+                        'total_times': total_times, 'total_percent_target': total_percent_target, 'total_point': total_point, 'total_tb_sp': total_tb_sp}
+
+        return result
+
     def print_hp_report_kpis_casting(self, cr, uid, type, date_from, date_to, month, month_from, month_to):
         #report week
         name_report = ''
@@ -242,65 +579,219 @@ class wizard_hp_report_kpis(osv.osv_memory):
         s_compare = 0
         for obj_casting in _casting:
             for line_casting in obj_casting.line_ids:
-                stt = stt + 1
-                #sale order
-                sale_line = self.pool.get('sale.order.line').search(cr, uid, [('product_id','=',line_casting.product_id.id)])
-                sale_name = ''
-                if(sale_line):
-                    sale_name = self.pool.get('sale.order.line').browse(cr, uid, sale_line[0]).order_id.name
-                    #add line report
-                _1_time = 0;
-                _2_times = 0;
-                _3_times = 0;
-                _4_times = 0;
-                #get times casting
-                if(line_casting.product_id.casting_times and line_casting.product_id.casting_times.name == 1):
-                    _1_time = 1
-                elif(line_casting.product_id.casting_times and line_casting.product_id.casting_times.name == 2):
-                    _2_times = 1
-                elif(line_casting.product_id.casting_times and line_casting.product_id.casting_times.name == 3):
-                    _3_times = 1
-                elif(line_casting.product_id.casting_times and line_casting.product_id.casting_times.name >= 4):
-                    _4_times = 1
-                
-                coefficient = 0
-                if(line_casting.product_id.casting_type and line_casting.product_id.casting_type == 'gold' and line_casting.product_id.casting_times):
-                    coefficient = line_casting.product_id.casting_times.coefficient_gold
-                elif(line_casting.product_id.casting_type and line_casting.product_id.casting_type == 'platinum' and line_casting.product_id.casting_times):
-                    coefficient = line_casting.product_id.casting_times.coefficient_pt
-                total_coeff = (_1_time + _2_times + _3_times + _4_times) * coefficient # (6)=(4)*(5)
-#                    #get tagert
-                target = 0
-                if(line_casting.product_id.casting_type):
-                    tagert_ids = self.pool.get('hpusa.kpis.target.casting.line').search(cr, uid, [('casting_type','=',line_casting.product_id.casting_type)])
-                    if(tagert_ids):
-                        target = self.pool.get('hpusa.kpis.target.casting.line').browse(cr, uid, tagert_ids[0]).target
-                s_1 += _1_time
-                s_2 += _2_times
-                s_3 += _3_times
-                s_4 += _4_times
-                s_coff += coefficient
-                s_total_coeff += total_coeff
-                s_target += target
-                s_compare += round(target > 0 and total_coeff / target or 0, 2)
-                
-                arr.append({
-                            'stt'        :  stt,
-                            'date'       :  obj_casting.report_date,
-                            'employee'   :  line_casting.worker.name,
-                            'sale_order' :  sale_name,
-                            '_1_time'    :  _1_time,
-                            '_2_times'   :  _2_times,
-                            '_3_times'   :  _3_times,
-                            '_4_times'   :  _4_times,
-                            'coefficient':  coefficient,
-                            'total_coeff':  total_coeff,
-                            'target'     :  target,
-                            'compare'    :  round(target > 0 and total_coeff / target or 0, 2), #(8)=(6)/(7),
-                            }) 
-        return {'name': name_report, 'line': arr, 's_1': s_1, 's_2': s_2, 's_3': s_3, 's_4': s_4, 's_coff': s_coff, 's_total_coeff': s_total_coeff, 's_target': s_target, 's_compare': s_compare}
+                if line_casting.product_id.casting_times and line_casting.casting_times.id == line_casting.product_id.casting_times.id:
+                    stt = stt + 1
+                    #sale order
+                    sale_line = self.pool.get('sale.order.line').search(cr, uid, [('product_id','=',line_casting.product_id.id)])
+                    sale_name = ''
+                    if(sale_line):
+                        sale_name = self.pool.get('sale.order.line').browse(cr, uid, sale_line[0]).order_id.name
+                        #add line report
+                    _1_time = 0;
+                    _2_times = 0;
+                    _3_times = 0;
+                    _4_times = 0;
+                    #get times casting
+                    if(line_casting.product_id.casting_times and line_casting.product_id.casting_times.name == 1):
+                        _1_time = 1
+                    elif(line_casting.product_id.casting_times and line_casting.product_id.casting_times.name == 2):
+                        _2_times = 1
+                    elif(line_casting.product_id.casting_times and line_casting.product_id.casting_times.name == 3):
+                        _3_times = 1
+                    elif(line_casting.product_id.casting_times and line_casting.product_id.casting_times.name >= 4):
+                        _4_times = 1
+                    
+                    coefficient = 0
+                    if(line_casting.product_id.casting_type and line_casting.product_id.casting_type == 'gold' and line_casting.product_id.casting_times):
+                        coefficient = line_casting.product_id.casting_times.coefficient_gold
+                    elif(line_casting.product_id.casting_type and line_casting.product_id.casting_type == 'platinum' and line_casting.product_id.casting_times):
+                        coefficient = line_casting.product_id.casting_times.coefficient_pt
+                    total_coeff = (_1_time + _2_times + _3_times + _4_times) * coefficient # (6)=(4)*(5)
+    #                   
+                    s_1 += _1_time
+                    s_2 += _2_times
+                    s_3 += _3_times
+                    s_4 += _4_times
+                    s_coff += coefficient
+                    s_total_coeff += total_coeff
+                    
+                    
+                    arr.append({
+                                'stt'        :  stt,
+                                'date'       :  obj_casting.report_date,
+                                'employee'   :  line_casting.worker.name,
+                                'sale_order' :  sale_name,
+                                '_1_time'    :  _1_time,
+                                '_2_times'   :  _2_times,
+                                '_3_times'   :  _3_times,
+                                '_4_times'   :  _4_times,
+                                'coefficient':  coefficient,
+                                'total_coeff':  total_coeff,
+                                }) 
+        return {'date_from': date_from, 'date_to': date_to, 'name': name_report, 'line': arr, 's_1': s_1, 's_2': s_2, 's_3': s_3, 's_4': s_4, 's_coff': s_coff, 's_total_coeff': s_total_coeff}
     
     
+    def summary_assembling(self, cr, uid, date_from, date_to):
+        #get target in date_from date_to
+        _assembling_target = self.pool.get('hpusa.kpis.target.assembling').search(cr, uid, [('type','=','assembling'),('date_from','>=', date_from),('date_to', '<=', date_to)])
+        arr_target = []
+        sum_target = 0
+        sum_days = 0
+        sum_total = 0
+
+        arr_target_tmp = {}
+        for _assembling in _assembling_target:
+            _assembling_object = self.pool.get('hpusa.kpis.target.assembling').browse(cr, uid, _assembling)
+            for line in _assembling_object.line_ids:
+                target = line.target
+                days = line.day_month
+                total = line.total
+                if arr_target_tmp.has_key(line.employee_id.id):
+                    target += arr_target_tmp[line.employee_id.id]['target']
+                    days += arr_target_tmp[line.employee_id.id]['days']
+                    total += arr_target_tmp[line.employee_id.id]['total']
+                arr_target_tmp[line.employee_id.id] = {
+                    'employee': line.employee_id.name,
+                    'target': target,
+                    'days': days,
+                    'total': total,
+                    'notes': line.notes and line.notes or '',
+                }
+        arr_target = []
+        stt = 0
+        for key in arr_target_tmp:
+            stt += 0
+            arr_target_tmp[key]['stt'] = stt
+            arr_target.append(arr_target_tmp[key])
+            sum_target += arr_target_tmp[key]['target']
+            sum_days += arr_target_tmp[key]['days']
+            sum_total += arr_target_tmp[key]['total']
+
+        
+        #get kpi get so luong hoan thanh va so ngay lam viec
+        _assembling_ids = self.pool.get('hpusa.daily.report.assembling').search(cr, uid, [('type','=','assembling'),('report_date','>=',date_from),('report_date','<=',date_to),('state','=','confirmed')])
+        _assembling_obj = self.pool.get('hpusa.daily.report.assembling').browse(cr, uid, _assembling_ids)
+        kpi_arr_temp = {}
+        total_i = 0
+        total_ii = 0
+        total_iii = 0
+        total_iv = 0
+        total_v = 0
+        total_vi = 0
+        total_target = 0
+        total_tb = 0
+        total_tb_sp = 0
+        total_day_work = 0
+        total_complete = 0
+        total_level = 0
+        total_point = 0
+        for obj in _assembling_obj:
+            arr = []
+            for line in obj.line_ids:
+                #count 
+                count_i = 0
+                count_ii = 0
+                count_iii = 0
+                count_iv = 0
+                count_v = 0
+                count_vi = 0
+                #count 
+                #sum_count
+                day_work = 0
+                if line.worker.id not in arr:
+                    day_work = 1
+                arr.append(line.worker.id)
+
+                if line.product_id.ass_difficulty_level:
+                    if line.product_id.ass_difficulty_level.name == 'I':
+                        count_i += line.complete
+                    elif line.product_id.ass_difficulty_level.name == 'II':
+                        count_ii += line.complete
+                    elif line.product_id.ass_difficulty_level.name == 'III':
+                        count_iii += line.complete
+                    elif line.product_id.ass_difficulty_level.name == 'IV':
+                        count_iv += line.complete
+                    elif line.product_id.ass_difficulty_level.name == 'V':
+                        count_v += line.complete
+                    elif line.product_id.ass_difficulty_level.name == 'VI':
+                        count_vi += line.complete              
+                #sum_count
+                complete = line.complete
+                point = line.point
+
+                if kpi_arr_temp.has_key(line.worker.id):
+                    complete += kpi_arr_temp[line.worker.id]['complete']
+                    day_work += kpi_arr_temp[line.worker.id]['day_work']
+                    count_i += kpi_arr_temp[line.worker.id]['count_i']
+                    count_ii += kpi_arr_temp[line.worker.id]['count_ii']
+                    count_iii += kpi_arr_temp[line.worker.id]['count_iii']
+                    count_iv += kpi_arr_temp[line.worker.id]['count_iv']
+                    count_v += kpi_arr_temp[line.worker.id]['count_v']
+                    count_vi += kpi_arr_temp[line.worker.id]['count_vi']
+                    point += kpi_arr_temp[line.worker.id]['point']
+
+                kpi_arr_temp[line.worker.id] = {
+                                                    'name': line.worker.name, 'complete': complete, 'day_work': day_work, 'point': point,
+                                                    'count_i': count_i, 'count_ii': count_ii,
+                                                    'count_iii': count_iii, 'count_iv': count_iv, 'count_v': count_v,
+                                                    'count_vi': count_vi, 'tb_sp': day_work and round(complete / day_work, 2)  or 0, 'tb': day_work and round(point / day_work, 2)  or 0
+                                                }
+            
+        arr_kpi = []
+        stt = 0
+        for key in kpi_arr_temp:
+            stt = stt + 1
+            #get target
+            _assembling_target = self.pool.get('hpusa.kpis.target.assembling.line').search(cr, uid, [('parent_id.type','=','assembling'),('parent_id.date_from','>=', date_from),('parent_id.date_to', '<=', date_to), ('employee_id', '=', key)])
+            emp_target = 0
+            if arr_target_tmp.has_key(key):
+                emp_target = arr_target_tmp[key]['total']
+            kpi_arr_temp[key]['target'] = emp_target
+            kpi_arr_temp[key]['percent'] = emp_target and round(kpi_arr_temp[key]['point'] * 100/ emp_target, 2) or 0
+
+            kpi_arr_temp[key]['total_level'] = kpi_arr_temp[key]['count_i'] + kpi_arr_temp[key]['count_ii'] + kpi_arr_temp[key]['count_iii'] + kpi_arr_temp[key]['count_iv'] + kpi_arr_temp[key]['count_v'] + kpi_arr_temp[key]['count_vi']
+            kpi_arr_temp[key]['percent_i'] = kpi_arr_temp[key]['total_level'] > 0 and round(kpi_arr_temp[key]['count_i'] * 100 / kpi_arr_temp[key]['total_level'], 2) or 0
+            kpi_arr_temp[key]['percent_ii'] = kpi_arr_temp[key]['total_level'] > 0 and round(kpi_arr_temp[key]['count_ii'] * 100 / kpi_arr_temp[key]['total_level'], 2) or 0
+            kpi_arr_temp[key]['percent_iii'] = kpi_arr_temp[key]['total_level'] > 0 and round(kpi_arr_temp[key]['count_iii'] * 100 / kpi_arr_temp[key]['total_level'], 2) or 0
+            kpi_arr_temp[key]['percent_iv'] = kpi_arr_temp[key]['total_level'] > 0 and round(kpi_arr_temp[key]['count_iv'] * 100 / kpi_arr_temp[key]['total_level'], 2) or 0
+            kpi_arr_temp[key]['percent_v'] = kpi_arr_temp[key]['total_level'] > 0 and round(kpi_arr_temp[key]['count_v'] * 100 / kpi_arr_temp[key]['total_level'], 2) or 0
+            kpi_arr_temp[key]['percent_vi'] = kpi_arr_temp[key]['total_level'] > 0 and round(kpi_arr_temp[key]['count_vi'] * 100 / kpi_arr_temp[key]['total_level'], 2) or 0
+            kpi_arr_temp[key]['stt'] = stt
+            arr_kpi.append(kpi_arr_temp[key])
+
+            total_target += emp_target
+            total_level += kpi_arr_temp[key]['total_level']
+
+
+            total_i += kpi_arr_temp[key]['count_i']
+            total_ii += kpi_arr_temp[key]['count_ii']
+            total_iii +=  kpi_arr_temp[key]['count_iii']
+            total_iv += kpi_arr_temp[key]['count_iv']
+            total_v += kpi_arr_temp[key]['count_v']
+            total_vi += kpi_arr_temp[key]['count_vi']
+            total_tb +=  kpi_arr_temp[key]['tb']
+            total_tb_sp += kpi_arr_temp[key]['tb_sp']
+            total_day_work += kpi_arr_temp[key]['day_work']
+            total_complete += kpi_arr_temp[key]['complete']
+            total_point += kpi_arr_temp[key]['point']
+        
+
+        total_percent_target = round(total_target and total_point * 100 / total_target , 2) or 0
+        total_percent_i = round( total_level and total_i * 100 / total_level, 2) or 0
+        total_percent_ii = round( total_level and total_ii * 100 / total_level, 2) or 0
+        total_percent_iii = round( total_level and total_iii * 100 / total_level, 2) or 0
+        total_percent_iv = round( total_level and total_iv * 100 / total_level, 2) or 0
+        total_percent_v = round( total_level and total_v * 100 / total_level, 2) or 0
+        total_percent_vi = round( total_level and total_vi * 100 / total_level, 2) or 0
+
+        result = {}
+        result['target'] = {'res': arr_target, 'sum_target': sum_target, 'sum_days': sum_days, 'sum_total': sum_total}
+        result['kpi'] = {'res': arr_kpi, 'total_i': total_i, 'total_ii': total_ii, 'total_iii': total_iii, 'total_iv': total_iv, 'total_v': total_v, 'total_vi': total_vi, 'total_tb': total_tb, 'total_day_work': total_day_work, 'total_complete': total_complete,
+                        'total_target': total_target, 'total_percent_i': total_percent_i, 'total_percent_ii': total_percent_ii, 'total_percent_iii': total_percent_iii, 'total_percent_iv': total_percent_iv, 'total_percent_v': total_percent_v, 'total_percent_vi': total_percent_vi,
+                        'total_level': total_level, 'total_percent_target': total_percent_target, 'total_point': total_point, 'total_tb_sp': total_tb_sp}
+
+        return result
+
     def print_hp_report_kpis_assembling(self, cr, uid, type, date_from, date_to, month, month_from, month_to):
         #report week
         arr = []
@@ -360,12 +851,7 @@ class wizard_hp_report_kpis(osv.osv_memory):
                     v = 1
                 elif(line_assembling.product_id.ass_difficulty_level and line_assembling.product_id.ass_difficulty_level.name == 'VI'):
                     vi = 1
-                #get tagert
-                target = 0
-                if(line_assembling.product_id.ass_difficulty_level):
-                    tagert_ids = self.pool.get('hpusa.kpis.target.assembling.line').search(cr, uid, [('level','=',line_assembling.product_id.ass_difficulty_level.id)])
-                    if(tagert_ids):
-                        target = self.pool.get('hpusa.kpis.target.assembling.line').browse(cr, uid, tagert_ids[0]).target
+               
                 coeff =  line_assembling.product_id.ass_difficulty_level and line_assembling.product_id.ass_difficulty_level.coefficient or 0 
                 total_coeff = (i + ii + iii + iv + v + vi) * coeff
                 
@@ -378,8 +864,7 @@ class wizard_hp_report_kpis(osv.osv_memory):
                 s_percent += line_assembling.complete
                 s_coeff += coeff
                 s_total_coeff += total_coeff
-                s_target += target
-                s_compare += round(target > 0 and total_coeff/target or 0,2)
+
                 
                 arr.append({
                             'stt'        :  stt,
@@ -395,13 +880,170 @@ class wizard_hp_report_kpis(osv.osv_memory):
                             'percent'    :  line_assembling.complete,
                             'coeff'      :  coeff,
                             'total_coeff':  total_coeff,
-                            'target'     :  target,
-                            'compare'    :  round(target > 0 and total_coeff/target or 0,2),#(8)=(6)/(7)
                             })
-        return {'name': name_report, 'line': arr, 's_i': s_i, 's_ii': s_ii, 's_iii': s_iii, 's_iv': s_iv, 's_v': s_v, 's_vi': s_vi,
-                's_percent': s_percent, 's_coeff': s_coeff, 's_total_coeff': s_total_coeff, 's_target': s_target, 's_compare': s_compare}
+        return {'date_from': date_from, 'date_to': date_to, 'name': name_report, 'line': arr, 's_i': s_i, 's_ii': s_ii, 's_iii': s_iii, 's_iv': s_iv, 's_v': s_v, 's_vi': s_vi,
+                's_percent': s_percent, 's_coeff': s_coeff, 's_total_coeff': s_total_coeff}
     
     
+    def summary_setting(self, cr, uid, date_from, date_to):
+        #get target in date_from date_to
+        _setting_target = self.pool.get('hpusa.kpis.target.setting').search(cr, uid, [('type','=','setting'),('date_from','>=', date_from),('date_to', '<=', date_to)])
+        arr_target = []
+        sum_target = 0
+        sum_days = 0
+        sum_total = 0
+
+        arr_target_tmp = {}
+        for _setting in _setting_target:
+            _setting_object = self.pool.get('hpusa.kpis.target.setting').browse(cr, uid, _setting)
+            for line in _setting_object.line_ids:
+                target = line.target
+                days = line.day_month
+                total = line.total
+                if arr_target_tmp.has_key(line.employee_id.id):
+                    target += arr_target_tmp[line.employee_id.id]['target']
+                    days += arr_target_tmp[line.employee_id.id]['days']
+                    total += arr_target_tmp[line.employee_id.id]['total']
+                arr_target_tmp[line.employee_id.id] = {
+                    'employee': line.employee_id.name,
+                    'target': target,
+                    'days': days,
+                    'total': total,
+                    'notes': line.notes and line.notes or '',
+                }
+        arr_target = []
+        stt = 0
+        for key in arr_target_tmp:
+            stt += 0
+            arr_target_tmp[key]['stt'] = stt
+            arr_target.append(arr_target_tmp[key])
+            sum_target += arr_target_tmp[key]['target']
+            sum_days += arr_target_tmp[key]['days']
+            sum_total += arr_target_tmp[key]['total']
+
+        
+        #get kpi get so luong hoan thanh va so ngay lam viec
+        _setting_ids = self.pool.get('hpusa.daily.report.setting').search(cr, uid, [('type','=','setting'),('report_date','>=',date_from),('report_date','<=',date_to),('state','=','confirmed')])
+        _assembling_obj = self.pool.get('hpusa.daily.report.setting').browse(cr, uid, _setting_ids)
+        kpi_arr_temp = {}
+        total_i = 0
+        total_ii = 0
+        total_iii = 0
+        total_iv = 0
+        total_v = 0
+        total_vi = 0
+        total_target = 0
+        total_tb = 0
+        total_tb_sp = 0
+        total_day_work = 0
+        total_complete = 0
+        total_level = 0
+        total_point = 0
+        for obj in _assembling_obj:
+            arr = []
+            for line in obj.line_ids:
+                day_work = 0
+                if line.worker.id not in arr:
+                    day_work = 1
+                arr.append(line.worker.id)
+                #count 
+                count_i = 0
+                count_ii = 0
+                count_iii = 0
+                count_iv = 0
+                count_v = 0
+                count_vi = 0
+                #count 
+                #sum_count
+
+                if line.product_id.setting_difficulty_level:
+                    if line.product_id.setting_difficulty_level.name == 'I':
+                        count_i += line.complete
+                    elif line.product_id.setting_difficulty_level.name == 'II':
+                        count_ii += line.complete
+                    elif line.product_id.setting_difficulty_level.name == 'III':
+                        count_iii += line.complete
+                    elif line.product_id.setting_difficulty_level.name == 'IV':
+                        count_iv += line.complete
+                    elif line.product_id.setting_difficulty_level.name == 'V':
+                        count_v += line.complete
+                    elif line.product_id.setting_difficulty_level.name == 'VI':
+                        count_vi += line.complete               
+                #sum_count
+                complete = line.complete
+                point = line.point
+                if kpi_arr_temp.has_key(line.worker.id):
+                    complete += kpi_arr_temp[line.worker.id]['complete']
+                    day_work += kpi_arr_temp[line.worker.id]['day_work']
+                    count_i += kpi_arr_temp[line.worker.id]['count_i']
+                    count_ii += kpi_arr_temp[line.worker.id]['count_ii']
+                    count_iii += kpi_arr_temp[line.worker.id]['count_iii']
+                    count_iv += kpi_arr_temp[line.worker.id]['count_iv']
+                    count_v += kpi_arr_temp[line.worker.id]['count_v']
+                    count_vi += kpi_arr_temp[line.worker.id]['count_vi']
+                    point += kpi_arr_temp[line.worker.id]['point']
+
+                kpi_arr_temp[line.worker.id] = {
+                                                        'name': line.worker.name, 'complete': complete, 'day_work': day_work, 'point': point,
+                                                        'count_i': count_i, 'count_ii': count_ii,
+                                                        'count_iii': count_iii, 'count_iv': count_iv, 'count_v': count_v,
+                                                        'count_vi': count_vi, 'tb_sp': day_work and round(complete / day_work, 2)  or 0, 'tb': day_work and round(point / day_work, 2)  or 0
+                                                }
+        
+        arr_kpi = []
+        stt = 0
+        for key in kpi_arr_temp:
+            stt = stt + 1
+            #get target
+            emp_target = 0
+            if arr_target_tmp.has_key(key):
+                emp_target = arr_target_tmp[key]['total']
+
+            kpi_arr_temp[key]['target'] = emp_target
+            kpi_arr_temp[key]['percent'] = emp_target and round(kpi_arr_temp[key]['point'] * 100 / emp_target, 2) or 0
+
+            kpi_arr_temp[key]['total_level'] = kpi_arr_temp[key]['count_i'] + kpi_arr_temp[key]['count_ii'] + kpi_arr_temp[key]['count_iii'] + kpi_arr_temp[key]['count_iv'] + kpi_arr_temp[key]['count_v'] + kpi_arr_temp[key]['count_vi']
+            kpi_arr_temp[key]['percent_i'] = kpi_arr_temp[key]['total_level'] > 0 and round(kpi_arr_temp[key]['count_i'] * 100 / kpi_arr_temp[key]['total_level'], 2) or 0
+            kpi_arr_temp[key]['percent_ii'] = kpi_arr_temp[key]['total_level'] > 0 and round(kpi_arr_temp[key]['count_ii'] * 100 / kpi_arr_temp[key]['total_level'], 2) or 0
+            kpi_arr_temp[key]['percent_iii'] = kpi_arr_temp[key]['total_level'] > 0 and round(kpi_arr_temp[key]['count_iii'] * 100 / kpi_arr_temp[key]['total_level'], 2) or 0
+            kpi_arr_temp[key]['percent_iv'] = kpi_arr_temp[key]['total_level'] > 0 and round(kpi_arr_temp[key]['count_iv'] * 100 / kpi_arr_temp[key]['total_level'], 2) or 0
+            kpi_arr_temp[key]['percent_v'] = kpi_arr_temp[key]['total_level'] > 0 and round(kpi_arr_temp[key]['count_v'] * 100 / kpi_arr_temp[key]['total_level'], 2) or 0
+            kpi_arr_temp[key]['percent_vi'] = kpi_arr_temp[key]['total_level'] > 0 and round(kpi_arr_temp[key]['count_vi'] * 100 / kpi_arr_temp[key]['total_level'], 2) or 0
+            kpi_arr_temp[key]['stt'] = stt
+            arr_kpi.append(kpi_arr_temp[key])
+
+            total_target += emp_target
+            total_level += kpi_arr_temp[key]['total_level']
+
+            total_i += kpi_arr_temp[key]['count_i']
+            total_ii += kpi_arr_temp[key]['count_ii']
+            total_iii +=  kpi_arr_temp[key]['count_iii']
+            total_iv += kpi_arr_temp[key]['count_iv']
+            total_v += kpi_arr_temp[key]['count_v']
+            total_vi += kpi_arr_temp[key]['count_vi']
+            total_tb +=  kpi_arr_temp[key]['tb']
+            total_tb_sp +=  kpi_arr_temp[key]['tb_sp']
+            total_day_work += kpi_arr_temp[key]['day_work']
+            total_complete += kpi_arr_temp[key]['complete']
+            total_point += kpi_arr_temp[key]['point']
+            
+
+        total_percent_target = round(total_target and total_point * 100 / total_target , 2) or 0
+        total_percent_i = round( total_level and total_i * 100 / total_level, 2) or 0
+        total_percent_ii = round( total_level and total_ii * 100 / total_level, 2) or 0
+        total_percent_iii = round( total_level and total_iii * 100 / total_level, 2) or 0
+        total_percent_iv = round( total_level and total_iv * 100 / total_level, 2) or 0
+        total_percent_v = round( total_level and total_v * 100 / total_level, 2) or 0
+        total_percent_vi = round( total_level and total_vi * 100 / total_level, 2) or 0
+
+        result = {}
+        result['target'] = {'res': arr_target, 'sum_target': sum_target, 'sum_days': sum_days, 'sum_total': sum_total}
+        result['kpi'] = {'res': arr_kpi, 'total_i': total_i, 'total_ii': total_ii, 'total_iii': total_iii, 'total_iv': total_iv, 'total_v': total_v, 'total_vi': total_vi, 'total_tb': total_tb, 'total_day_work': total_day_work, 'total_complete': total_complete,
+                        'total_target': total_target, 'total_percent_i': total_percent_i, 'total_percent_ii': total_percent_ii, 'total_percent_iii': total_percent_iii, 'total_percent_iv': total_percent_iv, 'total_percent_v': total_percent_v, 'total_percent_vi': total_percent_vi,
+                        'total_level': total_level, 'total_percent_target': total_percent_target, 'total_point': total_point, 'total_tb_sp': total_tb_sp}
+
+        return result
+
     def print_hp_report_kpis_setting(self, cr, uid, type, date_from, date_to, month, month_from, month_to):
         #report week
         arr = []
@@ -476,12 +1118,7 @@ class wizard_hp_report_kpis(osv.osv_memory):
                 percent = line_setting.complete
                 coeff =  line_setting.product_id.setting_difficulty_level and line_setting.product_id.setting_difficulty_level.coefficient or 0 
                 total_coeff = (I + II + III + IV + V + VI + VII + VIII + IX) * percent * coeff #(7)=(4)*(5)*(6)
-                #get tagert
-                target = 0
-                if(line_setting.product_id.setting_difficulty_level):
-                    tagert_ids = self.pool.get('hpusa.kpis.target.setting.line').search(cr, uid, [('level','=',line_setting.product_id.setting_difficulty_level.id)])
-                    if(tagert_ids):
-                        target = self.pool.get('hpusa.kpis.target.setting.line').browse(cr, uid, tagert_ids[0]).target
+                
                 s_i += I
                 s_ii += II
                 s_iii += III
@@ -494,8 +1131,7 @@ class wizard_hp_report_kpis(osv.osv_memory):
                 s_per += percent
                 s_coeff += coeff
                 s_total_coeff += total_coeff
-                s_target += target
-                s_compare += target > 0 and total_coeff/target or 0
+                
                 arr.append({
                             'stt'        :  stt,
                             'date'       :  obj_setting.report_date,
@@ -513,12 +1149,10 @@ class wizard_hp_report_kpis(osv.osv_memory):
                             'percent'    :  percent,
                             'coeff'      :  coeff,
                             'total_coeff':  total_coeff,
-                            'target'     :  target,
-                            'compare'    :  target > 0 and total_coeff/target or 0,#(8)=(6)/(7)
                             })
-        return {'name': name_report, 'line': arr, 's_i': s_i, 's_ii': s_ii, 's_iii': s_iii, 's_iv': s_iv, 's_v': s_v,
-                's_vi': s_vi, 's_vii': s_vii, 's_viii': s_viii, 's_ix': s_ix, 's_per': s_per, 's_coeff': s_coeff, 's_total_coeff': s_total_coeff,
-                's_target': s_target, 's_compare': s_compare}
+        return {'date_from': date_from, 'date_to': date_to, 'name': name_report, 'line': arr, 's_i': s_i, 's_ii': s_ii, 's_iii': s_iii, 's_iv': s_iv, 's_v': s_v,
+                's_vi': s_vi, 's_vii': s_vii, 's_viii': s_viii, 's_ix': s_ix, 's_per': s_per, 's_coeff': s_coeff, 's_total_coeff': s_total_coeff
+                }
 
         
     def print_hp_report_kpis_aggregate(self, cr, uid, type, date_from, date_to, month, month_from, month_to):
@@ -530,376 +1164,7 @@ class wizard_hp_report_kpis(osv.osv_memory):
             name_report = period.name
             date_from = period.date_start
             date_to = period.date_stop
-            qty_3d_1_1 = self.qty_3d_times(cr, uid, date_from, date_to, 1, type, 1)
-            qty_3d_1_2 = self.qty_3d_times(cr, uid, date_from, date_to, 1, type, 2)
-            qty_3d_1_3 = self.qty_3d_times(cr, uid, date_from, date_to, 1, type, 3)
-            qty_3d_1_4 = self.qty_3d_times(cr, uid, date_from, date_to, 1, type, 4)
             
-            qty_3d_2_1 = self.qty_3d_times(cr, uid, date_from, date_to, 2, type, 1)
-            qty_3d_2_2 = self.qty_3d_times(cr, uid, date_from, date_to, 2, type, 2)
-            qty_3d_2_3 = self.qty_3d_times(cr, uid, date_from, date_to, 2, type, 3)
-            qty_3d_2_4 = self.qty_3d_times(cr, uid, date_from, date_to, 2, type, 4)
-            
-            qty_3d_3_1 = self.qty_3d_times(cr, uid, date_from, date_to, 3, type, 1)
-            qty_3d_3_2 = self.qty_3d_times(cr, uid, date_from, date_to, 3, type, 2)
-            qty_3d_3_3 = self.qty_3d_times(cr, uid, date_from, date_to, 3, type, 3)
-            qty_3d_3_4 = self.qty_3d_times(cr, uid, date_from, date_to, 3, type, 4)
-
-            qty_3d_4_1 = self.qty_3d_times(cr, uid, date_from, date_to, 4, type, 1)
-            qty_3d_4_2 = self.qty_3d_times(cr, uid, date_from, date_to, 4, type, 2)
-            qty_3d_4_3 = self.qty_3d_times(cr, uid, date_from, date_to, 4, type, 3)
-            qty_3d_4_4 = self.qty_3d_times(cr, uid, date_from, date_to, 4, type, 4)
-
-            qty_3d_easy_1 = self.qty_3d_level(cr, uid, date_from, date_to, 'Easy', type, 1)
-            qty_3d_easy_2 =  self.qty_3d_level(cr, uid, date_from, date_to, 'Easy', type, 2)
-            qty_3d_easy_3 =  self.qty_3d_level(cr, uid, date_from, date_to, 'Easy', type, 3)
-            qty_3d_easy_4 =  self.qty_3d_level(cr, uid, date_from, date_to, 'Easy', type, 4)
-
-            qty_3d_medium_1 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium', type, 1)
-            qty_3d_medium_2 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium', type, 2)
-            qty_3d_medium_3 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium', type, 3)
-            qty_3d_medium_4 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium', type, 3)
-
-            qty_3d_medium_hard_1 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium - Hard', type, 1)
-            qty_3d_medium_hard_2 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium - Hard', type, 2)
-            qty_3d_medium_hard_3 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium - Hard', type, 3)
-            qty_3d_medium_hard_4 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium - Hard', type, 4)
-
-            qty_3d_hard_1 = self.qty_3d_level(cr, uid, date_from, date_to, 'Hard', type, 1)
-            qty_3d_hard_2 = self.qty_3d_level(cr, uid, date_from, date_to, 'Hard', type, 2)
-            qty_3d_hard_3 = self.qty_3d_level(cr, uid, date_from, date_to, 'Hard', type, 3)
-            qty_3d_hard_4 = self.qty_3d_level(cr, uid, date_from, date_to, 'Hard', type, 4)
-
-            qty_3d_very_hard_1 = self.qty_3d_level(cr, uid, date_from, date_to, 'Very Hard', type, 1)
-            qty_3d_very_hard_2 = self.qty_3d_level(cr, uid, date_from, date_to, 'Very Hard', type, 2)
-            qty_3d_very_hard_3 = self.qty_3d_level(cr, uid, date_from, date_to, 'Very Hard', type, 3)
-            qty_3d_very_hard_4 = self.qty_3d_level(cr, uid, date_from, date_to, 'Very Hard', type, 4)
-            
-            qty_casting_1_1 = self.qty_casting(cr, uid, date_from, date_to, 1, type, 1)
-            qty_casting_1_2 = self.qty_casting(cr, uid, date_from, date_to, 1, type, 2)
-            qty_casting_1_3 = self.qty_casting(cr, uid, date_from, date_to, 1, type, 3)
-            qty_casting_1_4 = self.qty_casting(cr, uid, date_from, date_to, 1, type, 4)
-            
-            qty_casting_2_1 = self.qty_casting(cr, uid, date_from, date_to, 2, type, 1)
-            qty_casting_2_2 = self.qty_casting(cr, uid, date_from, date_to, 2, type, 2)
-            qty_casting_2_3 = self.qty_casting(cr, uid, date_from, date_to, 2, type, 3)
-            qty_casting_2_4 = self.qty_casting(cr, uid, date_from, date_to, 2, type, 4)
-            
-            qty_casting_3_1 = self.qty_casting(cr, uid, date_from, date_to, 3, type, 1)
-            qty_casting_3_2 = self.qty_casting(cr, uid, date_from, date_to, 3, type, 2)
-            qty_casting_3_3 = self.qty_casting(cr, uid, date_from, date_to, 3, type, 3)
-            qty_casting_3_4 = self.qty_casting(cr, uid, date_from, date_to, 3, type, 4)
-            
-            qty_casting_4_1 = self.qty_casting(cr, uid, date_from, date_to, 4, type, 1)
-            qty_casting_4_2 = self.qty_casting(cr, uid, date_from, date_to, 4, type, 2)
-            qty_casting_4_3 = self.qty_casting(cr, uid, date_from, date_to, 4, type, 3)
-            qty_casting_4_4 = self.qty_casting(cr, uid, date_from, date_to, 4, type, 4)
-            
-            qty_assembling_easy_1 = self.qty_assembling(cr, uid, date_from, date_to, 'Easy', type, 1)
-            qty_assembling_easy_2 = self.qty_assembling(cr, uid, date_from, date_to, 'Easy', type, 2)
-            qty_assembling_easy_3 = self.qty_assembling(cr, uid, date_from, date_to, 'Easy', type, 3)
-            qty_assembling_easy_4 = self.qty_assembling(cr, uid, date_from, date_to, 'Easy', type, 4)
-            
-            qty_assembling_medium_1 = self.qty_assembling(cr, uid, date_from, date_to, 'Medium', type, 1)
-            qty_assembling_medium_2 = self.qty_assembling(cr, uid, date_from, date_to, 'Medium', type, 2)
-            qty_assembling_medium_3 = self.qty_assembling(cr, uid, date_from, date_to, 'Medium', type, 3)
-            qty_assembling_medium_4 = self.qty_assembling(cr, uid, date_from, date_to, 'Medium', type, 4)
-            
-            qty_assembling_hard_1 = self.qty_assembling(cr, uid, date_from, date_to, 'Hard', type, 1)
-            qty_assembling_hard_2 = self.qty_assembling(cr, uid, date_from, date_to, 'Hard', type, 2)
-            qty_assembling_hard_3 = self.qty_assembling(cr, uid, date_from, date_to, 'Hard', type, 3)
-            qty_assembling_hard_4 = self.qty_assembling(cr, uid, date_from, date_to, 'Hard', type, 4)
-            
-            qty_assembling_very_hard_1 = self.qty_assembling(cr, uid, date_from, date_to, 'Very Hard', type, 1)
-            qty_assembling_very_hard_2 = self.qty_assembling(cr, uid, date_from, date_to, 'Very Hard', type, 2)
-            qty_assembling_very_hard_3 = self.qty_assembling(cr, uid, date_from, date_to, 'Very Hard', type, 3)
-            qty_assembling_very_hard_4 = self.qty_assembling(cr, uid, date_from, date_to, 'Very Hard', type, 4)
-            
-            qty_setting_i_1 = self.qty_setting(cr, uid, date_from, date_to, 'I', type, 1)
-            qty_setting_i_2 = self.qty_setting(cr, uid, date_from, date_to, 'I', type, 2)
-            qty_setting_i_3 = self.qty_setting(cr, uid, date_from, date_to, 'I', type, 3)
-            qty_setting_i_4 = self.qty_setting(cr, uid, date_from, date_to, 'I', type, 4)
-            
-            qty_setting_ii_1 = self.qty_setting(cr, uid, date_from, date_to, 'II', type, 1)
-            qty_setting_ii_2 = self.qty_setting(cr, uid, date_from, date_to, 'II', type, 2)
-            qty_setting_ii_3 = self.qty_setting(cr, uid, date_from, date_to, 'II', type, 3)
-            qty_setting_ii_4 = self.qty_setting(cr, uid, date_from, date_to, 'II', type, 4)
-            
-            qty_setting_iii_1 = self.qty_setting(cr, uid, date_from, date_to, 'III', type, 1)
-            qty_setting_iii_2 = self.qty_setting(cr, uid, date_from, date_to, 'III', type, 2)
-            qty_setting_iii_3 = self.qty_setting(cr, uid, date_from, date_to, 'III', type, 3)
-            qty_setting_iii_4 = self.qty_setting(cr, uid, date_from, date_to, 'III', type, 4)
-            
-            qty_setting_iv_1 = self.qty_setting(cr, uid, date_from, date_to, 'IV', type, 1)
-            qty_setting_iv_2 = self.qty_setting(cr, uid, date_from, date_to, 'IV', type, 2)
-            qty_setting_iv_3 = self.qty_setting(cr, uid, date_from, date_to, 'IV', type, 3)
-            qty_setting_iv_4 = self.qty_setting(cr, uid, date_from, date_to, 'IV', type, 4)
-            
-            qty_setting_v_1 = self.qty_setting(cr, uid, date_from, date_to, 'V', type, 1)
-            qty_setting_v_2 = self.qty_setting(cr, uid, date_from, date_to, 'V', type, 2)
-            qty_setting_v_3 = self.qty_setting(cr, uid, date_from, date_to, 'V', type, 3)
-            qty_setting_v_4 = self.qty_setting(cr, uid, date_from, date_to, 'V', type, 4)
-            
-            qty_setting_vi_1 = self.qty_setting(cr, uid, date_from, date_to, 'VI', type, 1)
-            qty_setting_vi_2 = self.qty_setting(cr, uid, date_from, date_to, 'VI', type, 2)
-            qty_setting_vi_3 = self.qty_setting(cr, uid, date_from, date_to, 'VI', type, 3)
-            qty_setting_vi_4 = self.qty_setting(cr, uid, date_from, date_to, 'VI', type, 4)
-            
-            qty_setting_vii_1 = self.qty_setting(cr, uid, date_from, date_to, 'VII', type, 1)
-            qty_setting_vii_2 = self.qty_setting(cr, uid, date_from, date_to, 'VII', type, 2)
-            qty_setting_vii_3 = self.qty_setting(cr, uid, date_from, date_to, 'VII', type, 3)
-            qty_setting_vii_4 = self.qty_setting(cr, uid, date_from, date_to, 'VII', type, 4)
-            
-            qty_setting_viii_1 = self.qty_setting(cr, uid, date_from, date_to, 'VIII', type, 1)
-            qty_setting_viii_2 = self.qty_setting(cr, uid, date_from, date_to, 'VIII', type, 2)
-            qty_setting_viii_3 = self.qty_setting(cr, uid, date_from, date_to, 'VIII', type, 3)
-            qty_setting_viii_4 = self.qty_setting(cr, uid, date_from, date_to, 'VIII', type, 4)
-            
-            qty_setting_ix_1 = self.qty_setting(cr, uid, date_from, date_to, 'IX', type, 1)
-            qty_setting_ix_2 = self.qty_setting(cr, uid, date_from, date_to, 'IX', type, 2)
-            qty_setting_ix_3 = self.qty_setting(cr, uid, date_from, date_to, 'IX', type, 3)
-            qty_setting_ix_4 = self.qty_setting(cr, uid, date_from, date_to, 'IX', type, 4)
-                      
-            
-            arr = {
-                      'coeff_3d_1': self._3d_times(cr, uid, '=', 1),
-                      'qty_3d_1_1': qty_3d_1_1,
-                      'qty_3d_1_2': qty_3d_1_2,
-                      'qty_3d_1_3': qty_3d_1_3,
-                      'qty_3d_1_4': qty_3d_1_4,
-                      'qty_3d_1_total': qty_3d_1_1 + qty_3d_1_2 + qty_3d_1_3 +qty_3d_1_4,
-                      'emp_3d_1': self._3d_employee_times(cr, uid, date_from, date_to, '=', 1),
-                      'target_3d_1': 0,
-                      
-                      'coeff_3d_2': self._3d_times(cr, uid, '=', 2),
-                      'qty_3d_2_1': qty_3d_2_1,
-                      'qty_3d_2_2': qty_3d_2_2,
-                      'qty_3d_2_3': qty_3d_2_3,
-                      'qty_3d_2_4': qty_3d_2_4,
-                      'qty_3d_2_total': qty_3d_2_1 + qty_3d_2_2 + qty_3d_2_3 + qty_3d_2_4,
-                      'emp_3d_2': self._3d_employee_times(cr, uid, date_from, date_to, '=', 2),
-                      'target_3d_2': 0,
-                      
-                      'coeff_3d_3': self._3d_times(cr, uid, '=', 3),
-                      'qty_3d_3_1': qty_3d_3_1,
-                      'qty_3d_3_2': qty_3d_3_2,
-                      'qty_3d_3_3': qty_3d_3_3,
-                      'qty_3d_3_4': qty_3d_3_4,
-                      'qty_3d_3_total': qty_3d_3_1 + qty_3d_3_2 + qty_3d_3_3 + qty_3d_3_4,
-                      'emp_3d_3': self._3d_employee_times(cr, uid, date_from, date_to, '=', 3),
-                      'target_3d_3': 0,
-                      
-                      'coeff_3d_4': self._3d_times(cr, uid, '>=', 4),
-                      'qty_3d_4_1': qty_3d_4_1,
-                      'qty_3d_4_2': qty_3d_4_2,
-                      'qty_3d_4_3': qty_3d_4_3,
-                      'qty_3d_4_4': qty_3d_4_4,
-                      'qty_3d_4_total': qty_3d_4_1 + qty_3d_4_2 + qty_3d_4_3 + qty_3d_4_4,
-                      'emp_3d_4': self._3d_employee_times(cr, uid, date_from, date_to, '>=', 4),
-                      'target_3d_4': 0,
-                      
-                      'coeff_3d_easy': self._3d_level(cr, uid, 'Easy'),
-                      'qty_3d_easy_1':  qty_3d_easy_1,
-                      'qty_3d_easy_2':  qty_3d_easy_2,
-                      'qty_3d_easy_3':  qty_3d_easy_2,
-                      'qty_3d_easy_4':  qty_3d_easy_4,
-                      'qty_3d_easy_total':  qty_3d_easy_1 + qty_3d_easy_2 + qty_3d_easy_3 + qty_3d_easy_4,
-                      'emp_3d_easy': self._3d_employee_level(cr, uid, date_from, date_to, 'Easy'),
-                      'target_3d_easy': self._3d_target(cr, uid, 'Easy'),
-                      
-                      'coeff_3d_medium': self._3d_level(cr, uid, 'Medium'),
-                      'qty_3d_medium_1': qty_3d_medium_1,
-                      'qty_3d_medium_2': qty_3d_medium_2,
-                      'qty_3d_medium_3': qty_3d_medium_3,
-                      'qty_3d_medium_4': qty_3d_medium_4,
-                      'qty_3d_medium_total': qty_3d_medium_1 + qty_3d_medium_2 + qty_3d_medium_3 + qty_3d_medium_4,
-                      'emp_3d_medium': self._3d_employee_level(cr, uid, date_from, date_to, 'Medium'),
-                      'target_3d_medium': self._3d_target(cr, uid, 'Medium'),
-                      
-                      'coeff_3d_medium_hard': self._3d_level(cr, uid, 'Medium - Hard'),
-                      'qty_3d_medium_hard_1': qty_3d_medium_hard_1,
-                      'qty_3d_medium_hard_2': qty_3d_medium_hard_2,
-                      'qty_3d_medium_hard_3': qty_3d_medium_hard_3,
-                      'qty_3d_medium_hard_4': qty_3d_medium_hard_4,
-                      'qty_3d_medium_hard_total': qty_3d_medium_hard_4,
-                      'emp_3d_medium_hard': self._3d_employee_level(cr, uid, date_from, date_to, 'Medium - Hard'),
-                      'target_3d_medium_hard': self._3d_target(cr, uid, 'Medium - Hard'),
-                      
-                      'coeff_3d_hard': self._3d_level(cr, uid, 'Hard'),
-                      'qty_3d_hard_1': qty_3d_hard_1,
-                      'qty_3d_hard_2': qty_3d_hard_2,
-                      'qty_3d_hard_3': qty_3d_hard_3,
-                      'qty_3d_hard_4': qty_3d_hard_4,
-                      'qty_3d_hard_total': qty_3d_hard_1 + qty_3d_hard_2 + qty_3d_hard_3 + qty_3d_hard_4,
-                      'emp_3d_hard': self._3d_employee_level(cr, uid, date_from, date_to, 'Hard'),
-                      'target_3d_hard': self._3d_target(cr, uid, 'Hard'),
-                      
-                      'coeff_3d_very_hard': self._3d_level(cr, uid, 'Very Hard'),
-                      'qty_3d_very_hard_1': qty_3d_very_hard_1,
-                      'qty_3d_very_hard_2': qty_3d_very_hard_2,
-                      'qty_3d_very_hard_3': qty_3d_very_hard_3,
-                      'qty_3d_very_hard_4': qty_3d_very_hard_4,
-                      'qty_3d_very_hard_total': qty_3d_very_hard_1 + qty_3d_very_hard_2 + qty_3d_very_hard_3 + qty_3d_very_hard_4,
-                      'emp_3d_very_hard': self._3d_employee_level(cr, uid, date_from, date_to, 'Very Hard'),
-                      'target_3d_very_hard': self._3d_target(cr, uid, 'Very Hard'),
-                      
-                      
-                      'coeff_casting_1' : self.casting(cr, uid, '=', 1),
-                      'qty_casting_1_1': qty_casting_1_1,
-                      'qty_casting_1_2': qty_casting_1_2,
-                      'qty_casting_1_3': qty_casting_1_3,
-                      'qty_casting_1_4': qty_casting_1_4,
-                      'qty_casting_1_total': qty_casting_1_1 + qty_casting_1_2 + qty_casting_1_3 + qty_casting_1_4,
-                      'emp_casting_1': self.casting_employee(cr, uid, date_from, date_to, '=', 1),
-                      'target_casting_1': 0,
-                      
-                      'coeff_casting_2' : self.casting(cr, uid, '=', 2),
-                      'qty_casting_2_1': qty_casting_2_1,
-                      'qty_casting_2_2': qty_casting_2_2,
-                      'qty_casting_2_3': qty_casting_2_3,
-                      'qty_casting_2_4': qty_casting_2_4,
-                      'qty_casting_2_total': qty_casting_2_1 + qty_casting_2_2 + qty_casting_2_3 + qty_casting_2_4,
-                      'emp_casting_2': self.casting_employee(cr, uid, date_from, date_to, '=', 2),
-                      'target_casting_2': 0,
-                      
-                      'coeff_casting_3' : self.casting(cr, uid, '=', 3),
-                      'qty_casting_3_1': qty_casting_3_1,
-                      'qty_casting_3_2': qty_casting_3_2,
-                      'qty_casting_3_3': qty_casting_3_3,
-                      'qty_casting_3_4':  qty_casting_3_4,
-                      'qty_casting_3_total':  qty_casting_3_1 + qty_casting_3_2 + qty_casting_3_3 + qty_casting_3_4,
-                      'emp_casting_3': self.casting_employee(cr, uid, date_from, date_to, '=', 3),
-                      'target_casting_3': 0,
-                      
-                      'coeff_casting_4' : self.casting(cr, uid, '>=', 4),
-                      'qty_casting_4_1':  qty_casting_4_1,
-                      'qty_casting_4_2': qty_casting_4_2,
-                      'qty_casting_4_3': qty_casting_4_3,
-                      'qty_casting_4_4': qty_casting_4_4,
-                      'qty_casting_4_total': qty_casting_4_1 + qty_casting_4_2 + qty_casting_4_3 + qty_casting_4_4,
-                      'emp_casting_4': self.casting_employee(cr, uid, date_from, date_to, '=', 4),
-                      'target_casting_4': 0,
-                      
-                      
-                      'coeff_assembling_easy': self.assembling(cr, uid, 'Easy'),
-                      'qty_assembling_easy_1': qty_assembling_easy_1,
-                      'qty_assembling_easy_2': qty_assembling_easy_2,
-                      'qty_assembling_easy_3': qty_assembling_easy_3,
-                      'qty_assembling_easy_4': qty_assembling_easy_4,
-                      'qty_assembling_easy_total': qty_assembling_easy_1 + qty_assembling_easy_2 + qty_assembling_easy_3 + qty_assembling_easy_4,
-                      'emp_assembling_easy'  : self.assembling_employee(cr, uid, date_from, date_to, 'Easy'),
-                      'target_assembling_easy': self.target_assembling(cr, uid, 'Easy'),
-                      
-                      'coeff_assembling_medium': self.assembling(cr, uid, 'Medium'),
-                      'qty_assembling_medium_1': qty_assembling_medium_1,
-                      'qty_assembling_medium_2': qty_assembling_medium_2,
-                      'qty_assembling_medium_3': qty_assembling_medium_3,
-                      'qty_assembling_medium_4': qty_assembling_medium_4,
-                      'qty_assembling_medium_total': qty_assembling_medium_1 + qty_assembling_medium_2 + qty_assembling_medium_3 + qty_assembling_medium_4,
-                      'emp_assembling_medium'  : self.assembling_employee(cr, uid, date_from, date_to, 'Medium'),
-                      'target_assembling_medium': self.target_assembling(cr, uid, 'Medium'),
-                      
-                      'coeff_assembling_hard': self.assembling(cr, uid, 'Hard'),
-                      'qty_assembling_hard_1': qty_assembling_hard_1,
-                      'qty_assembling_hard_2': qty_assembling_hard_2,
-                      'qty_assembling_hard_3': qty_assembling_hard_3,
-                      'qty_assembling_hard_4': qty_assembling_hard_4,
-                      'qty_assembling_hard_total': qty_assembling_hard_1 + qty_assembling_hard_2 + qty_assembling_hard_3 + qty_assembling_hard_4,
-                      'emp_assembling_hard'  : self.assembling_employee(cr, uid, date_from, date_to, 'Hard'),
-                      'target_assembling_hard': self.target_assembling(cr, uid, 'Hard'),
-                      
-                      'coeff_assembling_very_hard': self.assembling(cr, uid, 'Very Hard'),
-                      'qty_assembling_very_hard_1': qty_assembling_very_hard_1,
-                      'qty_assembling_very_hard_2': qty_assembling_very_hard_2,
-                      'qty_assembling_very_hard_3': qty_assembling_very_hard_3,
-                      'qty_assembling_very_hard_4': qty_assembling_very_hard_4,
-                      'qty_assembling_very_hard_total': qty_assembling_very_hard_1 + qty_assembling_very_hard_2 + qty_assembling_very_hard_3 + qty_assembling_very_hard_4,
-                      'emp_assembling_very_hard'  : self.assembling_employee(cr, uid, date_from, date_to, 'Very Hard'),
-                      'target_assembling_very_hard': self.target_assembling(cr, uid, 'Very Hard'),
-                      
-                      
-                      'coeff_setting_i': self.setting(cr, uid, 'I'),
-                      'qty_setting_i_1': qty_setting_i_1,
-                      'qty_setting_i_2': qty_setting_i_2,
-                      'qty_setting_i_3': qty_setting_i_3,
-                      'qty_setting_i_4': qty_setting_i_4,
-                      'qty_setting_i_total': qty_setting_i_1 + qty_setting_i_2 + qty_setting_i_3 + qty_setting_i_4,
-                      'emp_setting_i': self.setting_employee(cr, uid, date_from, date_to, 'I'),
-                      'target_setting_i': self.target_setting(cr, uid, 'I'),
-                      
-                      'coeff_setting_ii': self.setting(cr, uid, 'II'),
-                      'qty_setting_ii_1': qty_setting_ii_1,
-                      'qty_setting_ii_2': qty_setting_ii_2,
-                      'qty_setting_ii_3': qty_setting_ii_3,
-                      'qty_setting_ii_4': qty_setting_ii_4,
-                      'qty_setting_ii_total': qty_setting_ii_1 + qty_setting_ii_2 + qty_setting_ii_3 + qty_setting_ii_4,
-                      'emp_setting_ii': self.setting_employee(cr, uid, date_from, date_to, 'II'),
-                      'target_setting_ii': self.target_setting(cr, uid, 'II'),
-                      
-                      'coeff_setting_iii': self.setting(cr, uid, 'III'),
-                      'qty_setting_iii_1': qty_setting_iii_1,
-                      'qty_setting_iii_2': qty_setting_iii_2,
-                      'qty_setting_iii_3': qty_setting_iii_3,
-                      'qty_setting_iii_4': qty_setting_iii_4,
-                      'qty_setting_iii_total': qty_setting_iii_1 + qty_setting_iii_2 + qty_setting_iii_3 + qty_setting_iii_4,
-                      'emp_setting_iii': self.setting_employee(cr, uid, date_from, date_to, 'III'),
-                      'target_setting_iii': self.target_setting(cr, uid, 'III'),
-                      
-                      'coeff_setting_iv': self.setting(cr, uid, 'IV'),
-                      'qty_setting_iv_1': qty_setting_iv_1,
-                      'qty_setting_iv_2': qty_setting_iv_2,
-                      'qty_setting_iv_3': qty_setting_iv_3,
-                      'qty_setting_iv_4': qty_setting_iv_4,
-                      'qty_setting_iv_total': qty_setting_iv_1 + qty_setting_iv_2 + qty_setting_iv_3 + qty_setting_iv_4,
-                      'emp_setting_iv': self.setting_employee(cr, uid, date_from, date_to, 'IV'),
-                      'target_setting_iv': self.target_setting(cr, uid, 'IV'),
-                      
-                      'coeff_setting_v': self.setting(cr, uid, 'V'),
-                      'qty_setting_v_1': qty_setting_v_1,
-                      'qty_setting_v_2': qty_setting_v_2,
-                      'qty_setting_v_3': qty_setting_v_3,
-                      'qty_setting_v_4': qty_setting_v_4,
-                      'qty_setting_v_total': qty_setting_v_1 + qty_setting_v_2 + qty_setting_v_3 + qty_setting_v_4,
-                      'emp_setting_v': self.setting_employee(cr, uid, date_from, date_to, 'V'),
-                      'target_setting_v': self.target_setting(cr, uid, 'V'),
-                      
-                      'coeff_setting_vi': self.setting(cr, uid, 'VI'),
-                      'qty_setting_vi_1': qty_setting_vi_1,
-                      'qty_setting_vi_2': qty_setting_vi_2,
-                      'qty_setting_vi_3': qty_setting_vi_3,
-                      'qty_setting_vi_4': qty_setting_vi_4,
-                      'qty_setting_vi_total': qty_setting_vi_1 + qty_setting_vi_2 + qty_setting_vi_3 + qty_setting_vi_4,
-                      'emp_setting_vi': self.setting_employee(cr, uid, date_from, date_to,'VI'),
-                      'target_setting_vi': self.target_setting(cr, uid, 'VI'),
-                      
-                      'coeff_setting_vii': self.setting(cr, uid, 'VII'),
-                      'qty_setting_vii_1': qty_setting_vii_1,
-                      'qty_setting_vii_2': qty_setting_vii_2,
-                      'qty_setting_vii_3': qty_setting_vii_3,
-                      'qty_setting_vii_4': qty_setting_vii_4,
-                      'qty_setting_vii_total': qty_setting_vii_1 + qty_setting_vii_2 + qty_setting_vii_3 + qty_setting_vii_4,
-                      'emp_setting_vii': self.setting_employee(cr, uid, date_from, date_to, 'VII'),
-                      'target_setting_vii': self.target_setting(cr, uid, 'VII'),
-                      
-                      'coeff_setting_viii': self.setting(cr, uid, 'VIII'),
-                      'qty_setting_viii_1': qty_setting_viii_1,
-                      'qty_setting_viii_2': qty_setting_viii_2,
-                      'qty_setting_viii_3': qty_setting_viii_3,
-                      'qty_setting_viii_4': qty_setting_viii_4,
-                      'qty_setting_viii_total': qty_setting_viii_1 + qty_setting_viii_2 + qty_setting_viii_3 + qty_setting_viii_4,
-                      'emp_setting_viii': self.setting_employee(cr, uid, date_from, date_to, 'VIII'),
-                      'target_setting_viii': self.target_setting(cr, uid, 'VIII'),
-                      
-                      'coeff_setting_ix': self.setting(cr, uid, 'IX'),
-                      'qty_setting_ix_1': qty_setting_ix_1,
-                      'qty_setting_ix_2': qty_setting_ix_2,
-                      'qty_setting_ix_3': qty_setting_ix_3,
-                      'qty_setting_ix_4': qty_setting_ix_4,
-                      'qty_setting_ix_total': qty_setting_ix_1 + qty_setting_ix_2 + qty_setting_ix_3 + qty_setting_ix_4,
-                      'emp_setting_ix': self.setting_employee(cr, uid, date_from, date_to, 'IX'),
-                      'target_setting_ix': self.target_setting(cr, uid, 'IX'),
-                   }
-            return {'name': name_report, 'line': arr}
 
         #report month
         elif type == 'year':
@@ -909,1031 +1174,10 @@ class wizard_hp_report_kpis(osv.osv_memory):
             date_from = period_from.date_start
             date_to = period_to.date_stop
             
-            qty_3d_1_1 = self.qty_3d_times(cr, uid, date_from, date_to, 1, type, 1)
-            qty_3d_1_2 = self.qty_3d_times(cr, uid, date_from, date_to, 1, type, 2)
-            qty_3d_1_3 = self.qty_3d_times(cr, uid, date_from, date_to, 1, type, 3)
-            qty_3d_1_4 = self.qty_3d_times(cr, uid, date_from, date_to, 1, type, 4)
-            qty_3d_1_5 = self.qty_3d_times(cr, uid, date_from, date_to, 1, type, 5)
-            qty_3d_1_6 = self.qty_3d_times(cr, uid, date_from, date_to, 1, type, 6)
-            qty_3d_1_7 = self.qty_3d_times(cr, uid, date_from, date_to, 1, type, 7)
-            qty_3d_1_8 = self.qty_3d_times(cr, uid, date_from, date_to, 1, type, 8)
-            qty_3d_1_9 = self.qty_3d_times(cr, uid, date_from, date_to, 1, type, 9)
-            qty_3d_1_10 = self.qty_3d_times(cr, uid, date_from, date_to, 1, type, 10)
-            qty_3d_1_11 = self.qty_3d_times(cr, uid, date_from, date_to, 1, type, 11)
-            qty_3d_1_12 = self.qty_3d_times(cr, uid, date_from, date_to, 1, type, 12)
             
-            qty_3d_2_1 = self.qty_3d_times(cr, uid, date_from, date_to, 2, type, 1)
-            qty_3d_2_2 = self.qty_3d_times(cr, uid, date_from, date_to, 2, type, 2)
-            qty_3d_2_3 = self.qty_3d_times(cr, uid, date_from, date_to, 2, type, 3)
-            qty_3d_2_4 = self.qty_3d_times(cr, uid, date_from, date_to, 2, type, 4)
-            qty_3d_2_5 = self.qty_3d_times(cr, uid, date_from, date_to, 2, type, 5)
-            qty_3d_2_6 = self.qty_3d_times(cr, uid, date_from, date_to, 2, type, 6)
-            qty_3d_2_7 = self.qty_3d_times(cr, uid, date_from, date_to, 2, type, 7)
-            qty_3d_2_8 = self.qty_3d_times(cr, uid, date_from, date_to, 2, type, 8)
-            qty_3d_2_9 = self.qty_3d_times(cr, uid, date_from, date_to, 2, type, 9)
-            qty_3d_2_10 = self.qty_3d_times(cr, uid, date_from, date_to, 2, type, 10)
-            qty_3d_2_11 = self.qty_3d_times(cr, uid, date_from, date_to, 2, type, 11)
-            qty_3d_2_12 = self.qty_3d_times(cr, uid, date_from, date_to, 2, type, 12)
-            
-            qty_3d_3_1 = self.qty_3d_times(cr, uid, date_from, date_to, 3, type, 1)
-            qty_3d_3_2 = self.qty_3d_times(cr, uid, date_from, date_to, 3, type, 2)
-            qty_3d_3_3 = self.qty_3d_times(cr, uid, date_from, date_to, 3, type, 3)
-            qty_3d_3_4 = self.qty_3d_times(cr, uid, date_from, date_to, 3, type, 4)
-            qty_3d_3_5 = self.qty_3d_times(cr, uid, date_from, date_to, 3, type, 5)
-            qty_3d_3_6 = self.qty_3d_times(cr, uid, date_from, date_to, 3, type, 6)
-            qty_3d_3_7 = self.qty_3d_times(cr, uid, date_from, date_to, 3, type, 7)
-            qty_3d_3_8 = self.qty_3d_times(cr, uid, date_from, date_to, 3, type, 8)
-            qty_3d_3_9 = self.qty_3d_times(cr, uid, date_from, date_to, 3, type, 9)
-            qty_3d_3_10 = self.qty_3d_times(cr, uid, date_from, date_to, 3, type, 10)
-            qty_3d_3_11 = self.qty_3d_times(cr, uid, date_from, date_to, 3, type, 11)
-            qty_3d_3_12 = self.qty_3d_times(cr, uid, date_from, date_to, 3, type, 12)
-
-            qty_3d_4_1 = self.qty_3d_times(cr, uid, date_from, date_to, 4, type, 1)
-            qty_3d_4_2 = self.qty_3d_times(cr, uid, date_from, date_to, 4, type, 2)
-            qty_3d_4_3 = self.qty_3d_times(cr, uid, date_from, date_to, 4, type, 3)
-            qty_3d_4_4 = self.qty_3d_times(cr, uid, date_from, date_to, 4, type, 4)
-            qty_3d_4_5 = self.qty_3d_times(cr, uid, date_from, date_to, 4, type, 5)
-            qty_3d_4_6 = self.qty_3d_times(cr, uid, date_from, date_to, 4, type, 6)
-            qty_3d_4_7 = self.qty_3d_times(cr, uid, date_from, date_to, 4, type, 7)
-            qty_3d_4_8 = self.qty_3d_times(cr, uid, date_from, date_to, 4, type, 8)
-            qty_3d_4_9 = self.qty_3d_times(cr, uid, date_from, date_to, 4, type, 9)
-            qty_3d_4_10 = self.qty_3d_times(cr, uid, date_from, date_to, 4, type, 10)
-            qty_3d_4_11 = self.qty_3d_times(cr, uid, date_from, date_to, 4, type, 11)
-            qty_3d_4_12 = self.qty_3d_times(cr, uid, date_from, date_to, 4, type, 12)
-
-            qty_3d_easy_1 = self.qty_3d_level(cr, uid, date_from, date_to, 'Easy', type, 1)
-            qty_3d_easy_2 =  self.qty_3d_level(cr, uid, date_from, date_to, 'Easy', type, 2)
-            qty_3d_easy_3 =  self.qty_3d_level(cr, uid, date_from, date_to, 'Easy', type, 3)
-            qty_3d_easy_4 =  self.qty_3d_level(cr, uid, date_from, date_to, 'Easy', type, 4)
-            qty_3d_easy_5 =  self.qty_3d_level(cr, uid, date_from, date_to, 'Easy', type, 5)
-            qty_3d_easy_6 =  self.qty_3d_level(cr, uid, date_from, date_to, 'Easy', type, 6)
-            qty_3d_easy_7 =  self.qty_3d_level(cr, uid, date_from, date_to, 'Easy', type, 7)
-            qty_3d_easy_8 =  self.qty_3d_level(cr, uid, date_from, date_to, 'Easy', type, 8)
-            qty_3d_easy_9 =  self.qty_3d_level(cr, uid, date_from, date_to, 'Easy', type, 9)
-            qty_3d_easy_10 =  self.qty_3d_level(cr, uid, date_from, date_to, 'Easy', type, 10)
-            qty_3d_easy_11 =  self.qty_3d_level(cr, uid, date_from, date_to, 'Easy', type, 11)
-            qty_3d_easy_12 =  self.qty_3d_level(cr, uid, date_from, date_to, 'Easy', type, 12)
-
-            qty_3d_medium_1 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium', type, 1)
-            qty_3d_medium_2 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium', type, 2)
-            qty_3d_medium_3 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium', type, 3)
-            qty_3d_medium_4 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium', type, 4)
-            qty_3d_medium_5 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium', type, 5)
-            qty_3d_medium_6 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium', type, 6)
-            qty_3d_medium_7 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium', type, 7)
-            qty_3d_medium_8 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium', type, 8)
-            qty_3d_medium_9 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium', type, 9)
-            qty_3d_medium_10 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium', type, 10)
-            qty_3d_medium_11 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium', type, 11)
-            qty_3d_medium_12 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium', type, 12)
-
-            qty_3d_medium_hard_1 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium - Hard', type, 1)
-            qty_3d_medium_hard_2 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium - Hard', type, 2)
-            qty_3d_medium_hard_3 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium - Hard', type, 3)
-            qty_3d_medium_hard_4 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium - Hard', type, 4)
-            qty_3d_medium_hard_5 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium - Hard', type, 5)
-            qty_3d_medium_hard_6 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium - Hard', type, 6)
-            qty_3d_medium_hard_7 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium - Hard', type, 7)
-            qty_3d_medium_hard_8 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium - Hard', type, 8)
-            qty_3d_medium_hard_9 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium - Hard', type, 9)
-            qty_3d_medium_hard_10 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium - Hard', type, 10)
-            qty_3d_medium_hard_11 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium - Hard', type, 11)
-            qty_3d_medium_hard_12 = self.qty_3d_level(cr, uid, date_from, date_to, 'Medium - Hard', type, 12)
-
-            qty_3d_hard_1 = self.qty_3d_level(cr, uid, date_from, date_to, 'Hard', type, 1)
-            qty_3d_hard_2 = self.qty_3d_level(cr, uid, date_from, date_to, 'Hard', type, 2)
-            qty_3d_hard_3 = self.qty_3d_level(cr, uid, date_from, date_to, 'Hard', type, 3)
-            qty_3d_hard_4 = self.qty_3d_level(cr, uid, date_from, date_to, 'Hard', type, 4)
-            qty_3d_hard_5 = self.qty_3d_level(cr, uid, date_from, date_to, 'Hard', type, 5)
-            qty_3d_hard_6 = self.qty_3d_level(cr, uid, date_from, date_to, 'Hard', type, 6)
-            qty_3d_hard_7 = self.qty_3d_level(cr, uid, date_from, date_to, 'Hard', type, 7)
-            qty_3d_hard_8 = self.qty_3d_level(cr, uid, date_from, date_to, 'Hard', type, 8)
-            qty_3d_hard_9 = self.qty_3d_level(cr, uid, date_from, date_to, 'Hard', type, 9)
-            qty_3d_hard_10 = self.qty_3d_level(cr, uid, date_from, date_to, 'Hard', type, 10)
-            qty_3d_hard_11 = self.qty_3d_level(cr, uid, date_from, date_to, 'Hard', type, 11)
-            qty_3d_hard_12 = self.qty_3d_level(cr, uid, date_from, date_to, 'Hard', type, 12)
-
-            qty_3d_very_hard_1 = self.qty_3d_level(cr, uid, date_from, date_to, 'Very Hard', type, 1)
-            qty_3d_very_hard_2 = self.qty_3d_level(cr, uid, date_from, date_to, 'Very Hard', type, 2)
-            qty_3d_very_hard_3 = self.qty_3d_level(cr, uid, date_from, date_to, 'Very Hard', type, 3)
-            qty_3d_very_hard_4 = self.qty_3d_level(cr, uid, date_from, date_to, 'Very Hard', type, 4)
-            qty_3d_very_hard_5 = self.qty_3d_level(cr, uid, date_from, date_to, 'Very Hard', type, 5)
-            qty_3d_very_hard_6 = self.qty_3d_level(cr, uid, date_from, date_to, 'Very Hard', type, 6)
-            qty_3d_very_hard_7 = self.qty_3d_level(cr, uid, date_from, date_to, 'Very Hard', type, 7)
-            qty_3d_very_hard_8 = self.qty_3d_level(cr, uid, date_from, date_to, 'Very Hard', type, 8)
-            qty_3d_very_hard_9 = self.qty_3d_level(cr, uid, date_from, date_to, 'Very Hard', type, 9)
-            qty_3d_very_hard_10 = self.qty_3d_level(cr, uid, date_from, date_to, 'Very Hard', type, 10)
-            qty_3d_very_hard_11 = self.qty_3d_level(cr, uid, date_from, date_to, 'Very Hard', type, 11)
-            qty_3d_very_hard_12 = self.qty_3d_level(cr, uid, date_from, date_to, 'Very Hard', type, 12)
-            
-            qty_casting_1_1 = self.qty_casting(cr, uid, date_from, date_to, 1, type, 1)
-            qty_casting_1_2 = self.qty_casting(cr, uid, date_from, date_to, 1, type, 2)
-            qty_casting_1_3 = self.qty_casting(cr, uid, date_from, date_to, 1, type, 3)
-            qty_casting_1_4 = self.qty_casting(cr, uid, date_from, date_to, 1, type, 4)
-            qty_casting_1_5 = self.qty_casting(cr, uid, date_from, date_to, 1, type, 5)
-            qty_casting_1_6 = self.qty_casting(cr, uid, date_from, date_to, 1, type, 6)
-            qty_casting_1_7 = self.qty_casting(cr, uid, date_from, date_to, 1, type, 7)
-            qty_casting_1_8 = self.qty_casting(cr, uid, date_from, date_to, 1, type, 8)
-            qty_casting_1_9 = self.qty_casting(cr, uid, date_from, date_to, 1, type, 9)
-            qty_casting_1_10 = self.qty_casting(cr, uid, date_from, date_to, 1, type, 10)
-            qty_casting_1_11 = self.qty_casting(cr, uid, date_from, date_to, 1, type, 11)
-            qty_casting_1_12 = self.qty_casting(cr, uid, date_from, date_to, 1, type, 12)
-            
-            qty_casting_2_1 = self.qty_casting(cr, uid, date_from, date_to, 2, type, 1)
-            qty_casting_2_2 = self.qty_casting(cr, uid, date_from, date_to, 2, type, 2)
-            qty_casting_2_3 = self.qty_casting(cr, uid, date_from, date_to, 2, type, 3)
-            qty_casting_2_4 = self.qty_casting(cr, uid, date_from, date_to, 2, type, 4)
-            qty_casting_2_5 = self.qty_casting(cr, uid, date_from, date_to, 2, type, 5)
-            qty_casting_2_6 = self.qty_casting(cr, uid, date_from, date_to, 2, type, 6)
-            qty_casting_2_7 = self.qty_casting(cr, uid, date_from, date_to, 2, type, 7)
-            qty_casting_2_8 = self.qty_casting(cr, uid, date_from, date_to, 2, type, 8)
-            qty_casting_2_9 = self.qty_casting(cr, uid, date_from, date_to, 2, type, 9)
-            qty_casting_2_10 = self.qty_casting(cr, uid, date_from, date_to, 2, type, 10)
-            qty_casting_2_11 = self.qty_casting(cr, uid, date_from, date_to, 2, type, 11)
-            qty_casting_2_12 = self.qty_casting(cr, uid, date_from, date_to, 2, type, 12)
-            
-            qty_casting_3_1 = self.qty_casting(cr, uid, date_from, date_to, 3, type, 1)
-            qty_casting_3_2 = self.qty_casting(cr, uid, date_from, date_to, 3, type, 2)
-            qty_casting_3_3 = self.qty_casting(cr, uid, date_from, date_to, 3, type, 3)
-            qty_casting_3_4 = self.qty_casting(cr, uid, date_from, date_to, 3, type, 4)
-            qty_casting_3_5 = self.qty_casting(cr, uid, date_from, date_to, 3, type, 5)
-            qty_casting_3_6 = self.qty_casting(cr, uid, date_from, date_to, 3, type, 6)
-            qty_casting_3_7 = self.qty_casting(cr, uid, date_from, date_to, 3, type, 7)
-            qty_casting_3_8 = self.qty_casting(cr, uid, date_from, date_to, 3, type, 8)
-            qty_casting_3_9 = self.qty_casting(cr, uid, date_from, date_to, 3, type, 9)
-            qty_casting_3_10 = self.qty_casting(cr, uid, date_from, date_to, 3, type, 10)
-            qty_casting_3_11 = self.qty_casting(cr, uid, date_from, date_to, 3, type, 11)
-            qty_casting_3_12 = self.qty_casting(cr, uid, date_from, date_to, 3, type, 12)
-            
-            qty_casting_4_1 = self.qty_casting(cr, uid, date_from, date_to, 4, type, 1)
-            qty_casting_4_2 = self.qty_casting(cr, uid, date_from, date_to, 4, type, 2)
-            qty_casting_4_3 = self.qty_casting(cr, uid, date_from, date_to, 4, type, 3)
-            qty_casting_4_4 = self.qty_casting(cr, uid, date_from, date_to, 4, type, 4)
-            qty_casting_4_5 = self.qty_casting(cr, uid, date_from, date_to, 4, type, 5)
-            qty_casting_4_6 = self.qty_casting(cr, uid, date_from, date_to, 4, type, 6)
-            qty_casting_4_7 = self.qty_casting(cr, uid, date_from, date_to, 4, type, 7)
-            qty_casting_4_8 = self.qty_casting(cr, uid, date_from, date_to, 4, type, 8)
-            qty_casting_4_9 = self.qty_casting(cr, uid, date_from, date_to, 4, type, 9)
-            qty_casting_4_10 = self.qty_casting(cr, uid, date_from, date_to, 4, type, 10)
-            qty_casting_4_11 = self.qty_casting(cr, uid, date_from, date_to, 4, type, 11)
-            qty_casting_4_12 = self.qty_casting(cr, uid, date_from, date_to, 4, type, 12)
-            
-            qty_assembling_easy_1 = self.qty_assembling(cr, uid, date_from, date_to, 'Easy', type, 1)
-            qty_assembling_easy_2 = self.qty_assembling(cr, uid, date_from, date_to, 'Easy', type, 2)
-            qty_assembling_easy_3 = self.qty_assembling(cr, uid, date_from, date_to, 'Easy', type, 3)
-            qty_assembling_easy_4 = self.qty_assembling(cr, uid, date_from, date_to, 'Easy', type, 4)
-            qty_assembling_easy_5 = self.qty_assembling(cr, uid, date_from, date_to, 'Easy', type, 5)
-            qty_assembling_easy_6 = self.qty_assembling(cr, uid, date_from, date_to, 'Easy', type, 6)
-            qty_assembling_easy_7 = self.qty_assembling(cr, uid, date_from, date_to, 'Easy', type, 7)
-            qty_assembling_easy_8 = self.qty_assembling(cr, uid, date_from, date_to, 'Easy', type, 8)
-            qty_assembling_easy_9 = self.qty_assembling(cr, uid, date_from, date_to, 'Easy', type, 9)
-            qty_assembling_easy_10 = self.qty_assembling(cr, uid, date_from, date_to, 'Easy', type, 10)
-            qty_assembling_easy_11 = self.qty_assembling(cr, uid, date_from, date_to, 'Easy', type, 11)
-            qty_assembling_easy_12 = self.qty_assembling(cr, uid, date_from, date_to, 'Easy', type, 12)
-            
-            qty_assembling_medium_1 = self.qty_assembling(cr, uid, date_from, date_to, 'Medium', type, 1)
-            qty_assembling_medium_2 = self.qty_assembling(cr, uid, date_from, date_to, 'Medium', type, 2)
-            qty_assembling_medium_3 = self.qty_assembling(cr, uid, date_from, date_to, 'Medium', type, 3)
-            qty_assembling_medium_4 = self.qty_assembling(cr, uid, date_from, date_to, 'Medium', type, 4)
-            qty_assembling_medium_5 = self.qty_assembling(cr, uid, date_from, date_to, 'Medium', type, 5)
-            qty_assembling_medium_6 = self.qty_assembling(cr, uid, date_from, date_to, 'Medium', type, 6)
-            qty_assembling_medium_7 = self.qty_assembling(cr, uid, date_from, date_to, 'Medium', type, 7)
-            qty_assembling_medium_8 = self.qty_assembling(cr, uid, date_from, date_to, 'Medium', type, 8)
-            qty_assembling_medium_9 = self.qty_assembling(cr, uid, date_from, date_to, 'Medium', type, 9)
-            qty_assembling_medium_10 = self.qty_assembling(cr, uid, date_from, date_to, 'Medium', type, 10)
-            qty_assembling_medium_11 = self.qty_assembling(cr, uid, date_from, date_to, 'Medium', type, 11)
-            qty_assembling_medium_12 = self.qty_assembling(cr, uid, date_from, date_to, 'Medium', type, 12)
-            
-            qty_assembling_hard_1 = self.qty_assembling(cr, uid, date_from, date_to, 'Hard', type, 1)
-            qty_assembling_hard_2 = self.qty_assembling(cr, uid, date_from, date_to, 'Hard', type, 2)
-            qty_assembling_hard_3 = self.qty_assembling(cr, uid, date_from, date_to, 'Hard', type, 3)
-            qty_assembling_hard_4 = self.qty_assembling(cr, uid, date_from, date_to, 'Hard', type, 4)
-            qty_assembling_hard_5 = self.qty_assembling(cr, uid, date_from, date_to, 'Hard', type, 5)
-            qty_assembling_hard_6 = self.qty_assembling(cr, uid, date_from, date_to, 'Hard', type, 6)
-            qty_assembling_hard_7 = self.qty_assembling(cr, uid, date_from, date_to, 'Hard', type, 7)
-            qty_assembling_hard_8 = self.qty_assembling(cr, uid, date_from, date_to, 'Hard', type, 8)
-            qty_assembling_hard_9 = self.qty_assembling(cr, uid, date_from, date_to, 'Hard', type, 9)
-            qty_assembling_hard_10 = self.qty_assembling(cr, uid, date_from, date_to, 'Hard', type, 10)
-            qty_assembling_hard_11 = self.qty_assembling(cr, uid, date_from, date_to, 'Hard', type, 11)
-            qty_assembling_hard_12 = self.qty_assembling(cr, uid, date_from, date_to, 'Hard', type, 12)
-            
-            qty_assembling_very_hard_1 = self.qty_assembling(cr, uid, date_from, date_to, 'Very Hard', type, 1)
-            qty_assembling_very_hard_2 = self.qty_assembling(cr, uid, date_from, date_to, 'Very Hard', type, 2)
-            qty_assembling_very_hard_3 = self.qty_assembling(cr, uid, date_from, date_to, 'Very Hard', type, 3)
-            qty_assembling_very_hard_4 = self.qty_assembling(cr, uid, date_from, date_to, 'Very Hard', type, 4)
-            qty_assembling_very_hard_5 = self.qty_assembling(cr, uid, date_from, date_to, 'Very Hard', type, 5)
-            qty_assembling_very_hard_6 = self.qty_assembling(cr, uid, date_from, date_to, 'Very Hard', type, 6)
-            qty_assembling_very_hard_7 = self.qty_assembling(cr, uid, date_from, date_to, 'Very Hard', type, 7)
-            qty_assembling_very_hard_8 = self.qty_assembling(cr, uid, date_from, date_to, 'Very Hard', type, 8)
-            qty_assembling_very_hard_9 = self.qty_assembling(cr, uid, date_from, date_to, 'Very Hard', type, 9)
-            qty_assembling_very_hard_10 = self.qty_assembling(cr, uid, date_from, date_to, 'Very Hard', type, 10)
-            qty_assembling_very_hard_11 = self.qty_assembling(cr, uid, date_from, date_to, 'Very Hard', type, 11)
-            qty_assembling_very_hard_12 = self.qty_assembling(cr, uid, date_from, date_to, 'Very Hard', type, 12)
-            
-            qty_setting_i_1 = self.qty_setting(cr, uid, date_from, date_to, 'I', type, 1)
-            qty_setting_i_2 = self.qty_setting(cr, uid, date_from, date_to, 'I', type, 2)
-            qty_setting_i_3 = self.qty_setting(cr, uid, date_from, date_to, 'I', type, 3)
-            qty_setting_i_4 = self.qty_setting(cr, uid, date_from, date_to, 'I', type, 4)
-            qty_setting_i_5 = self.qty_setting(cr, uid, date_from, date_to, 'I', type, 5)
-            qty_setting_i_6 = self.qty_setting(cr, uid, date_from, date_to, 'I', type, 6)
-            qty_setting_i_7 = self.qty_setting(cr, uid, date_from, date_to, 'I', type, 7)
-            qty_setting_i_8 = self.qty_setting(cr, uid, date_from, date_to, 'I', type, 8)
-            qty_setting_i_9 = self.qty_setting(cr, uid, date_from, date_to, 'I', type, 9)
-            qty_setting_i_10 = self.qty_setting(cr, uid, date_from, date_to, 'I', type, 10)
-            qty_setting_i_11 = self.qty_setting(cr, uid, date_from, date_to, 'I', type, 11)
-            qty_setting_i_12 = self.qty_setting(cr, uid, date_from, date_to, 'I', type, 12)
-            
-            qty_setting_ii_1 = self.qty_setting(cr, uid, date_from, date_to, 'II', type, 1)
-            qty_setting_ii_2 = self.qty_setting(cr, uid, date_from, date_to, 'II', type, 2)
-            qty_setting_ii_3 = self.qty_setting(cr, uid, date_from, date_to, 'II', type, 3)
-            qty_setting_ii_4 = self.qty_setting(cr, uid, date_from, date_to, 'II', type, 4)
-            qty_setting_ii_5 = self.qty_setting(cr, uid, date_from, date_to, 'II', type, 5)
-            qty_setting_ii_6 = self.qty_setting(cr, uid, date_from, date_to, 'II', type, 6)
-            qty_setting_ii_7 = self.qty_setting(cr, uid, date_from, date_to, 'II', type, 7)
-            qty_setting_ii_8 = self.qty_setting(cr, uid, date_from, date_to, 'II', type, 8)
-            qty_setting_ii_9 = self.qty_setting(cr, uid, date_from, date_to, 'II', type, 9)
-            qty_setting_ii_10 = self.qty_setting(cr, uid, date_from, date_to, 'II', type, 10)
-            qty_setting_ii_11 = self.qty_setting(cr, uid, date_from, date_to, 'II', type, 11)
-            qty_setting_ii_12 = self.qty_setting(cr, uid, date_from, date_to, 'II', type, 12)
-            
-            qty_setting_iii_1 = self.qty_setting(cr, uid, date_from, date_to, 'III', type, 1)
-            qty_setting_iii_2 = self.qty_setting(cr, uid, date_from, date_to, 'III', type, 2)
-            qty_setting_iii_3 = self.qty_setting(cr, uid, date_from, date_to, 'III', type, 3)
-            qty_setting_iii_4 = self.qty_setting(cr, uid, date_from, date_to, 'III', type, 4)
-            qty_setting_iii_5 = self.qty_setting(cr, uid, date_from, date_to, 'III', type, 5)
-            qty_setting_iii_6 = self.qty_setting(cr, uid, date_from, date_to, 'III', type, 6)
-            qty_setting_iii_7 = self.qty_setting(cr, uid, date_from, date_to, 'III', type, 7)
-            qty_setting_iii_8 = self.qty_setting(cr, uid, date_from, date_to, 'III', type, 8)
-            qty_setting_iii_9 = self.qty_setting(cr, uid, date_from, date_to, 'III', type, 9)
-            qty_setting_iii_10 = self.qty_setting(cr, uid, date_from, date_to, 'III', type, 10)
-            qty_setting_iii_11 = self.qty_setting(cr, uid, date_from, date_to, 'III', type, 11)
-            qty_setting_iii_12 = self.qty_setting(cr, uid, date_from, date_to, 'III', type, 12)
-            
-            qty_setting_iv_1 = self.qty_setting(cr, uid, date_from, date_to, 'IV', type, 1)
-            qty_setting_iv_2 = self.qty_setting(cr, uid, date_from, date_to, 'IV', type, 2)
-            qty_setting_iv_3 = self.qty_setting(cr, uid, date_from, date_to, 'IV', type, 3)
-            qty_setting_iv_4 = self.qty_setting(cr, uid, date_from, date_to, 'IV', type, 4)
-            qty_setting_iv_5 = self.qty_setting(cr, uid, date_from, date_to, 'IV', type, 5)
-            qty_setting_iv_6 = self.qty_setting(cr, uid, date_from, date_to, 'IV', type, 6)
-            qty_setting_iv_7 = self.qty_setting(cr, uid, date_from, date_to, 'IV', type, 7)
-            qty_setting_iv_8 = self.qty_setting(cr, uid, date_from, date_to, 'IV', type, 8)
-            qty_setting_iv_9 = self.qty_setting(cr, uid, date_from, date_to, 'IV', type, 9)
-            qty_setting_iv_10 = self.qty_setting(cr, uid, date_from, date_to, 'IV', type, 10)
-            qty_setting_iv_11 = self.qty_setting(cr, uid, date_from, date_to, 'IV', type, 11)
-            qty_setting_iv_12 = self.qty_setting(cr, uid, date_from, date_to, 'IV', type, 12)
-            
-            qty_setting_v_1 = self.qty_setting(cr, uid, date_from, date_to, 'V', type, 1)
-            qty_setting_v_2 = self.qty_setting(cr, uid, date_from, date_to, 'V', type, 2)
-            qty_setting_v_3 = self.qty_setting(cr, uid, date_from, date_to, 'V', type, 3)
-            qty_setting_v_4 = self.qty_setting(cr, uid, date_from, date_to, 'V', type, 4)
-            qty_setting_v_5 = self.qty_setting(cr, uid, date_from, date_to, 'V', type, 5)
-            qty_setting_v_6 = self.qty_setting(cr, uid, date_from, date_to, 'V', type, 6)
-            qty_setting_v_7 = self.qty_setting(cr, uid, date_from, date_to, 'V', type, 7)
-            qty_setting_v_8 = self.qty_setting(cr, uid, date_from, date_to, 'V', type, 8)
-            qty_setting_v_9 = self.qty_setting(cr, uid, date_from, date_to, 'V', type, 9)
-            qty_setting_v_10 = self.qty_setting(cr, uid, date_from, date_to, 'V', type, 10)
-            qty_setting_v_11 = self.qty_setting(cr, uid, date_from, date_to, 'V', type, 11)
-            qty_setting_v_12 = self.qty_setting(cr, uid, date_from, date_to, 'V', type, 12)
-            
-            qty_setting_vi_1 = self.qty_setting(cr, uid, date_from, date_to, 'VI', type, 1)
-            qty_setting_vi_2 = self.qty_setting(cr, uid, date_from, date_to, 'VI', type, 2)
-            qty_setting_vi_3 = self.qty_setting(cr, uid, date_from, date_to, 'VI', type, 3)
-            qty_setting_vi_4 = self.qty_setting(cr, uid, date_from, date_to, 'VI', type, 4)
-            qty_setting_vi_5 = self.qty_setting(cr, uid, date_from, date_to, 'VI', type, 5)
-            qty_setting_vi_6 = self.qty_setting(cr, uid, date_from, date_to, 'VI', type, 6)
-            qty_setting_vi_7 = self.qty_setting(cr, uid, date_from, date_to, 'VI', type, 7)
-            qty_setting_vi_8 = self.qty_setting(cr, uid, date_from, date_to, 'VI', type, 8)
-            qty_setting_vi_9 = self.qty_setting(cr, uid, date_from, date_to, 'VI', type, 9)
-            qty_setting_vi_10 = self.qty_setting(cr, uid, date_from, date_to, 'VI', type, 10)
-            qty_setting_vi_11 = self.qty_setting(cr, uid, date_from, date_to, 'VI', type, 11)
-            qty_setting_vi_12 = self.qty_setting(cr, uid, date_from, date_to, 'VI', type, 12)
-            
-            qty_setting_vii_1 = self.qty_setting(cr, uid, date_from, date_to, 'VII', type, 1)
-            qty_setting_vii_2 = self.qty_setting(cr, uid, date_from, date_to, 'VII', type, 2)
-            qty_setting_vii_3 = self.qty_setting(cr, uid, date_from, date_to, 'VII', type, 3)
-            qty_setting_vii_4 = self.qty_setting(cr, uid, date_from, date_to, 'VII', type, 4)
-            qty_setting_vii_5 = self.qty_setting(cr, uid, date_from, date_to, 'VII', type, 5)
-            qty_setting_vii_6 = self.qty_setting(cr, uid, date_from, date_to, 'VII', type, 6)
-            qty_setting_vii_7 = self.qty_setting(cr, uid, date_from, date_to, 'VII', type, 7)
-            qty_setting_vii_8 = self.qty_setting(cr, uid, date_from, date_to, 'VII', type, 8)
-            qty_setting_vii_9 = self.qty_setting(cr, uid, date_from, date_to, 'VII', type, 9)
-            qty_setting_vii_10 = self.qty_setting(cr, uid, date_from, date_to, 'VII', type, 10)
-            qty_setting_vii_11 = self.qty_setting(cr, uid, date_from, date_to, 'VII', type, 11)
-            qty_setting_vii_12 = self.qty_setting(cr, uid, date_from, date_to, 'VII', type, 12)
-            
-            qty_setting_viii_1 = self.qty_setting(cr, uid, date_from, date_to, 'VIII', type, 1)
-            qty_setting_viii_2 = self.qty_setting(cr, uid, date_from, date_to, 'VIII', type, 2)
-            qty_setting_viii_3 = self.qty_setting(cr, uid, date_from, date_to, 'VIII', type, 3)
-            qty_setting_viii_4 = self.qty_setting(cr, uid, date_from, date_to, 'VIII', type, 4)
-            qty_setting_viii_5 = self.qty_setting(cr, uid, date_from, date_to, 'VIII', type, 5)
-            qty_setting_viii_6 = self.qty_setting(cr, uid, date_from, date_to, 'VIII', type, 6)
-            qty_setting_viii_7 = self.qty_setting(cr, uid, date_from, date_to, 'VIII', type, 7)
-            qty_setting_viii_8 = self.qty_setting(cr, uid, date_from, date_to, 'VIII', type, 8)
-            qty_setting_viii_9 = self.qty_setting(cr, uid, date_from, date_to, 'VIII', type, 9)
-            qty_setting_viii_10 = self.qty_setting(cr, uid, date_from, date_to, 'VIII', type, 10)
-            qty_setting_viii_11 = self.qty_setting(cr, uid, date_from, date_to, 'VIII', type, 11)
-            qty_setting_viii_12 = self.qty_setting(cr, uid, date_from, date_to, 'VIII', type, 12)
-            
-            qty_setting_ix_1 = self.qty_setting(cr, uid, date_from, date_to, 'IX', type, 1)
-            qty_setting_ix_2 = self.qty_setting(cr, uid, date_from, date_to, 'IX', type, 2)
-            qty_setting_ix_3 = self.qty_setting(cr, uid, date_from, date_to, 'IX', type, 3)
-            qty_setting_ix_4 = self.qty_setting(cr, uid, date_from, date_to, 'IX', type, 4)
-            qty_setting_ix_5 = self.qty_setting(cr, uid, date_from, date_to, 'IX', type, 5)
-            qty_setting_ix_6 = self.qty_setting(cr, uid, date_from, date_to, 'IX', type, 6)
-            qty_setting_ix_7 = self.qty_setting(cr, uid, date_from, date_to, 'IX', type, 7)
-            qty_setting_ix_8 = self.qty_setting(cr, uid, date_from, date_to, 'IX', type, 8)
-            qty_setting_ix_9 = self.qty_setting(cr, uid, date_from, date_to, 'IX', type, 9)
-            qty_setting_ix_10 = self.qty_setting(cr, uid, date_from, date_to, 'IX', type, 10)
-            qty_setting_ix_11 = self.qty_setting(cr, uid, date_from, date_to, 'IX', type, 11)
-            qty_setting_ix_12 = self.qty_setting(cr, uid, date_from, date_to, 'IX', type, 12)
-                      
-            
-            arr = {
-                      'coeff_3d_1': self._3d_times(cr, uid, '=', 1),
-                      'qty_3d_1_1': qty_3d_1_1,
-                      'qty_3d_1_2': qty_3d_1_2,
-                      'qty_3d_1_3': qty_3d_1_3,
-                      'qty_3d_1_4': qty_3d_1_4,
-                      'qty_3d_1_5': qty_3d_1_5,
-                      'qty_3d_1_6': qty_3d_1_6,
-                      'qty_3d_1_7': qty_3d_1_7,
-                      'qty_3d_1_8': qty_3d_1_8,
-                      'qty_3d_1_9': qty_3d_1_9,
-                      'qty_3d_1_10': qty_3d_1_10,
-                      'qty_3d_1_11': qty_3d_1_11,
-                      'qty_3d_1_12': qty_3d_1_12,
-                      'qty_3d_1_total': qty_3d_1_1 + qty_3d_1_2 + qty_3d_1_3 + qty_3d_1_4 + qty_3d_1_5 + qty_3d_1_6 + qty_3d_1_7 + qty_3d_1_8 + qty_3d_1_9 + qty_3d_1_10 + qty_3d_1_11 + qty_3d_1_12,
-                      'emp_3d_1': self._3d_employee_times(cr, uid, date_from, date_to, '=', 1),
-                      'target_3d_1': 0,
-                      
-                      'coeff_3d_2': self._3d_times(cr, uid, '=', 2),
-                      'qty_3d_2_1': qty_3d_2_1,
-                      'qty_3d_2_2': qty_3d_2_2,
-                      'qty_3d_2_3': qty_3d_2_3,
-                      'qty_3d_2_4': qty_3d_2_4,
-                      'qty_3d_2_5': qty_3d_2_5,
-                      'qty_3d_2_6': qty_3d_2_6,
-                      'qty_3d_2_7': qty_3d_2_7,
-                      'qty_3d_2_8': qty_3d_2_8,
-                      'qty_3d_2_9': qty_3d_2_9,
-                      'qty_3d_2_10': qty_3d_2_10,
-                      'qty_3d_2_11': qty_3d_2_11,
-                      'qty_3d_2_12': qty_3d_2_12,
-                      'qty_3d_2_total': qty_3d_2_1 + qty_3d_2_2 + qty_3d_2_3 + qty_3d_2_4 + qty_3d_2_5 + qty_3d_2_6 + qty_3d_2_7 + qty_3d_2_8 + qty_3d_2_9 + qty_3d_2_10 + qty_3d_2_11 + qty_3d_2_12,
-                      'emp_3d_2': self._3d_employee_times(cr, uid, date_from, date_to, '=', 2),
-                      'target_3d_2': 0,
-                      
-                      'coeff_3d_3': self._3d_times(cr, uid, '=', 3),
-                      'qty_3d_3_1': qty_3d_3_1,
-                      'qty_3d_3_2': qty_3d_3_2,
-                      'qty_3d_3_3': qty_3d_3_3,
-                      'qty_3d_3_4': qty_3d_3_4,
-                      'qty_3d_3_5': qty_3d_3_5,
-                      'qty_3d_3_6': qty_3d_3_6,
-                      'qty_3d_3_7': qty_3d_3_7,
-                      'qty_3d_3_8': qty_3d_3_8,
-                      'qty_3d_3_9': qty_3d_3_9,
-                      'qty_3d_3_10': qty_3d_3_10,
-                      'qty_3d_3_11': qty_3d_3_11,
-                      'qty_3d_3_12': qty_3d_3_12,
-                      'qty_3d_3_total': qty_3d_3_1 + qty_3d_3_2 + qty_3d_3_3 + qty_3d_3_4 + qty_3d_3_5 + qty_3d_3_6 + qty_3d_3_7 + qty_3d_3_8 + qty_3d_3_9 + qty_3d_3_10 + qty_3d_3_11 + qty_3d_3_12,
-                      'emp_3d_3': self._3d_employee_times(cr, uid, date_from, date_to, '=', 3),
-                      'target_3d_3': 0,
-                      
-                      'coeff_3d_4': self._3d_times(cr, uid, '>=', 4),
-                      'qty_3d_4_1': qty_3d_4_1,
-                      'qty_3d_4_2': qty_3d_4_2,
-                      'qty_3d_4_3': qty_3d_4_3,
-                      'qty_3d_4_4': qty_3d_4_4,
-                      'qty_3d_4_5': qty_3d_4_5,
-                      'qty_3d_4_6': qty_3d_4_6,
-                      'qty_3d_4_7': qty_3d_4_7,
-                      'qty_3d_4_8': qty_3d_4_8,
-                      'qty_3d_4_9': qty_3d_4_9,
-                      'qty_3d_4_10': qty_3d_4_10,
-                      'qty_3d_4_11': qty_3d_4_11,
-                      'qty_3d_4_12': qty_3d_4_12,
-                      'qty_3d_4_total': qty_3d_4_1 + qty_3d_4_2 + qty_3d_4_3 + qty_3d_4_4 + qty_3d_4_5 + qty_3d_4_6 + qty_3d_4_7 + qty_3d_4_8 + qty_3d_4_9 + qty_3d_4_10 + qty_3d_4_11 + qty_3d_4_12,
-                      'emp_3d_4': self._3d_employee_times(cr, uid, date_from, date_to, '>=', 4),
-                      'target_3d_4': 0,
-                      
-                      'coeff_3d_easy': self._3d_level(cr, uid, 'Easy'),
-                      'qty_3d_easy_1':  qty_3d_easy_1,
-                      'qty_3d_easy_2':  qty_3d_easy_2,
-                      'qty_3d_easy_3':  qty_3d_easy_2,
-                      'qty_3d_easy_4':  qty_3d_easy_4,
-                      'qty_3d_easy_5':  qty_3d_easy_5,
-                      'qty_3d_easy_6':  qty_3d_easy_6,
-                      'qty_3d_easy_7':  qty_3d_easy_7,
-                      'qty_3d_easy_8':  qty_3d_easy_8,
-                      'qty_3d_easy_9':  qty_3d_easy_9,
-                      'qty_3d_easy_10':  qty_3d_easy_10,
-                      'qty_3d_easy_11':  qty_3d_easy_11,
-                      'qty_3d_easy_12':  qty_3d_easy_12,
-                      'qty_3d_easy_total':  qty_3d_easy_1 + qty_3d_easy_2 + qty_3d_easy_3 + qty_3d_easy_4 + qty_3d_easy_5 + qty_3d_easy_6 + qty_3d_easy_7 + qty_3d_easy_8 + qty_3d_easy_9 + qty_3d_easy_10 + qty_3d_easy_11 + qty_3d_easy_12,
-                      'emp_3d_easy': self._3d_employee_level(cr, uid, date_from, date_to, 'Easy'),
-                      'target_3d_easy': self._3d_target(cr, uid, 'Easy'),
-                      
-                      'coeff_3d_medium': self._3d_level(cr, uid, 'Medium'),
-                      'qty_3d_medium_1': qty_3d_medium_1,
-                      'qty_3d_medium_2': qty_3d_medium_2,
-                      'qty_3d_medium_3': qty_3d_medium_3,
-                      'qty_3d_medium_4': qty_3d_medium_4,
-                      'qty_3d_medium_5': qty_3d_medium_5,
-                      'qty_3d_medium_6': qty_3d_medium_6,
-                      'qty_3d_medium_7': qty_3d_medium_7,
-                      'qty_3d_medium_8': qty_3d_medium_8,
-                      'qty_3d_medium_9': qty_3d_medium_9,
-                      'qty_3d_medium_10': qty_3d_medium_10,
-                      'qty_3d_medium_11': qty_3d_medium_11,
-                      'qty_3d_medium_12': qty_3d_medium_12,
-                      'qty_3d_medium_total': qty_3d_medium_1 + qty_3d_medium_2 + qty_3d_medium_3 + qty_3d_medium_4 + qty_3d_medium_5 + qty_3d_medium_6 + qty_3d_medium_7 + qty_3d_medium_8 + qty_3d_medium_9 + qty_3d_medium_10 + qty_3d_medium_11 + qty_3d_medium_12,
-                      'emp_3d_medium': self._3d_employee_level(cr, uid, date_from, date_to, 'Medium'),
-                      'target_3d_medium': self._3d_target(cr, uid, 'Medium'),
-                      
-                      'coeff_3d_medium_hard': self._3d_level(cr, uid, 'Medium - Hard'),
-                      'qty_3d_medium_hard_1': qty_3d_medium_hard_1,
-                      'qty_3d_medium_hard_2': qty_3d_medium_hard_2,
-                      'qty_3d_medium_hard_3': qty_3d_medium_hard_3,
-                      'qty_3d_medium_hard_4': qty_3d_medium_hard_4,
-                      'qty_3d_medium_hard_5': qty_3d_medium_hard_5,
-                      'qty_3d_medium_hard_6': qty_3d_medium_hard_6,
-                      'qty_3d_medium_hard_7': qty_3d_medium_hard_7,
-                      'qty_3d_medium_hard_8': qty_3d_medium_hard_8,
-                      'qty_3d_medium_hard_9': qty_3d_medium_hard_9,
-                      'qty_3d_medium_hard_10': qty_3d_medium_hard_10,
-                      'qty_3d_medium_hard_11': qty_3d_medium_hard_11,
-                      'qty_3d_medium_hard_12': qty_3d_medium_hard_12,
-                      'qty_3d_medium_hard_total': qty_3d_medium_hard_1 + qty_3d_medium_hard_2 + qty_3d_medium_hard_3 + qty_3d_medium_hard_4 + qty_3d_medium_hard_5 + qty_3d_medium_hard_6 + qty_3d_medium_hard_7 + qty_3d_medium_hard_8 + qty_3d_medium_hard_9 + qty_3d_medium_hard_10 + qty_3d_medium_hard_11 + qty_3d_medium_hard_12,
-                      'emp_3d_medium_hard': self._3d_employee_level(cr, uid, date_from, date_to, 'Medium - Hard'),
-                      'target_3d_medium_hard': self._3d_target(cr, uid, 'Medium - Hard'),
-                      
-                      'coeff_3d_hard': self._3d_level(cr, uid, 'Hard'),
-                      'qty_3d_hard_1': qty_3d_hard_1,
-                      'qty_3d_hard_2': qty_3d_hard_2,
-                      'qty_3d_hard_3': qty_3d_hard_3,
-                      'qty_3d_hard_4': qty_3d_hard_4,
-                      'qty_3d_hard_5': qty_3d_hard_5,
-                      'qty_3d_hard_6': qty_3d_hard_6,
-                      'qty_3d_hard_7': qty_3d_hard_7,
-                      'qty_3d_hard_8': qty_3d_hard_8,
-                      'qty_3d_hard_9': qty_3d_hard_9,
-                      'qty_3d_hard_10': qty_3d_hard_10,
-                      'qty_3d_hard_11': qty_3d_hard_11,
-                      'qty_3d_hard_12': qty_3d_hard_12,
-                      'qty_3d_hard_total': qty_3d_hard_1 + qty_3d_hard_2 + qty_3d_hard_3 + qty_3d_hard_4 + qty_3d_hard_5 + qty_3d_hard_6 + qty_3d_hard_7 + qty_3d_hard_8 + qty_3d_hard_9 + qty_3d_hard_10 + qty_3d_hard_11 + qty_3d_hard_12,
-                      'emp_3d_hard': self._3d_employee_level(cr, uid, date_from, date_to, 'Hard'),
-                      'target_3d_hard': self._3d_target(cr, uid, 'Hard'),
-                      
-                      'coeff_3d_very_hard': self._3d_level(cr, uid, 'Very Hard'),
-                      'qty_3d_very_hard_1': qty_3d_very_hard_1,
-                      'qty_3d_very_hard_2': qty_3d_very_hard_2,
-                      'qty_3d_very_hard_3': qty_3d_very_hard_3,
-                      'qty_3d_very_hard_4': qty_3d_very_hard_4,
-                      'qty_3d_very_hard_5': qty_3d_very_hard_5,
-                      'qty_3d_very_hard_6': qty_3d_very_hard_6,
-                      'qty_3d_very_hard_7': qty_3d_very_hard_7,
-                      'qty_3d_very_hard_8': qty_3d_very_hard_8,
-                      'qty_3d_very_hard_9': qty_3d_very_hard_9,
-                      'qty_3d_very_hard_10': qty_3d_very_hard_10,
-                      'qty_3d_very_hard_11': qty_3d_very_hard_11,
-                      'qty_3d_very_hard_12': qty_3d_very_hard_12,
-                      'qty_3d_very_hard_total': qty_3d_very_hard_1 + qty_3d_very_hard_2 + qty_3d_very_hard_3 + qty_3d_very_hard_4 + qty_3d_very_hard_5 + qty_3d_very_hard_6 + qty_3d_very_hard_7 + qty_3d_very_hard_8 + qty_3d_very_hard_9 + qty_3d_very_hard_10 + qty_3d_very_hard_11 + qty_3d_very_hard_12,
-                      'emp_3d_very_hard': self._3d_employee_level(cr, uid, date_from, date_to, 'Very Hard'),
-                      'target_3d_very_hard': self._3d_target(cr, uid, 'Very Hard'),
-                      
-                      
-                      'coeff_casting_1' : self.casting(cr, uid, '=', 1),
-                      'qty_casting_1_1': qty_casting_1_1,
-                      'qty_casting_1_2': qty_casting_1_2,
-                      'qty_casting_1_3': qty_casting_1_3,
-                      'qty_casting_1_4': qty_casting_1_4,
-                      'qty_casting_1_5': qty_casting_1_5,
-                      'qty_casting_1_6': qty_casting_1_6,
-                      'qty_casting_1_7': qty_casting_1_7,
-                      'qty_casting_1_8': qty_casting_1_8,
-                      'qty_casting_1_9': qty_casting_1_9,
-                      'qty_casting_1_10': qty_casting_1_10,
-                      'qty_casting_1_11': qty_casting_1_11,
-                      'qty_casting_1_12': qty_casting_1_12,
-                      'qty_casting_1_total': qty_casting_1_1 + qty_casting_1_2 + qty_casting_1_3 + qty_casting_1_4 + qty_casting_1_5 + qty_casting_1_6 + qty_casting_1_7 + qty_casting_1_8 + qty_casting_1_9 + qty_casting_1_10 + qty_casting_1_11 + qty_casting_1_12,
-                      'emp_casting_1': self.casting_employee(cr, uid, date_from, date_to, '=', 1),
-                      'target_casting_1': 0,
-                      
-                      'coeff_casting_2' : self.casting(cr, uid, '=', 2),
-                      'qty_casting_2_1': qty_casting_2_1,
-                      'qty_casting_2_2': qty_casting_2_2,
-                      'qty_casting_2_3': qty_casting_2_3,
-                      'qty_casting_2_4': qty_casting_2_4,
-                      'qty_casting_2_5': qty_casting_2_5,
-                      'qty_casting_2_6': qty_casting_2_6,
-                      'qty_casting_2_7': qty_casting_2_7,
-                      'qty_casting_2_8': qty_casting_2_8,
-                      'qty_casting_2_9': qty_casting_2_9,
-                      'qty_casting_2_10': qty_casting_2_10,
-                      'qty_casting_2_11': qty_casting_2_11,
-                      'qty_casting_2_12': qty_casting_2_12,
-                      'qty_casting_2_total': qty_casting_2_1 + qty_casting_2_2 + qty_casting_2_3 + qty_casting_2_4 + qty_casting_2_5 + qty_casting_2_6 + qty_casting_2_7 + qty_casting_2_8 +qty_casting_2_9 + qty_casting_2_10 + qty_casting_2_11 + qty_casting_2_12,
-                      'emp_casting_2': self.casting_employee(cr, uid, date_from, date_to, '=', 2),
-                      'target_casting_2': 0,
-                      
-                      'coeff_casting_3' : self.casting(cr, uid, '=', 3),
-                      'qty_casting_3_1': qty_casting_3_1,
-                      'qty_casting_3_2': qty_casting_3_2,
-                      'qty_casting_3_3': qty_casting_3_3,
-                      'qty_casting_3_4':  qty_casting_3_4,
-                      'qty_casting_3_5':  qty_casting_3_5,
-                      'qty_casting_3_6':  qty_casting_3_6,
-                      'qty_casting_3_7':  qty_casting_3_7,
-                      'qty_casting_3_8':  qty_casting_3_8,
-                      'qty_casting_3_9':  qty_casting_3_9,
-                      'qty_casting_3_10':  qty_casting_3_10,
-                      'qty_casting_3_11':  qty_casting_3_11,
-                      'qty_casting_3_12':  qty_casting_3_12,
-                      'qty_casting_3_total':  qty_casting_3_1 + qty_casting_3_2 + qty_casting_3_3 + qty_casting_3_4 + qty_casting_3_5 + qty_casting_3_6 + qty_casting_3_7 + qty_casting_3_8 + qty_casting_3_9 + qty_casting_3_10 + qty_casting_3_11 + qty_casting_3_12,
-                      'emp_casting_3': self.casting_employee(cr, uid, date_from, date_to, '=', 3),
-                      'target_casting_3': 0,
-                      
-                      'coeff_casting_4' : self.casting(cr, uid, '>=', 4),
-                      'qty_casting_4_1':  qty_casting_4_1,
-                      'qty_casting_4_2': qty_casting_4_2,
-                      'qty_casting_4_3': qty_casting_4_3,
-                      'qty_casting_4_4': qty_casting_4_4,
-                      'qty_casting_4_5': qty_casting_4_5,
-                      'qty_casting_4_6': qty_casting_4_6,
-                      'qty_casting_4_7': qty_casting_4_7,
-                      'qty_casting_4_8': qty_casting_4_8,
-                      'qty_casting_4_9': qty_casting_4_9,
-                      'qty_casting_4_10': qty_casting_4_10,
-                      'qty_casting_4_11': qty_casting_4_11,
-                      'qty_casting_4_12': qty_casting_4_12,
-                      'qty_casting_4_total': qty_casting_4_1 + qty_casting_4_2 + qty_casting_4_3 + qty_casting_4_4 + qty_casting_4_5 + qty_casting_4_6 + qty_casting_4_7 + qty_casting_4_8 + qty_casting_4_9 + qty_casting_4_10 + qty_casting_4_11 + qty_casting_4_12,
-                      'emp_casting_4': self.casting_employee(cr, uid, date_from, date_to, '=', 4),
-                      'target_casting_4': 0,
-                      
-                      
-                      'coeff_assembling_easy': self.assembling(cr, uid, 'Easy'),
-                      'qty_assembling_easy_1': qty_assembling_easy_1,
-                      'qty_assembling_easy_2': qty_assembling_easy_2,
-                      'qty_assembling_easy_3': qty_assembling_easy_3,
-                      'qty_assembling_easy_4': qty_assembling_easy_4,
-                      'qty_assembling_easy_5': qty_assembling_easy_5,
-                      'qty_assembling_easy_6': qty_assembling_easy_6,
-                      'qty_assembling_easy_7': qty_assembling_easy_7,
-                      'qty_assembling_easy_8': qty_assembling_easy_8,
-                      'qty_assembling_easy_9': qty_assembling_easy_9,
-                      'qty_assembling_easy_10': qty_assembling_easy_10,
-                      'qty_assembling_easy_11': qty_assembling_easy_11,
-                      'qty_assembling_easy_12': qty_assembling_easy_12,
-                      'qty_assembling_easy_total': qty_assembling_easy_1 + qty_assembling_easy_2 + qty_assembling_easy_3 + qty_assembling_easy_4 + qty_assembling_easy_5 + qty_assembling_easy_6 + qty_assembling_easy_7 + qty_assembling_easy_8 + qty_assembling_easy_9 + qty_assembling_easy_10 + qty_assembling_easy_11 + qty_assembling_easy_12,
-                      'emp_assembling_easy'  : self.assembling_employee(cr, uid, date_from, date_to, 'Easy'),
-                      'target_assembling_easy': self.target_assembling(cr, uid, 'Easy'),
-                      
-                      'coeff_assembling_medium': self.assembling(cr, uid, 'Medium'),
-                      'qty_assembling_medium_1': qty_assembling_medium_1,
-                      'qty_assembling_medium_2': qty_assembling_medium_2,
-                      'qty_assembling_medium_3': qty_assembling_medium_3,
-                      'qty_assembling_medium_4': qty_assembling_medium_4,
-                      'qty_assembling_medium_5': qty_assembling_medium_5,
-                      'qty_assembling_medium_6': qty_assembling_medium_6,
-                      'qty_assembling_medium_7': qty_assembling_medium_7,
-                      'qty_assembling_medium_8': qty_assembling_medium_8,
-                      'qty_assembling_medium_9': qty_assembling_medium_9,
-                      'qty_assembling_medium_10': qty_assembling_medium_10,
-                      'qty_assembling_medium_11': qty_assembling_medium_11,
-                      'qty_assembling_medium_12': qty_assembling_medium_12,
-                      'qty_assembling_medium_total': qty_assembling_medium_1 + qty_assembling_medium_2 + qty_assembling_medium_3 + qty_assembling_medium_4 + qty_assembling_medium_5 + qty_assembling_medium_6 + qty_assembling_medium_7 + qty_assembling_medium_8 + qty_assembling_medium_8 + qty_assembling_medium_10 + qty_assembling_medium_11 + qty_assembling_medium_12,
-                      'emp_assembling_medium'  : self.assembling_employee(cr, uid, date_from, date_to, 'Medium'),
-                      'target_assembling_medium': self.target_assembling(cr, uid, 'Medium'),
-                      
-                      'coeff_assembling_hard': self.assembling(cr, uid, 'Hard'),
-                      'qty_assembling_hard_1': qty_assembling_hard_1,
-                      'qty_assembling_hard_2': qty_assembling_hard_2,
-                      'qty_assembling_hard_3': qty_assembling_hard_3,
-                      'qty_assembling_hard_4': qty_assembling_hard_4,
-                      'qty_assembling_hard_5': qty_assembling_hard_5,
-                      'qty_assembling_hard_6': qty_assembling_hard_6,
-                      'qty_assembling_hard_7': qty_assembling_hard_7,
-                      'qty_assembling_hard_8': qty_assembling_hard_8,
-                      'qty_assembling_hard_9': qty_assembling_hard_9,
-                      'qty_assembling_hard_10': qty_assembling_hard_10,
-                      'qty_assembling_hard_11': qty_assembling_hard_11,
-                      'qty_assembling_hard_12': qty_assembling_hard_12,
-                      'qty_assembling_hard_total': qty_assembling_hard_1 + qty_assembling_hard_2 + qty_assembling_hard_3 + qty_assembling_hard_4 + qty_assembling_hard_5 + qty_assembling_hard_6 + qty_assembling_hard_7 + qty_assembling_hard_8 + qty_assembling_hard_9 + qty_assembling_hard_10 + qty_assembling_hard_11 + qty_assembling_hard_12,
-                      'emp_assembling_hard'  : self.assembling_employee(cr, uid, date_from, date_to, 'Hard'),
-                      'target_assembling_hard': self.target_assembling(cr, uid, 'Hard'),
-                      
-                      'coeff_assembling_very_hard': self.assembling(cr, uid, 'Very Hard'),
-                      'qty_assembling_very_hard_1': qty_assembling_very_hard_1,
-                      'qty_assembling_very_hard_2': qty_assembling_very_hard_2,
-                      'qty_assembling_very_hard_3': qty_assembling_very_hard_3,
-                      'qty_assembling_very_hard_4': qty_assembling_very_hard_4,
-                      'qty_assembling_very_hard_5': qty_assembling_very_hard_5,
-                      'qty_assembling_very_hard_6': qty_assembling_very_hard_6,
-                      'qty_assembling_very_hard_7': qty_assembling_very_hard_7,
-                      'qty_assembling_very_hard_8': qty_assembling_very_hard_8,
-                      'qty_assembling_very_hard_9': qty_assembling_very_hard_9,
-                      'qty_assembling_very_hard_10': qty_assembling_very_hard_10,
-                      'qty_assembling_very_hard_11': qty_assembling_very_hard_11,
-                      'qty_assembling_very_hard_12': qty_assembling_very_hard_12,
-                      'qty_assembling_very_hard_total': qty_assembling_very_hard_1 + qty_assembling_very_hard_2 + qty_assembling_very_hard_3 + qty_assembling_very_hard_4 + qty_assembling_very_hard_5 + qty_assembling_very_hard_6 + qty_assembling_very_hard_7 + qty_assembling_very_hard_8 + qty_assembling_very_hard_9 + qty_assembling_very_hard_10 + qty_assembling_very_hard_11 + qty_assembling_very_hard_12,
-                      'emp_assembling_very_hard'  : self.assembling_employee(cr, uid, date_from, date_to, 'Very Hard'),
-                      'target_assembling_very_hard': self.target_assembling(cr, uid, 'Very Hard'),
-                      
-                      
-                      'coeff_setting_i': self.setting(cr, uid, 'I'),
-                      'qty_setting_i_1': qty_setting_i_1,
-                      'qty_setting_i_2': qty_setting_i_2,
-                      'qty_setting_i_3': qty_setting_i_3,
-                      'qty_setting_i_4': qty_setting_i_4,
-                      'qty_setting_i_5': qty_setting_i_5,
-                      'qty_setting_i_6': qty_setting_i_6,
-                      'qty_setting_i_7': qty_setting_i_7,
-                      'qty_setting_i_8': qty_setting_i_8,
-                      'qty_setting_i_9': qty_setting_i_9,
-                      'qty_setting_i_10': qty_setting_i_10,
-                      'qty_setting_i_11': qty_setting_i_11,
-                      'qty_setting_i_12': qty_setting_i_12,
-                      'qty_setting_i_total': qty_setting_i_1 + qty_setting_i_2 + qty_setting_i_3 + qty_setting_i_4 + qty_setting_i_5 + qty_setting_i_6 + qty_setting_i_7 + qty_setting_i_8 + qty_setting_i_9 + qty_setting_i_10 + qty_setting_i_11 + qty_setting_i_12,
-                      'emp_setting_i': self.setting_employee(cr, uid, date_from, date_to, 'I'),
-                      'target_setting_i': self.target_setting(cr, uid, 'I'),
-                      
-                      'coeff_setting_ii': self.setting(cr, uid, 'II'),
-                      'qty_setting_ii_1': qty_setting_ii_1,
-                      'qty_setting_ii_2': qty_setting_ii_2,
-                      'qty_setting_ii_3': qty_setting_ii_3,
-                      'qty_setting_ii_4': qty_setting_ii_4,
-                      'qty_setting_ii_5': qty_setting_ii_5,
-                      'qty_setting_ii_6': qty_setting_ii_6,
-                      'qty_setting_ii_7': qty_setting_ii_7,
-                      'qty_setting_ii_8': qty_setting_ii_8,
-                      'qty_setting_ii_9': qty_setting_ii_9,
-                      'qty_setting_ii_10': qty_setting_ii_10,
-                      'qty_setting_ii_11': qty_setting_ii_11,
-                      'qty_setting_ii_12': qty_setting_ii_12,
-                      'qty_setting_ii_total': qty_setting_ii_1 + qty_setting_ii_2 + qty_setting_ii_3 + qty_setting_ii_4 + qty_setting_ii_5 + qty_setting_ii_6 + qty_setting_ii_7 + qty_setting_ii_8 + qty_setting_ii_9 + qty_setting_ii_10 + qty_setting_ii_11 + qty_setting_ii_12,
-                      'emp_setting_ii': self.setting_employee(cr, uid, date_from, date_to, 'II'),
-                      'target_setting_ii': self.target_setting(cr, uid, 'II'),
-                      
-                      'coeff_setting_iii': self.setting(cr, uid, 'III'),
-                      'qty_setting_iii_1': qty_setting_iii_1,
-                      'qty_setting_iii_2': qty_setting_iii_2,
-                      'qty_setting_iii_3': qty_setting_iii_3,
-                      'qty_setting_iii_4': qty_setting_iii_4,
-                      'qty_setting_iii_5': qty_setting_iii_5,
-                      'qty_setting_iii_6': qty_setting_iii_6,
-                      'qty_setting_iii_7': qty_setting_iii_7,
-                      'qty_setting_iii_8': qty_setting_iii_8,
-                      'qty_setting_iii_9': qty_setting_iii_9,
-                      'qty_setting_iii_10': qty_setting_iii_10,
-                      'qty_setting_iii_11': qty_setting_iii_11,
-                      'qty_setting_iii_12': qty_setting_iii_12,
-                      'qty_setting_iii_total': qty_setting_iii_1 + qty_setting_iii_2 + qty_setting_iii_3 + qty_setting_iii_4 + qty_setting_iii_5 + qty_setting_iii_6 + qty_setting_iii_7 + qty_setting_iii_8 + qty_setting_iii_9 + qty_setting_iii_10 + qty_setting_iii_11 + qty_setting_iii_12,
-                      'emp_setting_iii': self.setting_employee(cr, uid, date_from, date_to, 'III'),
-                      'target_setting_iii': self.target_setting(cr, uid, 'III'),
-                      
-                      'coeff_setting_iv': self.setting(cr, uid, 'IV'),
-                      'qty_setting_iv_1': qty_setting_iv_1,
-                      'qty_setting_iv_2': qty_setting_iv_2,
-                      'qty_setting_iv_3': qty_setting_iv_3,
-                      'qty_setting_iv_4': qty_setting_iv_4,
-                      'qty_setting_iv_5': qty_setting_iv_5,
-                      'qty_setting_iv_6': qty_setting_iv_6,
-                      'qty_setting_iv_7': qty_setting_iv_7,
-                      'qty_setting_iv_8': qty_setting_iv_8,
-                      'qty_setting_iv_9': qty_setting_iv_9,
-                      'qty_setting_iv_10': qty_setting_iv_10,
-                      'qty_setting_iv_11': qty_setting_iv_11,
-                      'qty_setting_iv_12': qty_setting_iv_12,
-                      'qty_setting_iv_total': qty_setting_iv_1 + qty_setting_iv_2 + qty_setting_iv_3 + qty_setting_iv_4 + qty_setting_iv_5 + qty_setting_iv_6 + qty_setting_iv_7 + qty_setting_iv_8 + qty_setting_iv_9 + qty_setting_iv_10 + qty_setting_iv_11 + qty_setting_iv_12,
-                      'emp_setting_iv': self.setting_employee(cr, uid, date_from, date_to, 'IV'),
-                      'target_setting_iv': self.target_setting(cr, uid, 'IV'),
-                      
-                      'coeff_setting_v': self.setting(cr, uid, 'V'),
-                      'qty_setting_v_1': qty_setting_v_1,
-                      'qty_setting_v_2': qty_setting_v_2,
-                      'qty_setting_v_3': qty_setting_v_3,
-                      'qty_setting_v_4': qty_setting_v_4,
-                      'qty_setting_v_5': qty_setting_v_5,
-                      'qty_setting_v_6': qty_setting_v_6,
-                      'qty_setting_v_7': qty_setting_v_7,
-                      'qty_setting_v_8': qty_setting_v_8,
-                      'qty_setting_v_9': qty_setting_v_9,
-                      'qty_setting_v_10': qty_setting_v_10,
-                      'qty_setting_v_11': qty_setting_v_11,
-                      'qty_setting_v_12': qty_setting_v_12,
-                      'qty_setting_v_total': qty_setting_v_1 + qty_setting_v_2 + qty_setting_v_3 + qty_setting_v_4 + qty_setting_v_5 + qty_setting_v_6 + qty_setting_v_7 + qty_setting_v_8 + qty_setting_v_9 + qty_setting_v_10 + qty_setting_v_11 + qty_setting_v_12,
-                      'emp_setting_v': self.setting_employee(cr, uid, date_from, date_to, 'V'),
-                      'target_setting_v': self.target_setting(cr, uid, 'V'),
-                      
-                      'coeff_setting_vi': self.setting(cr, uid, 'VI'),
-                      'qty_setting_vi_1': qty_setting_vi_1,
-                      'qty_setting_vi_2': qty_setting_vi_2,
-                      'qty_setting_vi_3': qty_setting_vi_3,
-                      'qty_setting_vi_4': qty_setting_vi_4,
-                      'qty_setting_vi_5': qty_setting_vi_5,
-                      'qty_setting_vi_6': qty_setting_vi_6,
-                      'qty_setting_vi_7': qty_setting_vi_7,
-                      'qty_setting_vi_8': qty_setting_vi_8,
-                      'qty_setting_vi_9': qty_setting_vi_9,
-                      'qty_setting_vi_10': qty_setting_vi_10,
-                      'qty_setting_vi_11': qty_setting_vi_11,
-                      'qty_setting_vi_12': qty_setting_vi_12,
-                      'qty_setting_vi_total': qty_setting_vi_1 + qty_setting_vi_2 + qty_setting_vi_3 + qty_setting_vi_4 + qty_setting_vi_5 + qty_setting_vi_6 + qty_setting_vi_7 + qty_setting_vi_8 + qty_setting_vi_9 + qty_setting_vi_10 + qty_setting_vi_11 + qty_setting_vi_12,
-                      'emp_setting_vi': self.setting_employee(cr, uid, date_from, date_to, 'VI'),
-                      'target_setting_vi': self.target_setting(cr, uid, 'VI'),
-                      
-                      'coeff_setting_vii': self.setting(cr, uid, 'VII'),
-                      'qty_setting_vii_1': qty_setting_vii_1,
-                      'qty_setting_vii_2': qty_setting_vii_2,
-                      'qty_setting_vii_3': qty_setting_vii_3,
-                      'qty_setting_vii_4': qty_setting_vii_4,
-                      'qty_setting_vii_5': qty_setting_vii_5,
-                      'qty_setting_vii_6': qty_setting_vii_6,
-                      'qty_setting_vii_7': qty_setting_vii_7,
-                      'qty_setting_vii_8': qty_setting_vii_8,
-                      'qty_setting_vii_9': qty_setting_vii_9,
-                      'qty_setting_vii_10': qty_setting_vii_10,
-                      'qty_setting_vii_11': qty_setting_vii_11,
-                      'qty_setting_vii_12': qty_setting_vii_12,
-                      'qty_setting_vii_total': qty_setting_vii_1 + qty_setting_vii_2 + qty_setting_vii_3 + qty_setting_vii_4 + qty_setting_vii_5 + qty_setting_vii_6 + qty_setting_vii_7 + qty_setting_vii_8 + qty_setting_vii_9 + qty_setting_vii_10 + qty_setting_vii_11 + qty_setting_vii_12,
-                      'emp_setting_vii': self.setting_employee(cr, uid, date_from, date_to, 'VII'),
-                      'target_setting_vii': self.target_setting(cr, uid, 'VII'),
-                      
-                      'coeff_setting_viii': self.setting(cr, uid, 'VIII'),
-                      'qty_setting_viii_1': qty_setting_viii_1,
-                      'qty_setting_viii_2': qty_setting_viii_2,
-                      'qty_setting_viii_3': qty_setting_viii_3,
-                      'qty_setting_viii_4': qty_setting_viii_4,
-                      'qty_setting_viii_5': qty_setting_viii_5,
-                      'qty_setting_viii_6': qty_setting_viii_6,
-                      'qty_setting_viii_7': qty_setting_viii_7,
-                      'qty_setting_viii_8': qty_setting_viii_8,
-                      'qty_setting_viii_9': qty_setting_viii_9,
-                      'qty_setting_viii_10': qty_setting_viii_10,
-                      'qty_setting_viii_11': qty_setting_viii_11,
-                      'qty_setting_viii_12': qty_setting_viii_12,
-                      'qty_setting_viii_total': qty_setting_viii_1 + qty_setting_viii_2 + qty_setting_viii_3 + qty_setting_viii_4 + qty_setting_viii_5 + qty_setting_viii_6 + qty_setting_viii_7 + qty_setting_viii_8 + qty_setting_viii_9 + qty_setting_viii_10 + qty_setting_viii_11 + qty_setting_viii_12,
-                      'emp_setting_viii': self.setting_employee(cr, uid, date_from, date_to, 'VIII'),
-                      'target_setting_viii': self.target_setting(cr, uid, 'VIII'),
-                      
-                      'coeff_setting_ix': self.setting(cr, uid, 'IX'),
-                      'qty_setting_ix_1': qty_setting_ix_1,
-                      'qty_setting_ix_2': qty_setting_ix_2,
-                      'qty_setting_ix_3': qty_setting_ix_3,
-                      'qty_setting_ix_4': qty_setting_ix_4,
-                      'qty_setting_ix_5': qty_setting_ix_5,
-                      'qty_setting_ix_6': qty_setting_ix_6,
-                      'qty_setting_ix_7': qty_setting_ix_7,
-                      'qty_setting_ix_8': qty_setting_ix_8,
-                      'qty_setting_ix_9': qty_setting_ix_9,
-                      'qty_setting_ix_10': qty_setting_ix_10,
-                      'qty_setting_ix_11': qty_setting_ix_11,
-                      'qty_setting_ix_12': qty_setting_ix_12,
-                      'qty_setting_ix_total': qty_setting_ix_1 + qty_setting_ix_2 + qty_setting_ix_3 + qty_setting_ix_4 + qty_setting_ix_5 + qty_setting_ix_6 + qty_setting_ix_7 + qty_setting_ix_8 + qty_setting_ix_9 + qty_setting_ix_10 + qty_setting_ix_11 + qty_setting_ix_12,
-                      'emp_setting_ix': self.setting_employee(cr, uid, date_from, date_to, 'IX'),
-                      'target_setting_ix': self.target_setting(cr, uid, 'IX'),
-                   }
-            return {'name': name_report, 'line': arr}
+        return {'date_from': date_from, 'date_to': date_to, 'name': name_report}
     
-    def _3d_level(self, cr, uid, name):
-        _3d_level = self.pool.get('hpusa3d.difficulty.level')
-        ids = _3d_level.search(cr, uid, [('name','=',name)])
-        if ids:
-            return _3d_level.browse(cr, uid, ids[0]).coefficient or 0 
-        return 0
-        
-    def qty_3d_level(self, cr, uid, date_from, date_to, name, type, number):
-        if type == 'month':
-            date_start = date_from
-            if number == 1:
-                date_from = datetime.strptime(date_start, '%Y-%m-%d')
-            else:
-                days = (number - 1)*7
-                date_from = datetime.strptime(date_start, '%Y-%m-%d') + relativedelta(days=days)
-            days = (number)*7
-            date_to = datetime.strptime(date_start, '%Y-%m-%d') + relativedelta(days=days)
-        else:
-            d = datetime.strptime(date_from, '%Y-%m-%d')
-            date_from = date(d.year, 1, 1) + relativedelta(months=+(number-1))
-            date_to = date(d.year, 1, 31) + relativedelta(months=+(number-1))
-        _3d_report_ids = self.pool.get('hpusa.3d.report.line').search(cr, uid, [('parent_id.report_date','>=',date_from),('parent_id.report_date','<=',date_to),('product_id._3d_difficulty_level.name','=', name),('parent_id.state','=','confirmed')])
-        point = len(_3d_report_ids)
-        return point   
     
-    def _3d_employee_level(self, cr, uid, date_from, date_to, name):
-        _3d_level = self.pool.get('hpusa3d.difficulty.level')
-        ids = _3d_level.search(cr, uid, [('name','=',name)]);
-        if ids:
-            #get report line
-            _3d_report = self.pool.get('hpusa.3d.report.line').search(cr, uid, [('product_id._3d_difficulty_level.id','=',ids[0]),('parent_id.state','=','confirmed')])
-            if _3d_report:
-                emp = []
-                for item in _3d_report:
-                    _3d = self.pool.get('hpusa.3d.report.line').browse(cr, uid, item)
-                    if _3d.parent_id.designer_id:
-                        if _3d.parent_id.designer_id.id not in emp:
-                            emp.append(_3d.parent_id.designer_id.id)
-                return len(emp);
-        return 0
-        
-    def _3d_times(self, cr, uid, symbol, name):
-        _3d_times = self.pool.get('hpusa3d.times')
-        ids = _3d_times.search(cr, uid, [('name',symbol,name)]);
-        if ids:
-            return _3d_times.browse(cr, uid, ids[0]).coefficient or 0
-        return 0
-    
-    def qty_3d_times(self, cr, uid, date_from, date_to, name, type, number):
-        if type == 'month':
-            date_start = date_from
-            if number == 1:
-                date_from = datetime.strptime(date_start, '%Y-%m-%d')
-            else:
-                days = (number - 1)*7
-                date_from = datetime.strptime(date_start, '%Y-%m-%d') + relativedelta(days=days)
-            days = (number)*7
-            date_to = datetime.strptime(date_start, '%Y-%m-%d') + relativedelta(days=days)
-        else:
-            d = datetime.strptime(date_from, '%Y-%m-%d')
-            date_from = date(d.year, 1, 1) + relativedelta(months=+(number-1))
-            date_to = date(d.year, 1, 31) + relativedelta(months=+(number-1))
-        if name == 4:
-            _3d_report_ids = self.pool.get('hpusa.3d.report.line').search(cr, uid, [('parent_id.report_date','>=',date_from),('parent_id.report_date','<=',date_to),('product_id._3d_design_times.name','>=', name),('parent_id.state','=','confirmed')])
-        else:
-            _3d_report_ids = self.pool.get('hpusa.3d.report.line').search(cr, uid, [('parent_id.report_date','>=',date_from),('parent_id.report_date','<=',date_to),('product_id._3d_design_times.name','=', name),('parent_id.state','=','confirmed')])
-        point = len(_3d_report_ids)
-        return point
-        
-    def _3d_employee_times(self, cr, uid, date_from, date_to, symbol, name):
-        _3d_times = self.pool.get('hpusa3d.times')
-        ids = _3d_times.search(cr, uid, [('name',symbol,name)]);
-        if ids:
-            #get report line
-            _3d_report = self.pool.get('hpusa.3d.report.line').search(cr, uid, [('product_id._3d_design_times.id','=',ids[0]),('parent_id.state','=','confirmed')])
-            if _3d_report:
-                emp = []
-                for item in _3d_report:
-                    _3d = self.pool.get('hpusa.3d.report.line').browse(cr, uid, item)
-                    if _3d.parent_id.designer_id:
-                        if _3d.parent_id.designer_id.id not in emp:
-                            emp.append(_3d.parent_id.designer_id.id)
-                return len(emp);
-        return 0
-
-    def _3d_target(self, cr, uid, name):
-        _3d_target = self.pool.get('hpusa.kpis.target.3d.line')
-        ids = _3d_target.search(cr, uid, [('level.name','=', name)])
-        if ids:
-            return _3d_target.browse(cr, uid, ids[0]).level and _3d_target.browse(cr, uid, ids[0]).level.coefficient or 0
-        return 0
-        
-    def casting(self, cr, uid, symbol, name):
-        casting = self.pool.get('hpusa.casting.times')
-        ids = casting.search(cr, uid, [('name', symbol, name)])
-        if ids:
-            return casting.browse(cr, uid, ids[0]).coefficient_gold or 0
-        return 0
-
-    def qty_casting(self, cr, uid, date_from, date_to, name, type, number):
-        if type == 'month':
-            date_start = date_from
-            if number == 1:
-                date_from = datetime.strptime(date_start, '%Y-%m-%d')
-            else:
-                days = (number - 1)*7
-                date_from = datetime.strptime(date_start, '%Y-%m-%d') + relativedelta(days=days)
-            days = (number)*7
-            date_to = datetime.strptime(date_start, '%Y-%m-%d') + relativedelta(days=days)
-        else:
-            d = datetime.strptime(date_from, '%Y-%m-%d')
-            date_from = date(d.year, 1, 1) + relativedelta(months=+(number-1))
-            date_to = date(d.year, 1, 31) + relativedelta(months=+(number-1))
-        if name == 4:
-            _casting_report_ids = self.pool.get('hpusa.casting.report.line').search(cr, uid, [('parent_id.report_date','>=',date_from),('parent_id.report_date','<=',date_to),('product_id.casting_times.name','>=', name),('parent_id.state','=','confirmed')])
-        else:
-            _casting_report_ids = self.pool.get('hpusa.casting.report.line').search(cr, uid, [('parent_id.report_date','>=',date_from),('parent_id.report_date','<=',date_to),('product_id.casting_times.name','=', name),('parent_id.state','=','confirmed')])
-        point = len(_casting_report_ids)
-        return point
-        
-    def casting_employee(self, cr, uid, date_from, date_to, symbol, name):
-        casting = self.pool.get('hpusa.casting.times')
-        ids = casting.search(cr, uid, [('name',symbol,name)]);
-        if ids:
-            #get report line
-            casting_report = self.pool.get('hpusa.casting.report.line').search(cr, uid, [('product_id.casting_times.id','=',ids[0]),('parent_id.state','=','confirmed')])
-            if casting_report:
-                emp = []
-                for item in casting_report:
-                    cas = self.pool.get('hpusa.casting.report.line').browse(cr, uid, item)
-                    if cas.worker:
-                        if cas.worker.id not in emp:
-                            emp.append(cas.worker.id)
-                return len(emp);
-        return 0
-        
-        
-    def assembling(self, cr, uid, name):
-        assembling = self.pool.get('hpusa.ass.difficulty.level')
-        ids = assembling.search(cr, uid, [('name', '=', name)])
-        if ids:
-            return assembling.browse(cr, uid, ids[0]).coefficient or 0
-        return 0
-        
-    def qty_assembling(self, cr, uid, date_from, date_to, name, type, number):
-        if type == 'month':
-            date_start = date_from
-            if number == 1:
-                date_from = datetime.strptime(date_start, '%Y-%m-%d')
-            else:
-                days = (number - 1)*7
-                date_from = datetime.strptime(date_start, '%Y-%m-%d') + relativedelta(days=days)
-            days = (number)*7
-            date_to = datetime.strptime(date_start, '%Y-%m-%d') + relativedelta(days=days)
-        else:
-            d = datetime.strptime(date_from, '%Y-%m-%d')
-            date_from = date(d.year, 1, 1) + relativedelta(months=+(number-1))
-            date_to = date(d.year, 1, 31) + relativedelta(months=+(number-1))
-        if name == 4:
-            _assembling_report_ids = self.pool.get('hpusa.assembling.report.line').search(cr, uid, [('parent_id.report_date','>=',date_from),('parent_id.report_date','<=',date_to),('product_id.ass_difficulty_level.name','>=', name),('parent_id.state','=','confirmed')])
-        else:
-            _assembling_report_ids = self.pool.get('hpusa.assembling.report.line').search(cr, uid, [('parent_id.report_date','>=',date_from),('parent_id.report_date','<=',date_to),('product_id.ass_difficulty_level.name','=', name),('parent_id.state','=','confirmed')])
-        point = 0
-        point = len(_assembling_report_ids)
-        return point
-        
-    def assembling_employee(self, cr, uid, date_from, date_to, name):
-        assembling = self.pool.get('hpusa.ass.difficulty.level')
-        ids = assembling.search(cr, uid, [('name','=',name)]);
-        if ids:
-            #get report line
-            assembling_report = self.pool.get('hpusa.assembling.report.line').search(cr, uid, [('product_id.ass_difficulty_level.id','=',ids[0]),('parent_id.state','=','confirmed')])
-            if assembling_report:
-                emp = []
-                for item in assembling_report:
-                    ass = self.pool.get('hpusa.assembling.report.line').browse(cr, uid, item)
-                    if ass.parent_id.reporter_id:
-                        if ass.parent_id.reporter_id.id not in emp:
-                            emp.append(ass.parent_id.reporter_id.id)
-                return len(emp);
-        return 0
-        
-    def target_assembling(self, cr, uid, name):
-        target_assembling = self.pool.get('hpusa.kpis.target.assembling.line')
-        ids = target_assembling.search(cr, uid, [('level.name', '=', name)])
-        if ids:
-            return target_assembling.browse(cr, uid, ids[0]).level and target_assembling.browse(cr, uid, ids[0]).level.coefficient or 0
-        return 0
-        
-    def setting(self, cr, uid, name):
-        setting = self.pool.get('hpusa.setting.difficulty.level')
-        ids = setting.search(cr, uid, [('name', '=', name)])
-        if ids:
-            return setting.browse(cr, uid, ids[0]).coefficient or 0
-        return 0
-        
-    def qty_setting(self, cr, uid, date_from, date_to, name, type, number):
-        if type == 'month':
-            date_start = date_from
-            if number == 1:
-                date_from = datetime.strptime(date_start, '%Y-%m-%d')
-            else:
-                days = (number - 1)*7
-                date_from = datetime.strptime(date_start, '%Y-%m-%d') + relativedelta(days=days)
-            days = (number)*7
-            date_to = datetime.strptime(date_start, '%Y-%m-%d') + relativedelta(days=days)
-        else:
-            d = datetime.strptime(date_from, '%Y-%m-%d')
-            date_from = date(d.year, 1, 1) + relativedelta(months=+(number-1))
-            date_to = date(d.year, 1, 31) + relativedelta(months=+(number-1))
-        _setting_report_ids = self.pool.get('hpusa.setting.report.line').search(cr, uid, [('parent_id.report_date','>=',date_from),('parent_id.report_date','<=',date_to),('product_id.setting_difficulty_level.name','=', name),('parent_id.state','=','confirmed')])
-        point = len(_setting_report_ids)
-        return point
-        
-    def setting_employee(self, cr, uid, date_from, date_to, name):
-        setting = self.pool.get('hpusa.setting.difficulty.level')
-        ids = setting.search(cr, uid, [('name','=',name)]);
-        if ids:
-            #get report line
-            setting_report = self.pool.get('hpusa.setting.report.line').search(cr, uid, [('product_id.setting_difficulty_level.id','=',ids[0]),('parent_id.state','=','confirmed')])
-            if setting_report:
-                emp = []
-                for item in setting_report:
-                    set = self.pool.get('hpusa.setting.report.line').browse(cr, uid, item)
-                    if set.parent_id.reporter_id:
-                        if set.parent_id.reporter_id.id not in emp:
-                            emp.append(set.parent_id.reporter_id.id)
-                return len(emp);
-        return 0
-        
-       
-    def target_setting(self, cr, uid, name):
-        target_setting = self.pool.get('hpusa.kpis.target.setting.line')
-        ids = target_setting.search(cr, uid, [('level.name', '=', name)])
-        if ids:
-            return target_setting.browse(cr, uid, ids[0]).level and target_setting.browse(cr, uid, ids[0]).level.coefficient or 0
-        return 0
-        
 wizard_hp_report_kpis()
 
 openoffice_report.openoffice_report(
