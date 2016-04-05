@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<openerp>
+	<data>
+		
+		<!-- Sale Order -->
+		<record id="view_order_form_inherit_besco_sale" model="ir.ui.view">
+	        <field name="name">view.order.form.inherit.besco.sale</field>
+	        <field name="model">sale.order</field>
+	        <field name="inherit_id" ref="sale.view_order_form"/>
+	        <field name="arch" type="xml">
+	        	<button name="%(sale.action_view_sale_advance_payment_inv)d" position="replace">
+	        		<button name="%(sale.action_view_sale_advance_payment_inv)d" string="Create Invoice"
+                            type="action" class="oe_highlight" groups="base.group_user" 
+                            	attrs="{'invisible': ['|',('state','=','manual'),('order_policy','=','picking')]}"/>
+                </button>
+                <button name="copy_quotation" position="before">
+                	<button name="action_set_to_draft" states="cancel" string="Set To Draft" type="object"/>
+                </button>
+	        </field>
+	    </record>
+	    
+	    <record id="hpusa_sale_order_inherit_besco_sale" model="ir.ui.view">
+	        <field name="name">hp.sale.order.form.inherit.besco.sale</field>
+	        <field name="model">sale.order</field>
+	        <field name="inherit_id" ref="hpusa_manufacturing.hpusa_sale_order"/>
+	        <field name="arch" type="xml">
+                <button name="action_create_mo" position="replace">
+                	<button name="action_create_mo" string="Create MO" type="object" 
+                		attrs="{'invisible': ['|',('state','!=','progress'),('sale_order_type', '!=', 'customize')]}" 
+                		class="oe_highlight" groups="base.group_user" colspan="1"/>
+                </button>
+                <button name="action_view_mo" position="replace">
+            	    <button name="action_view_mo" string="View MO" type="object" 
+            	    	attrs="{'invisible': ['|',('state','!=','progress'),('sale_order_type', '!=', 'customize')]}" 
+            	    	class="oe_highlight" groups="base.group_user" colspan="1"/>
+                </button>
+                <button name="%(hpusa_manufacturing.sale_open_mo_bom)d" position="replace">
+            		<button name="%(hpusa_manufacturing.sale_open_mo_bom)d" string="View BOM" type="action" 
+            			attrs="{'invisible': ['|',('state','!=','progress'),('sale_order_type', '!=', 'customize')]}" 
+            			class="oe_highlight" groups="base.group_user" colspan="2"/>
+            	</button>
+	        </field>
+	    </record>
+	    
+	</data>
+</openerp>
+	
