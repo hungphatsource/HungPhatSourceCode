@@ -24,7 +24,9 @@
     'author': 'Duong Thien Kim <kim.dt@besco.vn>',
     'category': 'BESCO',
     'depends': ['sale','sale_stock','hpusa_manufacturing'],
-    'data': ['sale_view.xml'
+    'data': [
+             'wizard/stock_return_picking_view.xml',
+             'sale_view.xml',
              ],
     'auto_install': False,
     'application': True,
