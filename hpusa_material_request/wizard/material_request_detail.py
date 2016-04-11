@@ -183,6 +183,7 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
                 select mp.id as production_id
                 ,mp.name as production_name 
                 ,mp.mo_date 
+                ,mp.bom_id
                 ,pp.id as id
                 ,pp.default_code as default_code
                 ,pp.name_template as sp
@@ -218,7 +219,7 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
                
         sql+='''
              
-             group by mp.id,mp.name,pp.id,pp.default_code,pt.name,pu.name,mp.mo_date
+             group by mp.id,mp.name,pp.id,pp.default_code,pt.name,pu.name,mp.mo_date, mp.bom_id
              order by mp.name
              
         '''
@@ -240,7 +241,7 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
                         'unit': product['dvt'],
                         'qty': product['qty'],
                         })
-                lines= self.get_lines(cr,product['production_id'])
+                lines= self.get_lines(cr,product['bom_id'])
                 for line in lines:
                     arr.append({
                         'parent':'',
@@ -258,17 +259,17 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
         return arr
     
     
-    def get_lines(self,cr,production_id):
+    def get_lines(self,cr,bom_id):
        
         sql = '''
-            select pp.default_code,pp.name_template as  p_name,mpbl.product_qty as qty,pu.name as unit
-            from mrp_production_bom_line mpbl
-            left join product_uom pu on mpbl.product_uom = pu.id
-            left join product_product pp on mpbl.product_id=pp.id
-            where production_id = %s
-            group by pp.default_code,pp.name_template,mpbl.product_qty,pu.name
+            select pp.default_code,pp.name_template as  p_name ,mrp.product_qty as qty ,pu.name as unit
+            from mrp_bom mrp
+            left join product_uom pu on mrp.product_uom = pu.id
+            left join product_product pp on mrp.product_id=pp.id
+            where bom_id = %s
+            group by pp.default_code,pp.name_template  ,mrp.product_qty,pu.name
                order by pp.name_template
-        '''%(production_id)
+        '''%(bom_id)
        
         cr.execute(sql)
        # print sql 
