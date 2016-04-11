@@ -82,11 +82,24 @@
             <field name="name">WIP Report</field>
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">hpusa.reportddp</field>
+             <field name="context">{'type_': 'data'}</field>
             <field name="view_type">form</field>
             <field name="view_mode">form</field>
             <field name="target">new</field>
         </record>
   
   <menuitem action="action_reportddp" id="e"  name="WIP Report" sequence="100" groups="base.group_user" parent="hpusa_manufacturing.hpusa_report"/>
+
+        <record id="action_reportddp_manager" model="ir.actions.act_window">
+            <field name="name">WIP Report</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">hpusa.reportddp</field>
+             <field name="context">{'type_': 'manager'}</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+  
+  <menuitem action="action_reportddp_manager" id="manager"  name="WIP Report Manager" sequence="101" groups="base.group_sale_manager" parent="hpusa_manufacturing.hpusa_report"/>
  </data>
 </openerp>

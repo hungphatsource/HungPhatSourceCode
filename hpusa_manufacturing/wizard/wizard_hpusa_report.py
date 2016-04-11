@@ -22,6 +22,7 @@ class wizard_hpusa_report(osv.osv_memory):
             
             # Hpusa configure 04-06-2015
             #'so_id': fields.many2one('sale.order','Sale Order'),
+           'tracking_number_id':fields.many2one('hpusa.trackingnumber', 'Tracking Number'),
             'so_id': fields.many2many('sale.order','sale_order_hpusa_report', 'wizard_hpusa_report_id', 'so_id','Sale Orders'),
             # Hpusa configure 04-06-2015
             'content':fields.html('Content')  ,
@@ -35,7 +36,7 @@ class wizard_hpusa_report(osv.osv_memory):
     }
     def action_print(self, cr, uid, ids, context = None):
         datas = {'ids': context.get('active_ids', [])}
-        res = self.read(cr, uid, ids, ['date_from','date_to','so_id','location_id'], context=context)
+        res = self.read(cr, uid, ids, ['date_from','date_to','tracking_number_id','so_id','location_id'], context=context)
         res = res and res[0] or {}
         datas['form'] = res
         name = self.pool.get('res.users').browse(cr, uid, uid).partner_id.name
@@ -53,7 +54,24 @@ class wizard_hpusa_report(osv.osv_memory):
            }
 
         if type == 'manufacturing_detail':
-            datas['line'] = self.print_manufacturing_detail(cr, uid, res['date_from'], res['date_to'],res['so_id'])
+            that = self.browse(cr, uid, ids,context = None)[0]
+            so_id_track = [] 
+            soids=[]
+            so_id =[]
+            if that.tracking_number_id:
+                this = self.pool.get('sale.order.track').search(cr, uid, [('shipping_id','=',that.tracking_number_id.id )], context = None)
+                so_ids = self.pool.get('sale.order.track').browse( cr, uid, this, context = None)
+                for soid in so_ids:
+                    so_id_track.append( soid.so_id.id)
+            if that.so_id :
+                for index in that.so_id:
+                    soids.append(index.id)
+            for item in soids:
+                for items in so_id_track:
+                    if item == items:
+                       so_id_track.pop(so_id_track.index( items ))
+            so_id =  so_id_track + soids
+            datas['line'] = self.print_manufacturing_detail(cr, uid, res['date_from'], res['date_to'],so_id)
             return {
                 'type'          : 'ir.actions.report.xml',
                 'report_name'   : 'manufacturing_detail',
@@ -69,20 +87,32 @@ class wizard_hpusa_report(osv.osv_memory):
            }
 
         if type == 'v_invoice':
-            datas['line'] = self.manufacturing_v_invoice(cr, uid, res['date_from'], res['date_to'],res['so_id'])
+            datas['line'] = self.manufacturing_v_invoice(cr, uid, res['date_from'], res['date_to'],res['tracking_number_id'], res['so_id'])
             return {
                 'type'          : 'ir.actions.report.xml',
                 'report_name'   : 'manufacturing_v_invoice',
                 'datas'         : datas,
            }
 
-    def manufacturing_v_invoice(self, cr, uid, date_form, date_to,so_id):
+    def manufacturing_v_invoice(self, cr, uid, date_form, date_to,tracking_number_id, soids):
+        # create a array about so_id
+        so_id_track = [] 
+        so_id =[]
+        if tracking_number_id:
+            this = self.pool.get('sale.order.track').search(cr, uid, [('shipping_id','=',tracking_number_id[0] )], context = None)
+            so_ids = self.pool.get('sale.order.track').browse( cr, uid, this, context = None)
+            for soid in so_ids:
+                so_id_track.append( soid.so_id.id)
+        for item in soids:
+            for items in so_id_track:
+                if item == items:
+                    so_id_track.pop(so_id_track.index( items ))
+        so_id =  so_id_track + soids
         pricelist_obj = self.pool.get('product.pricelist')
         product_uom = self.pool.get('product.uom')
         manufacturing = self.print_manufacturing_detail(cr, uid, date_form, date_to,so_id)
         pricelist = self.pool.get('product.pricelist')
         currency_obj = self.pool.get('res.currency')
-
 
         # hpusa 03-06-2015
         index = 0
@@ -103,7 +133,9 @@ class wizard_hpusa_report(osv.osv_memory):
                 setting_price = 0
                 standard_price = 0
                 work_order_price = 0
-
+                total_cost = 0.0
+                relate_cost = 0.0
+                percent_loss = 0.03
                 uom = self.pool.get('product.uom').search(cr, uid, [('name','=',item['uom'])])
                 if item['so_id'] and item['so_id']!='total':
                     # hpusa 03-06-2015
@@ -127,7 +159,9 @@ class wizard_hpusa_report(osv.osv_memory):
                 else:
                     sale_price = product_obj.list_price
                 setting_price = product_uom._compute_price(cr, uid, product_obj.uom_id.id, product_obj.setting_price, to_uom_id=uom[0])
-                standard_price = product_uom._compute_price(cr, uid, product_obj.uom_id.id, product_obj.standard_price, to_uom_id=uom[0])
+                # caculate Standar_price
+                if  product_obj.hp_type =='diamonds':
+                    standard_price = product_uom._compute_price(cr, uid, product_obj.uom_id.id, product_obj.standard_price, to_uom_id=uom[0])
                 
                 setting_price = currency_obj.compute(cr, uid,
                                     3, pricelist.currency_id.id,
@@ -138,21 +172,35 @@ class wizard_hpusa_report(osv.osv_memory):
                                     3, pricelist.currency_id.id,
                                     standard_price, round=False,
                                     context=None)
-
+                if product_obj.related_product.id and item['metal_in_product'] :
+                    relate_id = self.pool.get('product.product').browse(cr, uid, product_obj.related_product.id)
+                    relate_cost = relate_id.standard_price
+                    metal_product = item['metal_in_product']
+                    total_cost= (metal_product*percent_loss + metal_product) * relate_cost
+                    item['percent_loss']= percent_loss
+                    item['total_cost']  = round((total_cost or 0.0),2) 
+                    item['gold_cost'] = str(round((relate_cost or 0.0),2) )
+                    
+                else :
+                    item['percent_loss']= ''
+                    item['total_cost'] = '' 
+                    item['gold_cost'] = ''
                 #item['price'] = str((product_obj.standard_price or 0.0) )
                 item['price'] = str(round((float(standard_price or 0.0)),2) )
-
-
                 item['setting_price'] = str(setting_price or 0.0)
-                item['total_amount'] = str( round((float(standard_price or 0.0)) * (float(item['qty_real'] or 0.0)),2))                
+                item['total_amount'] = str( round((float(standard_price or 0.0)) * (float(item['qty_real'] or 0.0)),2))           
                 item['total_setting'] = str(((setting_price or 0.0) * float(item['qty_real'] or 0.0)) )
                 
                 # hpusa 03-06-2015
                 item['cost_price'] = ''
                 #item['sale_price'] = ''
                 item['qty_bom']= self.get_bom_qty(cr, uid, parrent_product_id, product_obj.id, context=None)
-                cost_price+= round(float(item['total_amount']) + float(item['total_setting']),2)
-                sum_mrp_cost += round(float(item['total_amount']) + float(item['total_setting']),2)
+                if item['total_cost']:
+                    cost_price+= round(float(item['total_amount']) + float(item['total_setting'])+ float(item['total_cost']) ,2)
+                    sum_mrp_cost += round(float(item['total_amount']) + float(item['total_setting'])+ float(item['total_cost']) ,2)
+                else:
+                    cost_price+= round(float(item['total_amount']) + float(item['total_setting']) ,2)
+                    sum_mrp_cost += round(float(item['total_amount']) + float(item['total_setting']) ,2)
                 # hpusa 03-06-2015
                 
                 #item['cost_price'] = str(standard_price or 0.0)
@@ -177,6 +225,9 @@ class wizard_hpusa_report(osv.osv_memory):
                     item['setting_price'] = ''
                     item['total_setting'] = ''
                     item['cost_price'] = 0
+                    item['percent_loss']= ''
+                    item['gold_cost'] = ''
+                    item['total_cost'] = '' 
                     #item['sale_price'] = ''
                     
             # hpusa 03-06-2015
@@ -189,6 +240,9 @@ class wizard_hpusa_report(osv.osv_memory):
                 #item['sale_price'] = ''
                 item['total_setting'] = ''
                 item['percent'] = ''
+                item['percent_loss']= ''
+                item['gold_cost'] = ''
+                item['total_cost'] = '' 
             
             # hpusa 03-06-2015
             manufacturing[index]['total_amount']=str(round(cost_price,2))
