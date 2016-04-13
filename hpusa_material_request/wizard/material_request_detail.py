@@ -24,6 +24,7 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
             'state':fields.selection([('get', 'get'),('choose','choose')]),
             'planning_id': fields.many2many('hpusa.manufacturing.planning','material_request_planning_rel','material_p_request_id','hpusa_planning_id','Planning'),
             'company_id': fields.many2one('res.company','Company'), 
+            'metal_id': fields.many2one('hpusa.metal','Metal Confficent'),
      }
     _defaults={  
               'date_from': lambda *a: time.strftime('%Y-%m-01'),
@@ -41,8 +42,8 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
         datas['model'] = 'wizard.hpusa.material.request.report'   
         type = context.get('type_', '')
         if type == 'material_request_detail':
-            datas['line'] = self.material_request_detail(cr, uid, res['date_from'], res['date_to'], res['so_id'] ,res['product_id'],res['company_id'])
-            datas['line1'] = self.request_material_summary(cr, uid, res['date_from'], res['date_to'], res['so_id'] ,res['product_id'],res['planning_id'],res['company_id']) 
+            datas['line'] = self.material_request_detail(cr, uid,ids, res['date_from'], res['date_to'], res['so_id'] ,res['product_id'],res['planning_id'],res['company_id'])
+            datas['line1'] = self.request_material_summary(cr, uid,ids, res['date_from'], res['date_to'], res['so_id'] ,res['product_id'],res['planning_id'],res['company_id']) 
             return {
                 'type'          : 'ir.actions.report.xml',
                 'report_name'   : 'material_request_detail',
@@ -50,7 +51,7 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
            }
     # hpusa 08-07-2015    
         else:
-            datas['line'] = self.request_material_summary(cr, uid, res['date_from'], res['date_to'], res['so_id'] ,res['product_id'],res['planning_id'])
+            datas['line'] = self.request_material_summary(cr, uid,ids, res['date_from'], res['date_to'], res['so_id'] ,res['product_id'],res['planning_id'],res['company_id'])
             return {
                 'type'          : 'ir.actions.report.xml',
                 'report_name'   : 'material_request_summary',
@@ -67,7 +68,7 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
         datas['model'] = 'wizard.hpusa.material.request.report'   
         type = context.get('type_', '')
         if type == 'material_request_detail':
-            datas['line'] = self.material_request_detail(cr, uid, res['date_from'], res['date_to'], res['so_id'] ,res['product_id'],res['company_id'])
+            datas['line'] = self.material_request_detail(cr, uid, ids ,res['date_from'], res['date_to'], res['so_id'] ,res['product_id'],res['planning_id'],res['company_id'])
             html = ""
             if datas['line']:
                 html +='<span contenteditable="false">'\
@@ -121,7 +122,7 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
             self.write(cr, uid,ids, {'state': 'get',
                                     'context':html }, context=context)   
         else:
-            datas['line'] = self.request_material_summary(cr, uid, res['date_from'], res['date_to'], res['so_id'] ,res['product_id'],res['planning_id'],res['company_id'])
+            datas['line'] = self.request_material_summary(cr, uid,ids, res['date_from'], res['date_to'], res['so_id'] ,res['product_id'],res['planning_id'],res['company_id'])
             html = ""
             if datas['line']:
                 html +='<span contenteditable="false">'\
@@ -174,8 +175,10 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
              'target': 'new',
                 }  
     
-    def material_request_detail(self, cr, uid, date_from, date_to, so_id, product_id,company_id):
+    def material_request_detail(self, cr, uid, ids, date_from, date_to, so_id, product_id,planning_id,company_id ):
         arr =[]
+        this = self.browse(cr, uid, ids ,context =None)[0]
+        metal_id = this.metal_id.conff
         dt_to = datetime.strptime(date_to,'%Y-%m-%d')
         date_to= str(dt_to+relativedelta.relativedelta( days=1))[:10]
         
@@ -190,28 +193,34 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
                 ,pu.name as dvt
                 ,sum(mp.product_qty) as qty
                 from mrp_production mp
-                , sale_order so  
-                , product_product pp  
-                , product_uom pu
-                , product_template pt  
+                left join sale_order so on so.name = mp.origin
+                left join product_template pt on mp.product_id = pt.id
+                left join product_product pp on mp.product_id = pp.id
+                left join product_uom pu on pt.uom_id = pu.id
             where to_date(to_char(mp.mo_date, 'YYYY-MM-DD'), 'YYYY-MM-DD') between '%s' and '%s'
-            and so.name = mp.origin
-            and mp.product_id = pp.id
-            and pt.uom_id = pu.id
-            and pp.product_tmpl_id = pt.id
         '''%(date_from,date_to)
-        if so_id:
-            #sale_ids = str(so_id).replace('[', '(')
-            #sale_ids = str(so_id).replace(']', ')')
-            sql+='''
-                and so.id = %s 
-            '''%(so_id[0])
-        if product_id:
-           # product_ids = str(product_id).replace('[', '(')
-            #product_ids = product_ids.replace(']', ')')
-            sql+='''
-                and mp.product_id = %s 
-            '''%(product_id[0])
+        if planning_id:
+            planning_ids =  str(planning_id).replace('[', '(')
+            planning_ids = str(planning_ids).replace(']', ')')
+            sql +=''' 
+             and mp.id in (select mo_id as id
+            from 
+            hpusa_manufacturing_planning_line
+            where planning_id in %s)
+            '''%(planning_ids)
+        else :
+            if so_id:
+                #sale_ids = str(so_id).replace('[', '(')
+                #sale_ids = str(so_id).replace(']', ')')
+                sql+='''
+                    and so.id = %s 
+                '''%(so_id[0])
+            if product_id:
+               # product_ids = str(product_id).replace('[', '(')
+                #product_ids = product_ids.replace(']', ')')
+                sql+='''
+                    and mp.product_id = %s 
+                '''%(product_id[0])
         if company_id:
             sql+='''
                 and mp.company_id = %s 
@@ -219,12 +228,13 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
                
         sql+='''
              
-             group by mp.id,mp.name,pp.id,pp.default_code,pt.name,pu.name,mp.mo_date, mp.bom_id
+             group by  mp.name,pp.id,pp.default_code,pt.name,pu.name,mp.mo_date, mp.bom_id,mp.id 
              order by mp.name
              
         '''
-        cr.execute(sql)
         print sql
+        cr.execute(sql)
+        
         items = cr.dictfetchall()
         if items:
             for product in items:
@@ -243,46 +253,73 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
                         })
                 lines= self.get_lines(cr,product['bom_id'])
                 for line in lines:
-                    arr.append({
-                        'parent':'',
-                        'production_name': '',
-                        'mo_date': '',
-                        'default_code':'',
-                        'product':'',
-                        'p_code':line['default_code'],
-                        'p_name':line['p_name'],
-    
-                        'unit': line['unit'],
-                        'qty': line['qty'], 
-                            })
- 
+                    if line ['hp_type'] =='metal':
+                        if  metal_id:
+                            arr.append({
+                                'parent':'',
+                                'production_name': '',
+                                'mo_date': '',
+                                'default_code':'',
+                                'product':'',
+                                'p_code':line['default_code'],
+                                'p_name':line['p_name'],
+                                'unit':line['unit'],
+                                'qty': float( line['qty'])* metal_id, 
+                                    })
+                        else :
+                            arr.append({
+                            'parent':'',
+                            'production_name': '',
+                            'mo_date': '',
+                            'default_code':'',
+                            'product':'',
+                            'p_code':line['default_code'],
+                            'p_name':line['p_name'],
+                            'unit': line['unit'],
+                            'qty': line['qty'], 
+                                })
+                    if line ['hp_type'] =='diamonds':
+                            arr.append({
+                            'parent':'',
+                            'production_name': '',
+                            'mo_date': '',
+                            'default_code':'',
+                            'product':'',
+                            'p_code':line['default_code'],
+                            'p_name':line['p_name'],
+                            'unit': line['unit'],
+                            'qty': line['qty'], 
+                                })
         return arr
     
     
     def get_lines(self,cr,bom_id):
        
         sql = '''
-            select pp.default_code,pp.name_template as  p_name ,mrp.product_qty as qty ,pu.name as unit
+            select pp.default_code,pp.name_template as  p_name ,pp.hp_type ,mrp.product_qty as qty ,pu.name as unit
             from mrp_bom mrp
             left join product_uom pu on mrp.product_uom = pu.id
             left join product_product pp on mrp.product_id=pp.id
-            where bom_id = %s
-            group by pp.default_code,pp.name_template  ,mrp.product_qty,pu.name
+            where bom_id = %s and (pp.hp_type = 'metal' or pp.hp_type = 'diamonds')
+            group by pp.default_code,pp.name_template  ,mrp.product_qty,pu.name,pp.hp_type
                order by pp.name_template
         '''%(bom_id)
-       
+        print sql
         cr.execute(sql)
        # print sql 
         return cr.dictfetchall()
     
-    def request_material_summary(self, cr, uid, date_from, date_to, so_id, product_id,planning_id,company_id):
+    def request_material_summary(self, cr, uid,ids, date_from, date_to, so_id, product_id,planning_id,company_id):
        
         dt_to = datetime.strptime(date_to,'%Y-%m-%d')
+        this = self.browse(cr, uid, ids ,context =None)[0]
+        metal_id = this.metal_id.conff
         date_to= str(dt_to+relativedelta.relativedelta( days=1))[:10]
         arr=[]
+        production_ids =[]
         # -----------============== GET PRODUCTIONS IDS ====================------------------
         sql = '''
-                select mp.id as id
+                select mp.id as id, mp.bom_id
                 from mrp_production mp
                 left join sale_order so on so.name = mp.origin
                 left join product_template pt on mp.product_id = pt.id
@@ -290,77 +327,92 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
                 left join product_uom pu on pt.uom_id = pu.id
             where to_date(to_char(mp.mo_date, 'YYYY-MM-DD'), 'YYYY-MM-DD') between '%s' and '%s'
         '''%(date_from,date_to)
-        if so_id:
-            #sale_ids = str(so_id).replace('[', '(')
-            #sale_ids = str(so_id).replace(']', ')')
-            sql+='''
-                and so.id = %s 
-            '''%(so_id[0])
-        if product_id:
-            #product_ids = str(product_id).replace('[', '(')
-            #product_ids = str(product_id).replace(']', ')')
-            sql+='''
-                and mp.product_id = %s 
-            '''%(product_id[0])
-        sql+='''
-             group by mp.id,pp.default_code,pt.name,pu.name
-             order by pt.name
-        '''
-        cr.execute(sql)
-        items = cr.dictfetchall()
-        
-        production_ids = []
-        for item in items:
-            production_ids.append(item['id'])
-        
         if planning_id:
             planning_ids =  str(planning_id).replace('[', '(')
             planning_ids = str(planning_ids).replace(']', ')')
-            sql_production =''' 
-            select mo_id as id
+            sql +=''' 
+             and mp.id in (select mo_id as id
             from 
             hpusa_manufacturing_planning_line
-            where planning_id in %s
-            
+            where planning_id in %s)
             '''%(planning_ids)
-            print sql_production
-            cr.execute(sql)
-            result = cr.dictfetchall()
-            for item in result:
-                
-                production_ids.append(item['id'])
-        print production_ids
-        
-        
-    #---------------=============== GET MATERIAL SUMMARY ======================----------------
-        sql_get_line = '''
-             select pp.default_code as p_code
-             ,pp.name_template as  p_name
-             ,sum(mpbl.product_qty) as qty
-             ,pu.name as unit
-            from mrp_production_bom_line mpbl
-            left join product_uom pu on mpbl.product_uom = pu.id
-            left join product_product pp on mpbl.product_id=pp.id   
+        else :
+            if so_id:
+                #sale_ids = str(so_id).replace('[', '(')
+                #sale_ids = str(so_id).replace(']', ')')
+                sql+='''
+                    and so.id = %s 
+                '''%(so_id[0])
+            if product_id:
+                #product_ids = str(product_id).replace('[', '(')
+                #product_ids = str(product_id).replace(']', ')')
+                sql+='''
+                    and mp.product_id = %s 
+                '''%(product_id[0])
+        if company_id:
+            sql+='''
+                and mp.company_id = %s 
+            '''%(company_id[0]) 
+        sql+='''
+             group by mp.id,pp.default_code,pt.name,pu.name,mp.bom_id
+             order by pt.name
         '''
-        if production_ids:
-            production_id = str(production_ids).replace('[', '(')
-            production_id = str(production_id).replace(']', ')')
-            sql_get_line+= ' where mpbl.production_id in' +production_id
-        sql_get_line+='''
-               group by pp.default_code,pu.name,pp.name_template
-               order by pp.name_template'''
+        cr.execute(sql)
+        items = cr.dictfetchall()  
+        if items:      
+            for item in items:
+                bom_id = item['bom_id']
+    #---------------=============== GET MATERIAL SUMMARY ======================----------------
+                sql_get_line = '''
+                     select pp.default_code as p_code
+                     ,pp.name_template as  p_name
+                     ,pp.hp_type
+                     ,sum(mpbl.product_qty) as qty
+                     ,pu.name as unit
+                    from mrp_bom mpbl
+                    left join product_uom pu on mpbl.product_uom = pu.id
+                    left join product_product pp on mpbl.product_id=pp.id  
+                     where bom_id = %s and (pp.hp_type = 'metal' or pp.hp_type = 'diamonds')
+                    group by pp.default_code,pp.name_template  ,pu.name,pp.hp_type
+                       order by pp.name_template 
+                '''%(bom_id)
+        #=======================================================================
+        # if production_ids:
+        #     production_id = str(production_ids).replace('[', '(')
+        #     production_id = str(production_id).replace(']', ')')
+        #     sql_get_line+= ' where mpbl.production_id in' +production_id
+        # sql_get_line+='''
+        #        group by pp.default_code,pu.name,pp.name_template
+        #        order by pp.name_template'''
+        #=======================================================================
         
-        print sql_get_line
-        cr.execute(sql_get_line)
-        results = cr.dictfetchall()
-        for result in results:
-            
-            arr.append({
-                            'p_code':result['p_code'],
-                            'p_name': result['p_name'],
-                            'unit':  result['unit'],
-                            'qty': result['qty'],
-                            })
+                print sql_get_line
+                cr.execute(sql_get_line)
+                results = cr.dictfetchall()
+                for result in results:
+                    if result ['hp_type'] =='metal':
+                        if metal_id:
+                            arr.append({
+                                            'p_code':result['p_code'],
+                                            'p_name': result['p_name'],
+                                            'unit':  result['unit'],
+                                            'qty':float( result['qty'])*metal_id,
+                                            })
+                        else:
+                            arr.append({
+                                            'p_code':result['p_code'],
+                                            'p_name': result['p_name'],
+                                            'unit':  result['unit'],
+                                            'qty': result['qty'],
+                                            })
+                    if result ['hp_type'] =='diamonds':
+                     
+                            arr.append({
+                                            'p_code':result['p_code'],
+                                            'p_name': result['p_name'],
+                                            'unit':  result['unit'],
+                                            'qty': result['qty'],
+                                            })
         return arr
 
 
