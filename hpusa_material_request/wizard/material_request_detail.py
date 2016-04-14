@@ -84,6 +84,7 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
                 '<th class = "ths"  style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >Material Name</th>'\
                 '<th class = "ths"  style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >Qty</th>'\
                 '<th class = "ths"  style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >Unit</th>'\
+                '<th class = "ths"  style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >Quality</th>'\
                 '</tr>'\
                 '</thead>'\
                 '<tbody>'
@@ -97,6 +98,7 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
                             '<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left">'+ str(i['p_name'])+'</td>'\
                             '<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: right">'+ str(i['qty'])+'</td>'\
                             '<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left">'+ str(i['unit'])+'</td>'\
+                            '<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left">'+ str(i['qly'])+'</td>'\
                             '</tr>'
                 html += '</tbody>'\
                         '</table>'\
@@ -113,6 +115,7 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
                 '<th class = "ths"  style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >Material Name</th>'\
                 '<th class = "ths"  style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >Unit</th>'\
                 '<th class = "ths"  style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >Qty</th>'\
+                '<th class = "ths"  style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >Quality</th>'\
                 '</tr>'\
                 '</thead>'\
                 '<tbody>'\
@@ -134,6 +137,7 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
                 '<th class = "ths"  style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >Material Name</th>'\
                 '<th class = "ths"  style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >Unit</th>'\
                 '<th class = "ths"  style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >Qty</th>'\
+                '<th class = "ths"  style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >Quality</th>'\
                 '</tr>'\
                 '</thead>'\
                 '<tbody>'
@@ -143,6 +147,7 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
                             '<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left">'+ str(i['p_name'])+'</td>'\
                             '<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left">'+ str(i['unit'])+'</td>'\
                             '<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: right">'+ str(i['qty'])+'</td>'\
+                           '<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: right">'+ str(i['qly'])+'</td>'\
                             '</tr>'
                 html += '</tbody>'\
                         '</table>'\
@@ -157,6 +162,7 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
                 '<th class = "ths"  style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >P Name</th>'\
                 '<th class = "ths"  style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >Unit</th>'\
                 '<th class = "ths"  style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >Qty</th>'\
+                '<th class = "ths"  style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >Quality</th>'\
                 '</tr>'\
                 '</thead>'\
                 '<tbody>'\
@@ -250,6 +256,7 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
                         'p_name':'',
                         'unit': product['dvt'],
                         'qty': product['qty'],
+                        'qly': '',
                         })
                 lines= self.get_lines(cr,product['bom_id'])
                 for line in lines:
@@ -265,6 +272,7 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
                                 'p_name':line['p_name'],
                                 'unit':line['unit'],
                                 'qty': float( line['qty'])* metal_id, 
+                                'qly': line['qly'],
                                     })
                         else :
                             arr.append({
@@ -277,6 +285,7 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
                             'p_name':line['p_name'],
                             'unit': line['unit'],
                             'qty': line['qty'], 
+                            'qly': line['qly'],
                                 })
                     if line ['hp_type'] =='diamonds':
                             arr.append({
@@ -289,6 +298,7 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
                             'p_name':line['p_name'],
                             'unit': line['unit'],
                             'qty': line['qty'], 
+                           'qly': line['qly'],
                                 })
         return arr
     
@@ -296,12 +306,13 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
     def get_lines(self,cr,bom_id):
        
         sql = '''
-            select pp.default_code,pp.name_template as  p_name ,pp.hp_type ,mrp.product_qty as qty ,pu.name as unit
+            select pp.default_code,pp.name_template as  p_name ,pp.hp_type ,pqc.name as qly,mrp.product_qty as qty ,pu.name as unit
             from mrp_bom mrp
             left join product_uom pu on mrp.product_uom = pu.id
             left join product_product pp on mrp.product_id=pp.id
+            left join product_quality_categories pqc on mrp.product_quality_id = pqc.id
             where bom_id = %s and (pp.hp_type = 'metal' or pp.hp_type = 'diamonds')
-            group by pp.default_code,pp.name_template  ,mrp.product_qty,pu.name,pp.hp_type
+            group by pp.default_code,pp.name_template  ,mrp.product_qty,pu.name,pp.hp_type,pqc.name
                order by pp.name_template
         '''%(bom_id)
         print sql
@@ -369,11 +380,13 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
                      ,pp.hp_type
                      ,sum(mpbl.product_qty) as qty
                      ,pu.name as unit
+                     ,pqc.name as qly
                     from mrp_bom mpbl
                     left join product_uom pu on mpbl.product_uom = pu.id
                     left join product_product pp on mpbl.product_id=pp.id  
+                    left join product_quality_categories pqc on mpbl.product_quality_id = pqc.id
                      where bom_id = %s and (pp.hp_type = 'metal' or pp.hp_type = 'diamonds')
-                    group by pp.default_code,pp.name_template  ,pu.name,pp.hp_type
+                    group by pp.default_code,pp.name_template  ,pu.name,pp.hp_type,pqc.name
                        order by pp.name_template 
                 '''%(bom_id)
         #=======================================================================
@@ -397,6 +410,7 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
                                             'p_name': result['p_name'],
                                             'unit':  result['unit'],
                                             'qty':float( result['qty'])*metal_id,
+                                            'qly':result['qly'],
                                             })
                         else:
                             arr.append({
@@ -404,6 +418,7 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
                                             'p_name': result['p_name'],
                                             'unit':  result['unit'],
                                             'qty': result['qty'],
+                                             'qly':result['qly'],
                                             })
                     if result ['hp_type'] =='diamonds':
                      
@@ -412,6 +427,7 @@ class wizard_hpusa_material_request_report(osv.osv_memory):
                                             'p_name': result['p_name'],
                                             'unit':  result['unit'],
                                             'qty': result['qty'],
+                                             'qly':result['qly'],
                                             })
         return arr
 
