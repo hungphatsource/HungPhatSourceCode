@@ -72,6 +72,7 @@ class hpusa_reportddp_wizard(osv.osv):
         if type == 'data':
             datas['line']  = self.get_all_data(cr, uid, res['from_date'], res['to_date'], sid, res['work_center'], res['status'], this.worker.id,this.company_id,this.check_order_date,this.check_pickup_date,this.check_due_date, context=None)
             datas['line1']  = self.get_all_data_detail(cr, uid, res['from_date'], res['to_date'], sid, res['work_center'], res['status'], this.worker.id,this.company_id,this.check_order_date,this.check_pickup_date,this.check_due_date, context=None)
+            datas['line2']  = self.get_so_detail(cr, uid, res['from_date'], res['to_date'],this.company_id, context=None)
             return {
                     'type'          : 'ir.actions.report.xml',
                     'report_name'   : 'export_data_wip_sumary',
@@ -80,6 +81,7 @@ class hpusa_reportddp_wizard(osv.osv):
         else:
             datas['line']  = self.get_all_data(cr, uid, res['from_date'], res['to_date'], sid, res['work_center'], res['status'], this.worker.id,this.company_id,this.check_order_date,this.check_pickup_date,this.check_due_date, context=None)
             datas['line1']  = self.get_all_data_detail(cr, uid, res['from_date'], res['to_date'], sid, res['work_center'], res['status'], this.worker.id,this.company_id,this.check_order_date,this.check_pickup_date,this.check_due_date, context=None)
+            datas['line2']  = self.get_so_detail(cr, uid, res['from_date'], res['to_date'],this.company_id, context=None)
             return {
                     'type'          : 'ir.actions.report.xml',
                     'report_name'   : 'export_data_wip_sumary_manager',
@@ -107,7 +109,6 @@ class hpusa_reportddp_wizard(osv.osv):
     
     def get_all_data(self ,cr, uid,from_date,to_date ,so_id,work_center,status,worker,company_id,check_order_date,check_pickup_date,check_due_date,context=None):
             #self.get_all_data_detail(cr, uid, from_date, to_date, so_id, work_center, status, worker,company_id,check_order_date,check_pickup_date,check_due_date, context=None)
-            
             arr =[]
             sql =''
             str_query =''
@@ -173,8 +174,6 @@ class hpusa_reportddp_wizard(osv.osv):
                 str_query += '''and mp.state_view = '%s' '''% (status)
             if worker:
                 str_query += ''' and mp.employee_id = %s'''%(str(worker))
-                
-                
             list_workcenter= ['3D Design','Waxmodeling','Casting','Assembling','Setting','Polishing']
             
             for co_id in company_ids:
@@ -212,8 +211,6 @@ class hpusa_reportddp_wizard(osv.osv):
                             %s
                             group by mp.wo_view,mp.state_view
                         ) as tab1 on ( tab1.wo_view=mp.wo_view)
-
-
                           -- Waiting Material
                         left join
                         (
@@ -244,9 +241,6 @@ class hpusa_reportddp_wizard(osv.osv):
                             %s
                             group by mp.wo_view,mp.state_view
                         ) as tab3 on ( tab3.wo_view=mp.wo_view)
-
-
-                        
                         -- Inprogress
                         left join
                         (
@@ -429,11 +423,11 @@ class hpusa_reportddp_wizard(osv.osv):
             for co_id in company_ids:
                 
                 company_name = self.pool.get('res.company').browse(cr,uid,co_id,context=None).name
-               
                 if work_center:                    
                     sql ='''
                             select 
                             so.company_id
+                            ,so.id as so_id
                             ,tab1.customer_id 
                             ,tab1.name
                             ,tab1.sale_name
@@ -486,15 +480,11 @@ class hpusa_reportddp_wizard(osv.osv):
                             and state_view <>'Done'
                             and  wo_view <> 'Polishing' 
                             order by  so.company_id,tab1.name,tab1.date_order;
-    
                                     '''%(str_query,co_id)            
-                        
                     cr.execute(sql)
                     print sql 
                     result = cr.dictfetchall() 
                     for item in result:
-                                
-                        #print 'ok'
                         arr.append({                                        
                                     'sequence':sequence,
                                     'company_id':company_name,
@@ -513,19 +503,18 @@ class hpusa_reportddp_wizard(osv.osv):
                                     'status':item['state_view'],
                                     'worker':item['employee'],
                                     'due_date':item['mo_date'],
-                                    'remark':item['description']
-                                                        
-                                    })
+                                    'remark':item['description'] ,
+                                    'so_id':  item['so_id'] ,           
+                                })
                         sequence+=1
-                     
-                else:
-                        
+                else: 
                     for workcenter in list_workcenter:
                                           
                         sql ='''
                             select 
                             so.company_id
                             ,tab1.customer_id 
+                            ,so.id as so_id
                             ,tab1.name 
                             ,tab1.sale_name
                             ,tab1.date_order
@@ -579,14 +568,11 @@ class hpusa_reportddp_wizard(osv.osv):
                         if workcenter =='Polishing':
                             sql+="and state_view <>'Done' "
                         sql+=   '''order by  so.company_id,tab1.name,tab1.date_order;
-                                    '''            
-                        
+                                    '''
                         cr.execute(sql)
                         print sql 
                         result = cr.dictfetchall() 
                         for item in result:
-                                
-                            #print 'ok'
                             arr.append({
                                     'sequence':sequence,
                                     'company_id':company_name,
@@ -605,12 +591,12 @@ class hpusa_reportddp_wizard(osv.osv):
                                     'status':item['state_view'],
                                     'worker':item['employee'],
                                     'due_date':item['mo_date'],
-                                    'remark':item['description']                   
+                                    'remark':item['description'],
+                                    'so_id':  item['so_id'] ,                   
                                         })
                             sequence+=1
-                                           
+            print arr                    
             return arr
-
     def view_rp(self,cr,uid,ids,context= None):
         this = self.browse(cr, uid,ids,context =None)[0]
         from_date = this.from_date
@@ -788,8 +774,81 @@ class hpusa_reportddp_wizard(osv.osv):
             v['check_pickup_date'] = False
         return {'value': v}
     
-    
-        
+    def get_so_detail (self ,cr, uid,from_date,to_date ,company_id,context=None):
+        arr = []
+        so_ids = []
+        sale_order = []
+        str_query =''
+        sql_get_company=''
+        company_ids = []
+        str_query += ''' and so.date_order >= to_date('%s','YYYY-MM-DD')  '''%(from_date)
+        str_query += ''' and so.date_order <= to_date('%s','YYYY-MM-DD')  '''%(to_date)
+        sql_get_company+=''' where so.date_order >= to_date('%s','YYYY-MM-DD')  '''%(from_date)
+        sql_get_company += ''' and so.date_order <= to_date('%s','YYYY-MM-DD')  '''%(to_date)
+        sql_mo = '''  select distinct(mo.so_id) from mrp_production mo where mo.so_id is not null 
+        and mo.mo_date >= to_date('%s','YYYY-MM-DD') and  mo.mo_date <= to_date('%s','YYYY-MM-DD')
+        '''%(from_date,to_date) 
+        cr.execute(sql_mo)
+        result1 = cr.dictfetchall() 
+        for index in result1:
+            arr.append(index)
+        if company_id:
+                for id in company_id:
+                    company_ids.append(id.id)
+        else:
+                sql_get='''select distinct(company_id) as company_id from sale_order so %s'''%(sql_get_company)
+                cr.execute(sql_get) 
+                result = cr.dictfetchall() 
+                for item in result:
+                    company_ids.append(item['company_id'])   
+        if arr:
+            for i in arr:
+                so_ids.append(i['so_id'])
+        if so_ids:
+            so_id =  str(so_ids).replace('[', '(')
+            so_id = str(so_id).replace(']', ')') 
+        sequence=0
+        for co_id in company_ids:
+            company_name = self.pool.get('res.company').browse(cr,uid,co_id,context=None).name
+            sale_order.append({'company':company_name,
+                                  'no':'',
+                                  'so_name': '',
+                                  'customer':'',
+                                  'state':'',
+                                  'sale_name':'',
+                                  'date_order': '',
+                                  'date_confirm':'',
+                                  })
+            if so_id:
+                sql =''' select so.id, so.name , so.date_order, rp.name as customer , so.state, so.date_confirm, pn.name as sale_name
+                            from sale_order as so
+                                ,res_partner rp
+                                ,res_users ru
+                                ,res_partner pn
+                                where rp.id = so.partner_id
+                                and ru.id = so.user_id
+                                and ru.partner_id = pn.id
+                                and so.sale_order_type = 'customize'
+                                and so.id not in %s
+                                %s
+                                and so.company_id = %s'''%(so_id ,str_query,co_id)            
+                cr.execute(sql)
+                print sql 
+                result = cr.dictfetchall() 
+            
+            for item in result:
+                sequence = sequence + 1
+                sale_order.append({'company':'',
+                                  'no':sequence,
+                                  'so_name': item['name'],
+                                  'customer':item['customer'],
+                                  'state':item['state'],
+                                  'sale_name':item['sale_name'],
+                                  'date_order': item['date_order'],
+                                  'date_confirm':item['date_confirm'],
+                                  })
+        return sale_order
+                
 hpusa_reportddp_wizard()
 
 openoffice_report.openoffice_report(
