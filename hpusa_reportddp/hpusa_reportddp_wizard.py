@@ -818,26 +818,32 @@ class hpusa_reportddp_wizard(osv.osv):
                                   'sale_name':'',
                                   'date_order': '',
                                   'date_confirm':'',
+                                  'total_product':'',
                                   })
             if so_id:
-                sql =''' select so.id, so.name , so.date_order, rp.name as customer , so.state, so.date_confirm, pn.name as sale_name
+                sql =''' select so.id, so.name , so.date_order, rp.name as customer , so.state, so.date_confirm, pn.name as sale_name, count(sol.id) as total_product
                             from sale_order as so
                                 ,res_partner rp
                                 ,res_users ru
                                 ,res_partner pn
+                                 ,sale_order_line sol
                                 where rp.id = so.partner_id
                                 and ru.id = so.user_id
                                 and ru.partner_id = pn.id
+                                and sol.order_id = so.id
                                 and so.sale_order_type = 'customize'
                                 and so.id not in %s
                                 %s
-                                and so.company_id = %s'''%(so_id ,str_query,co_id)            
+                                and so.company_id = %s
+                                group by  so.id, so.name , so.date_order,rp.name,so.state, so.date_confirm, pn.name '''%(so_id ,str_query,co_id)         
+                                   
                 cr.execute(sql)
                 print sql 
                 result = cr.dictfetchall() 
-            
+            total_product_company = 0
             for item in result:
                 sequence = sequence + 1
+                total_product_company = total_product_company + item['total_product']
                 sale_order.append({'company':'',
                                   'no':sequence,
                                   'so_name': item['name'],
@@ -846,6 +852,17 @@ class hpusa_reportddp_wizard(osv.osv):
                                   'sale_name':item['sale_name'],
                                   'date_order': item['date_order'],
                                   'date_confirm':item['date_confirm'],
+                                  'total_product':item['total_product'],
+                                  })
+            sale_order.append({'company':'',
+                                  'no':'',
+                                  'so_name': '',
+                                  'customer':'',
+                                  'state':'',
+                                  'sale_name':'',
+                                  'date_order': '',
+                                  'date_confirm':'Total',
+                                  'total_product':total_product_company,
                                   })
         return sale_order
                 
