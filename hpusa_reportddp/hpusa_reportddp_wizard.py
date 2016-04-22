@@ -619,19 +619,77 @@ class hpusa_reportddp_wizard(osv.osv):
         worker = this.worker.id
         total = 0
         arr = self.get_all_data(cr, uid, from_date, to_date, sid, work_center, status, worker,this.company_id,this.check_order_date,this.check_pickup_date,this.check_due_date, context=None)
+        soids = self.get_so_detail(cr, uid, from_date, to_date,this.company_id, context=None)
         html = ''
+        html += '<span contenteditable="false">'\
+        '<h1  style = "text-align:center"> WORK IN PROCESS(WIP) </h1>'
+        if soids :
+            html +=  '<table  width="800px"  class ="tables" style = "border : 1px solid #999 ; border-collapse: collapse">'\
+                    '<thead class = "theads">'\
+                      '<tr class = "trs" style="background-color: rgb(238, 76, 140) ; text-align: center" >'\
+                        '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white">COMPANY</th>'\
+                        '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white">NO</th>'\
+                        '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white">SO NAME</th>'\
+                        '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >CUSTOMER</th>'\
+                        '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >STATE</th>'\
+                        '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >SALE NAME</th>'\
+                        '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >DATE ORDER</th>'\
+                        '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >DATE CONFIRM</th>'\
+                        '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >QTY PRODUCT</th>'\
+                      '</tr>' \
+                    '</thead>'\
+                    '<tbody>'
+            for item in soids:
+                html += '<tr class = "trs">'
+                if item['company']:
+                    html+='<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left">'+ str(item["company"])+'</td>'
+                else :
+                    html += '<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left"></td>'
+                if item['no']:
+                    html+='<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left">'+ str(item['no'])+'</td>'
+                else :
+                    html += '<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left"></td>'
+                if item['so_name']:
+                    html+='<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left">'+ str(item['so_name'])+'</td>'
+                else :
+                    html += '<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left"></td>'
+                if item['customer']:
+                    html+='<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left">'+ str(item['customer'])+'</td>'
+                else :
+                    html += '<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left"></td>'
+                if item['state']:
+                    html+='<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left">'+ str(item['state'])+'</td>'
+                else :
+                    html += '<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left"></td>'
+                if item['sale_name']:
+                    html+='<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left">'+ str(item['sale_name'])+'</td>'
+                else :
+                    html += '<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left"></td>'
+                if item['date_order']:
+                    html+='<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left">'+ str(item['date_order'])+'</td>'
+                else :
+                    html += '<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left"></td>'
+                if item['date_confirm']:
+                    html+='<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left">'+ str(item['date_confirm'])+'</td>'
+                else :
+                    html += '<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left"></td>'
+                if item['total_product']:
+                    html+='<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left">'+ str(item['total_product'])+'</td>'
+                else :
+                    html += '<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left"></td>'
+                html+='</tr>'
+            html += '</tbody>'\
+                    '</table>'
         if arr:
-            html += '<span contenteditable="false">'\
-                    '<h1  style = "text-align:center"> WORK IN PROCESS(WIP) </h1>'\
-                    '<table  width="800px"  class ="tables" style = "border : 1px solid #999 ; border-collapse: collapse">'\
+            html +=  '<table  width="800px"  class ="tables" style = "border : 1px solid #999 ; border-collapse: collapse">'\
                     '<thead class = "theads">'\
                       '<tr class = "trs" style="background-color: rgb(238, 76, 140) ; text-align: center" >'\
                         '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white">COMPANY</th>'\
                         '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white">TOTAL PRODUCT</th>'\
                         '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white">WORKCENTER</th>'\
                         '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >DRAFT</th>'\
-                          '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >WAITING MATERIAL</th>'\
-                            '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >PENDING</th>'\
+                        '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >WAITING MATERIAL</th>'\
+                        '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >PENDING</th>'\
                         '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >INPROGRESS</th>'\
                         '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >QC</th>'\
                         '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >DONE</th>'\
@@ -641,8 +699,6 @@ class hpusa_reportddp_wizard(osv.osv):
                     '</thead>'\
                     '<tbody>'
             for  i in arr:
-                
-                
                 html += '<tr class = "trs">'
                 if i['company_id']:
                     
@@ -713,8 +769,7 @@ class hpusa_reportddp_wizard(osv.osv):
                     '</table>'\
                     '</span>'
         else:
-            html += '<span contenteditable="false">'\
-            '<table id ="tb" width="800px"  class ="tables" style ="align: center">'\
+            html += '<table id ="tb" width="800px"  class ="tables" style ="align: center">'\
                     '<thead class = "theads">'\
                       '<tr class = "trs" style="background-color: rgb(238, 76, 140) ; text-align: center" >'\
                         '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left ; color : white">Sale Order</th>'\
@@ -798,8 +853,8 @@ class hpusa_reportddp_wizard(osv.osv):
         else:
                 sql_get='''select distinct(company_id) as company_id from sale_order so %s'''%(sql_get_company)
                 cr.execute(sql_get) 
-                result = cr.dictfetchall() 
-                for item in result:
+                result1 = cr.dictfetchall() 
+                for item in result1:
                     company_ids.append(item['company_id'])   
         if arr:
             for i in arr:
@@ -807,8 +862,11 @@ class hpusa_reportddp_wizard(osv.osv):
         if so_ids:
             so_id =  str(so_ids).replace('[', '(')
             so_id = str(so_id).replace(']', ')') 
-        sequence=0
+        
+        total_product = 0
         for co_id in company_ids:
+            sequence=0
+            total_product_company = 0
             company_name = self.pool.get('res.company').browse(cr,uid,co_id,context=None).name
             sale_order.append({'company':company_name,
                                   'no':'',
@@ -820,7 +878,7 @@ class hpusa_reportddp_wizard(osv.osv):
                                   'date_confirm':'',
                                   'total_product':'',
                                   })
-            if so_id:
+            if so_ids:
                 sql =''' select so.id, so.name , so.date_order, rp.name as customer , so.state, so.date_confirm, pn.name as sale_name, count(sol.id) as total_product
                             from sale_order as so
                                 ,res_partner rp
@@ -840,20 +898,20 @@ class hpusa_reportddp_wizard(osv.osv):
                 cr.execute(sql)
                 print sql 
                 result = cr.dictfetchall() 
-            total_product_company = 0
-            for item in result:
-                sequence = sequence + 1
-                total_product_company = total_product_company + item['total_product']
-                sale_order.append({'company':'',
-                                  'no':sequence,
-                                  'so_name': item['name'],
-                                  'customer':item['customer'],
-                                  'state':item['state'],
-                                  'sale_name':item['sale_name'],
-                                  'date_order': item['date_order'],
-                                  'date_confirm':item['date_confirm'],
-                                  'total_product':item['total_product'],
-                                  })
+                for item in result:
+                    sequence = sequence + 1
+                    total_product_company = total_product_company + item['total_product']
+                    sale_order.append({'company':'',
+                                      'no':sequence,
+                                      'so_name': item['name'],
+                                      'customer':item['customer'],
+                                      'state':item['state'],
+                                      'sale_name':item['sale_name'],
+                                      'date_order': item['date_order'],
+                                      'date_confirm':item['date_confirm'],
+                                      'total_product':item['total_product'],
+                                      })
+                total_product = total_product  + total_product_company
             sale_order.append({'company':'',
                                   'no':'',
                                   'so_name': '',
@@ -863,6 +921,16 @@ class hpusa_reportddp_wizard(osv.osv):
                                   'date_order': '',
                                   'date_confirm':'Total',
                                   'total_product':total_product_company,
+                                  })
+        sale_order.append({'company':'Total',
+                                  'no':'',
+                                  'so_name': '',
+                                  'customer':'',
+                                  'state':'',
+                                  'sale_name':'',
+                                  'date_order': '',
+                                  'date_confirm':'',
+                                  'total_product':total_product,
                                   })
         return sale_order
                 
