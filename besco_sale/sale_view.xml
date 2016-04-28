@@ -31,12 +31,12 @@
                 </button>
                 <button name="action_view_mo" position="replace">
             	    <button name="action_view_mo" string="View MO" type="object" 
-            	    	attrs="{'invisible': ['|',('state','in',('progress','done')),('sale_order_type', '!=', 'customize')]}" 
+            	    	attrs="{'invisible': [('sale_order_type', '!=', 'customize')]}" 
             	    	class="oe_highlight" groups="base.group_user" colspan="1"/>
                 </button>
                 <button name="%(hpusa_manufacturing.sale_open_mo_bom)d" position="replace">
             		<button name="%(hpusa_manufacturing.sale_open_mo_bom)d" string="View BOM" type="action" 
-            			attrs="{'invisible': ['|',('state','in',('progress','done')),('sale_order_type', '!=','customize')]}" 
+            			attrs="{'invisible': [('sale_order_type', '!=','customize')]}" 
             			class="oe_highlight" groups="base.group_user" colspan="2"/>
             	</button>
 	        </field>
