@@ -141,7 +141,14 @@ class inventory_report(osv.osv):
         diamond_real += self.request_stock_in_out_diamonds_real(cr,uid,date_start,date_end,main_stock_id,diamond_category)
         
         diff_diamond = diamond_real-diamond_book
-        weight_loss= self.request_loss_month(cr, uid, date_start, date_end)
+        arr = self.request_loss_month(cr, uid, date_start, date_end)
+        weight_loss = 0
+        gold_loss_limit = 0
+        gold_loss_over = 0
+        for item in arr :
+            weight_loss = item['weight_loss']
+            gold_loss_limit = item['loss_limit']
+            gold_loss_over = item['loss_over']
         
         gold_start = 0
         gold_in = 0
@@ -150,8 +157,6 @@ class inventory_report(osv.osv):
         gold_out_pro = 0
         gold_pending = 0 
         gold_finish = 0
-        gold_loss_limit = 0 
-        gold_loss_over = 0 
         gold_ship_to_us = 0
       
         
@@ -174,8 +179,8 @@ class inventory_report(osv.osv):
         
         if result_production:
             gold_start+= float(result_production[0]['qty_24k'] or 0)
-            gold_in += float(result_production[0]['qty_in'] or 0)
-            gold_out += float(result_production[0]['qty_out'] or 0)
+            gold_in_pro += float(result_production[0]['qty_in'] or 0)
+            gold_out_pro += float(result_production[0]['qty_out'] or 0)
             
         #=== Get Manufacturing Order Loss ===#
             
@@ -183,14 +188,8 @@ class inventory_report(osv.osv):
         
         if mo_info:
             gold_finish += mo_info[0]['net_weight']
-<<<<<<< HEAD
-            gold_pending = gold_out- gold_in -  gold_finish - weight_loss
-            gold_loss_limit = gold_finish*this.gold_los_limit_allow
-            gold_loss_over = weight_loss -gold_loss_limit
-=======
             # Gold Pending 
             gold_pending = self.gold_pending(cr, uid)
->>>>>>> dc7f5487f660b1466dfb6bf3e81b8899f8bad5d9
             ship_infor =  self.export_manufacturing_loss_sumary_ship(cr,uid,date_start,date_end)
             gold_ship_to_us =  ship_infor[0]['net_weight']
             
@@ -1665,64 +1664,59 @@ class inventory_report(osv.osv):
           
     def request_loss_month(self,cr,uid,date_from,date_to):
         weight_loss= 0
+        loss_limit = 0
+        loss_over = 0
         
         sql = '''
-<<<<<<< HEAD
-                select sum(loss_weight_24k) as loss
-                from mrp_production
-                where   mo_date >= to_date('%s','YYYY-MM-DD') 
-                AND mo_date < to_date('%s','YYYY-MM-DD')   
-            '''%( date_from, date_to)
-=======
             SELECT
-            mp.name,
-            mpwl.date_planned actual_date,
-            mpwl.name line_name,
-            round(coalesce(sum(tab1.qty),0),3) as metal_delivery,
-            coalesce(sum(tab1.qty_24k),0) as metal_24k_delivery,
-            round(coalesce(sum(tab2.qty),0),3) as metal_return,
-            coalesce(sum(tab2.qty_24k),0) as metal_24k_return,
-            round(coalesce(sum(tab3.weight_ct),0),3) as diamond_delivery_ct,
-            round(coalesce(sum(tab3.weight_gr),0),3) as diamond_delivery_gr,
-            round(coalesce(sum(tab4.weight_ct),0),3) as diamond_return_ct,
-            round(coalesce(sum(tab4.weight_gr),0),3) as diamond_return_gr,
-            round(coalesce(sum(tab5.weight_gr),0),3) as finish_delivery,
-            round(coalesce(sum(tab6.weight_gr),0),3) as finish_return,
-            round(coalesce(sum(diamond.weight_gr),0),3) as diamond_weight,
-              round(coalesce(sum(tab1.qty),0),3) -  round(coalesce(sum(tab2.qty),0),3)  +(round(coalesce(sum(tab5.weight_gr),0),3)
-            -round(coalesce(sum(tab5.weight_gr)/sum(tab5.weight_gr)*sum(diamond.weight_gr),0),3)) -
-            ((round(coalesce(sum(tab6.weight_gr),0),3)
-            -round(coalesce(sum(tab6.weight_gr)/sum(tab6.weight_gr)*sum(diamond.weight_gr),0),3))) as loss_weight,
-            pp.coeff_24k as coeff_24k,
-            wk.percent as percent,
-            mp.metal_in_product as net_weight,
-            round(coalesce(sum(tab1.qty),0),3)
-            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
-            - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3)))
-            as loss,
-            mp.metal_in_product * wk.percent /100
-            as loss_limit,
-            round(coalesce(sum(tab1.qty),0),3)
-            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
-            - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3)))
-             -  ( mp.metal_in_product * wk.percent /100)
-             as loss_over,
-           ( round(coalesce(sum(tab1.qty),0),3)
-            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
-            - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3))))
-            * coeff_24k as loss_24k,
-               ( mp.metal_in_product* wk.percent /100)
-            *coeff_24k as loss_limit_24k,
-             (round(coalesce(sum(tab1.qty),0),3)
-            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
-            - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3)))
-             -  ( mp.metal_in_product* wk.percent /100))
-            *coeff_24k as loss_over_24k
-            from mrp_production_workcenter_line mpwl
-             left join mrp_workcenter as wk on(wk.id = mpwl.workcenter_id)
-            left join mrp_production as mp on(mp.id = mpwl.production_id)
-            left join product_product as pp on (pp.id = mp.product_id)
-            left join
+                    mp.name,
+                    mpwl.date_planned actual_date,
+                    mpwl.name line_name,
+                    round(coalesce(sum(tab1.qty),0),3) as metal_delivery,
+                    coalesce(sum(tab1.qty_24k),0) as metal_24k_delivery,
+                    round(coalesce(sum(tab2.qty),0),3) as metal_return,
+                    coalesce(sum(tab2.qty_24k),0) as metal_24k_return,
+                    round(coalesce(sum(tab3.weight_ct),0),3) as diamond_delivery_ct,
+                    round(coalesce(sum(tab3.weight_gr),0),3) as diamond_delivery_gr,
+                    round(coalesce(sum(tab4.weight_ct),0),3) as diamond_return_ct,
+                    round(coalesce(sum(tab4.weight_gr),0),3) as diamond_return_gr,
+                    round(coalesce(sum(tab5.weight_gr),0),3) as finish_delivery,
+                    round(coalesce(sum(tab6.weight_gr),0),3) as finish_return,
+                    round(coalesce(sum(diamond.weight_gr),0),3) as diamond_weight,
+                      round(coalesce(sum(tab1.qty),0),3) -  round(coalesce(sum(tab2.qty),0),3)  +(round(coalesce(sum(tab5.weight_gr),0),3)
+                    -round(coalesce(sum(tab5.weight_gr)/sum(tab5.weight_gr)*sum(diamond.weight_gr),0),3)) -
+                    ((round(coalesce(sum(tab6.weight_gr),0),3)
+                    -round(coalesce(sum(tab6.weight_gr)/sum(tab6.weight_gr)*sum(diamond.weight_gr),0),3))) as loss_weight,
+                    pp.coeff_24k as coeff_24k,
+                   wk.percent as percent,
+                    mp.metal_in_product as net_weight,
+                    round(coalesce(sum(tab1.qty),0),3)
+                    + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
+                    - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3)))
+                    as loss,
+                    mp.metal_in_product * wk.percent /100
+                    as loss_limit,
+                    round(coalesce(sum(tab1.qty),0),3)
+                    + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
+                    - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3)))
+                     -  ( mp.metal_in_product * wk.percent /100)
+                     as loss_over,
+                   ( round(coalesce(sum(tab1.qty),0),3)
+                    + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
+                    - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3))))
+                    * coeff_24k as loss_24k,
+                       ( mp.metal_in_product* wk.percent /100)
+                    *coeff_24k as loss_limit_24k,
+                     (round(coalesce(sum(tab1.qty),0),3)
+                    + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
+                    - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3)))
+                     -  ( mp.metal_in_product* wk.percent /100))
+                    *coeff_24k as loss_over_24k
+                    from mrp_production_workcenter_line mpwl
+                     left join mrp_workcenter as wk on(wk.id = mpwl.workcenter_id)
+                    left join mrp_production as mp on(mp.id = mpwl.production_id)
+                    left join product_product as pp on (pp.id = mp.product_id)
+                    left join
             --- JOIN METAL DELIVERY  ---
                 (SELECT mpwl.id as mpwl_id,
                 mpwl.name as mpwl_name,
@@ -2048,17 +2042,13 @@ class inventory_report(osv.osv):
                   date_from,date_to,
                   date_from,date_to,
                   date_from,date_to)
->>>>>>> dc7f5487f660b1466dfb6bf3e81b8899f8bad5d9
             
         cr.execute(sql)
         print sql
+        arr = []
         results = cr.dictfetchall()
         if len(results)>=1:
             for result in results:
-<<<<<<< HEAD
-                if(result['loss']!=None):
-                    weight_loss= float(result['loss'])
-=======
                 if(result['loss_24k']!=None):
                     weight_loss += round(float(result['loss_24k']or 0.0),3)
                     loss_limit += round(float(result['loss_limit_24k']or 0.0),3)
@@ -2068,9 +2058,8 @@ class inventory_report(osv.osv):
                         'loss_limit': loss_limit,
                         'loss_over':loss_over,
                         })
->>>>>>> dc7f5487f660b1466dfb6bf3e81b8899f8bad5d9
         
-        return  weight_loss
+        return  arr
 
     def print_stock_in_out(self, cr, uid, date_from, date_to, location_id, category):
         str_query = ''

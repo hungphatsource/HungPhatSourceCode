@@ -380,7 +380,7 @@ class mrp_production(osv.osv):
 
                 if mrp.product_id.metal_class !='platinum':
 		    #print 'casting_type: '+ str(mrp.product_id.casting_type)
-                    loss_weight_24= weight_24k_used-weight_24k_return
+                    loss_weight_24= loss_weight * item['coeff_24k']
 
 
                 res = self.write(cr, uid, ids, {'metal_delivery':item['metal_delivery']
