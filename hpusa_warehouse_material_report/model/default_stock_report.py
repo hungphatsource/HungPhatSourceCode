@@ -1,8 +1,10 @@
-
+    
 from openerp.osv import fields, osv
 import time
 from datetime import datetime
 from dateutil import relativedelta
+from openerp import SUPERUSER_ID
+
 
 class default_stock_report(osv.osv):
     
@@ -59,7 +61,7 @@ class inventory_report(osv.osv):
             'gold_loss_over':fields.float('Loss Over'),
             'gold_ship_to_us':fields.float('Ship to US'),  
             'gold_end_phyical': fields.float('Balance Gold Physical'),
-            'gold_end_erp': fields.float('Balance Gold End(Book)', readonly=True, status={'open': [('readonly', False)]}),
+            'gold_end_erp': fields.float('Balance Gold End(Book)',  status={'open': [('readonly', False)]}),
             'diff_gold': fields.float('Diffence Gold'),
         
             'pt_start': fields.float('PT Start'),
@@ -72,7 +74,7 @@ class inventory_report(osv.osv):
             'pt_loss_over':fields.float('PT Over'),
             'pt_ship_to_us':fields.float('PT to US'),  
             'pt_end_phyical': fields.float('Balance PT Physical'),
-            'pt_end_erp': fields.float('Balance PT End(Book)', readonly=True, status={'open': [('readonly', False)]}),
+            'pt_end_erp': fields.float('Balance PT End(Book)',  status={'open': [('readonly', False)]}),
             'diff_pt': fields.float('Diffence PT'),
             
             
@@ -86,7 +88,7 @@ class inventory_report(osv.osv):
             'diamond_loss_over':fields.float('Diamond Over'),
             'diamond_ship_to_us':fields.float('Diamond to US'),  
             'diamond_end_physical': fields.float('Diamond End Physical'),
-            'diamond_end_erp': fields.float('Balance End Diamond(Book)', readonly=True, status={'open': [('readonly', False)]}),
+            'diamond_end_erp': fields.float('Balance End Diamond(Book)',  status={'open': [('readonly', False)]}),
             'diff_diamond': fields.float('Diffence Diamond'),
             
             'status': fields.selection([('open','Open'),('closed','Closed')],'Status', required=True,track_visibility='onchange'),
@@ -112,81 +114,91 @@ class inventory_report(osv.osv):
     
     def update_data(self,cr,uid,ids,context):
         
+        
+        uid = SUPERUSER_ID
+        
+        
         this = self.browse(cr, uid, ids[0], context)
         date_start = this.date_start
         date_end = str(datetime.strptime(this.date_end,'%Y-%m-%d') + relativedelta.relativedelta(days=1))[:10]
-        
+         
         gold_book=0
         diff_gold = 0
-        
+         
         diamond_book = 0
         diamond_physical = this.diamond_end_physical
         diff_diamond =0
         gold_real_24k =0
         diamond_real =0
-        
+         
         main_stock_id = this.main_stock_id.id
         production_stock_id = this.production_stock_id.id
         gold_category = this.gold_category.id
         diamond_category = this.diamond_category.id
-        
+         
         gold_book += self.request_stock_report_rawmaterrial(cr,uid,date_start,date_end,main_stock_id,gold_category)
         gold_book += self.request_stock_report_rawmaterrial(cr,uid,date_start,date_end,production_stock_id,gold_category)
-        
+         
         gold_real_24k += self.request_stock_report_rawmaterrial_real(cr,uid,date_start,date_end,main_stock_id,gold_category)
         gold_real_24k += self.request_stock_report_rawmaterrial_real(cr,uid,date_start,date_end,production_stock_id,gold_category)
-        
+         
         diff_gold = gold_real_24k- gold_book
         diamond_book += self.request_stock_in_out_diamonds(cr,uid,date_start,date_end,main_stock_id,diamond_category)
         diamond_real += self.request_stock_in_out_diamonds_real(cr,uid,date_start,date_end,main_stock_id,diamond_category)
-        
+         
         diff_diamond = diamond_real-diamond_book
-        weight_loss= self.request_loss_month(cr, uid, date_start, date_end)
-        
+        arr = self.request_loss_month(cr, uid, date_start, date_end)
+        weight_loss = 0
+        gold_loss_limit = 0
+        gold_loss_over = 0
+        for item in arr :
+            weight_loss = item['weight_loss']
+            gold_loss_limit = item['loss_limit']
+            gold_loss_over = item['loss_over']
+         
         gold_start = 0
         gold_in = 0
         gold_out =0
+        gold_in_pro = 0
+        gold_out_pro = 0
         gold_pending = 0 
         gold_finish = 0
-        gold_loss_limit = 0 
-        gold_loss_over = 0 
         gold_ship_to_us = 0
-      
-        
+       
+         
         category =[]
         category.append(gold_category)
         main_stock = []
         main_stock.append(main_stock_id)
         production_stock =[]
         production_stock.append(production_stock_id)
-        
+         
         result_main =   self.print_stock_in_out( cr, uid, date_start, date_end, main_stock, category)
-        
-        result_production = self.print_stock_in_out( cr, uid, date_start, date_end, production_stock, category)
-        
+         
+        #result_production = self.print_stock_in_out( cr, uid, date_start, date_end, production_stock, category)
+         
         #=== Lay du lieu dau ky ===#
         if result_main:
             gold_start+= float(result_main[0]['qty_24k'] or 0)
             gold_in += float(result_main[0]['qty_in'] or 0)
             gold_out += float(result_main[0]['qty_out'] or 0)
-        
-        if result_production:
-            gold_start+= float(result_production[0]['qty_24k'] or 0)
-            gold_in += float(result_production[0]['qty_in'] or 0)
-            gold_out += float(result_production[0]['qty_out'] or 0)
-            
+         
+#         if result_production:
+#             gold_start+= float(result_production[0]['qty_24k'] or 0)
+#             gold_in += float(result_production[0]['qty_in'] or 0)
+#             gold_out += float(result_production[0]['qty_out'] or 0)
+             
         #=== Get Manufacturing Order Loss ===#
-            
+             
         mo_info = self.export_manufacturing_loss_sumary(cr,uid,date_start,date_end)
-        
+         
         if mo_info:
             gold_finish += mo_info[0]['net_weight']
-            gold_pending = gold_out- gold_in -  gold_finish - weight_loss
-            gold_loss_limit = gold_finish*this.gold_los_limit_allow
-            gold_loss_over = weight_loss -gold_loss_limit
+            # Gold Pending 
+            gold_pending = self.gold_pending(cr, uid)
             ship_infor =  self.export_manufacturing_loss_sumary_ship(cr,uid,date_start,date_end)
             gold_ship_to_us =  ship_infor[0]['net_weight']
-            
+             
         self.write(cr, uid, ids, {
                                 'gold_end_erp': gold_book,
                                 'gold_end_phyical':gold_real_24k, 
@@ -197,21 +209,21 @@ class inventory_report(osv.osv):
                                 'gold_loss': weight_loss,
                                 'gold_start': gold_start,
                                 'gold_in':gold_in,
-                                'gold_out':gold_out,
+                                'gold_out':gold_finish,
                                 'gold_pending':gold_pending,
                                 'gold_finish':gold_finish,
                                 'gold_loss_limit':gold_loss_limit,
                                 'gold_loss_over':gold_loss_over,
                                 'gold_ship_to_us':gold_ship_to_us,    
                                   }, context)
-   
+    
         print date_start + '  ' +date_end 
-        
+         
         #Start get info Platinum#
         pt_in_out = self.get_stock_in_out_platinum(cr, uid, date_start, date_end, main_stock, category )
         pt_loss_get = self.export_manufacturing_loss_platinum (cr,uid,date_start,date_end)
         pt_loss_ship= self.export_manufacturing_loss_platinum_ship(cr,uid,date_start,date_end)
-        
+         
         pt_start = 0
         pt_in = 0
         pt_out = 0
@@ -224,13 +236,13 @@ class inventory_report(osv.osv):
         pt_end_phyical = 0
         pt_end_erp = 0
         diff_pt = 0
-        
+         
         pt_start = pt_in_out[0]['qty_first']
         pt_in = pt_in_out[0]['qty_in']
         pt_out = pt_in_out[0]['qty_out']
         pt_pending = pt_in_out[0]['qty_out'] -pt_loss_get[0]['net_weight'] - pt_in_out[0]['qty_lost'] 
         pt_finish =pt_loss_get[0]['net_weight'] 
-       
+        
         pt_loss_limit = pt_loss_get[0]['net_weight'] * this.gold_los_limit_allow 
         pt_loss_over =  pt_loss_get[0]['loss_weight']
         pt_ship_to_us = pt_loss_ship[0]['net_weight']
@@ -251,23 +263,23 @@ class inventory_report(osv.osv):
                                 'pt_end_phyical':  pt_end_phyical ,
                                 'pt_end_phyical': pt_end_erp,
                                 'diff_pt' :diff_pt 
-                                       
+                                        
                                   }, context)
-        
-        
+         
+         
         #Start get info Diamond#
         dia_category = []
         dia_category.append(diamond_category)
-        
+         
         diamond_get =self.get_stock_in_out_diamonds(cr, uid,date_start , date_end, main_stock, dia_category)
-        
-        
+         
+         
         diamond_start = diamond_get[0]['wt_first']
         diamond_in = diamond_get[0]['wt_in']
         diamond_out = diamond_get[0]['wt_out']
         diamond_pending = diamond_get[0]['wt_out'] - diamond_get[0]['wt_in'] - mo_info[0]['diamond_weight']
         diamond_finish = mo_info[0]['diamond_weight']
-        
+         
         diamond_loss = diamond_get[0]['wt_lost']
         diamond_loss_limit = 0
         diamond_loss_over = 0
@@ -275,7 +287,7 @@ class inventory_report(osv.osv):
         diamond_end_physical = diamond_get[0]['wt_stock']
         diamond_end_erp = diamond_get[0]['wt_endbook']
         diff_diamond = diamond_get[0]['wt_adjust']
-       
+        
         self.write(cr, uid, ids, {
                                 'diamond_start' :diamond_start,
                                 'diamond_in':diamond_in,
@@ -292,8 +304,7 @@ class inventory_report(osv.osv):
                                   }, context)
          
         return True
-    
-    
+      
     def get_stock_in_out_diamonds(self, cr, uid, date_from, date_to, location_id, category):
         print 'Start get information'
         cate_arr=[]
@@ -1525,8 +1536,11 @@ class inventory_report(osv.osv):
                                     GROUP BY product_id
                             ) as tab ON(tab.product_id = p.id)
 
-                        -- Nhap
-                        LEFT JOIN (
+                           -- Nhap
+                            LEFT JOIN (
+                            SELECT _second.product_id, SUM(_second.qty) as qty, sum(_second.wt) as wt FROM
+                            
+                            (
                             SELECT product_id
                             , coalesce(SUM(product_qty),0) as qty
                             ,coalesce(SUM(weight_mo),0) as wt
@@ -1536,7 +1550,24 @@ class inventory_report(osv.osv):
                             AND date <= '%s' AND state = 'done'
                             AND location_id <>  location_dest_id
                             GROUP BY product_id
+                            UNION ALL
+                            SELECT product_id
+                            , coalesce(-SUM(product_qty),0) as qty
+                            ,coalesce(-SUM(weight_mo),0) as wt
+                            FROM stock_move sm
+                            LEFT JOIN stock_picking sp ON(sp.id = sm.picking_id)
+                            WHERE sm.location_dest_id = %s
+                            AND sm.date >= '%s'
+                            AND sm.date <= '%s'
+                            AND sm.state = 'done'
+                            AND sm.location_id <>  sm.location_dest_id
+                            AND sp.hp_transfer_type in('return','adjust')
+                            GROUP BY product_id
+                            ) as _second
+                            GROUP BY product_id
                             ) as tab2 ON(tab2.product_id =  p.id)
+
+
 
                         -- Xuat
                         LEFT JOIN (
@@ -1658,23 +1689,402 @@ class inventory_report(osv.osv):
           
     def request_loss_month(self,cr,uid,date_from,date_to):
         weight_loss= 0
+        loss_limit = 0
+        loss_over = 0
         
         sql = '''
-                select sum(loss_weight_24k) as loss
-                from mrp_production
-                where   mo_date >= to_date('%s','YYYY-MM-DD') 
-                AND mo_date < to_date('%s','YYYY-MM-DD')   
-            '''%( date_from, date_to)
+            SELECT
+            mp.name,
+            mpwl.date_planned actual_date,
+            mpwl.name line_name,
+            round(coalesce(sum(tab1.qty),0),3) as metal_delivery,
+            coalesce(sum(tab1.qty_24k),0) as metal_24k_delivery,
+            round(coalesce(sum(tab2.qty),0),3) as metal_return,
+            coalesce(sum(tab2.qty_24k),0) as metal_24k_return,
+            round(coalesce(sum(tab3.weight_ct),0),3) as diamond_delivery_ct,
+            round(coalesce(sum(tab3.weight_gr),0),3) as diamond_delivery_gr,
+            round(coalesce(sum(tab4.weight_ct),0),3) as diamond_return_ct,
+            round(coalesce(sum(tab4.weight_gr),0),3) as diamond_return_gr,
+            round(coalesce(sum(tab5.weight_gr),0),3) as finish_delivery,
+            round(coalesce(sum(tab6.weight_gr),0),3) as finish_return,
+            round(coalesce(sum(diamond.weight_gr),0),3) as diamond_weight,
+              round(coalesce(sum(tab1.qty),0),3) -  round(coalesce(sum(tab2.qty),0),3)  +(round(coalesce(sum(tab5.weight_gr),0),3)
+            -round(coalesce(sum(tab5.weight_gr)/sum(tab5.weight_gr)*sum(diamond.weight_gr),0),3)) -
+            ((round(coalesce(sum(tab6.weight_gr),0),3)
+             -round(coalesce(coalesce(sum(tab6.weight_gr)*(1+sum(tab6.weight_gr))/(1+sum(tab6.weight_gr)),0)*sum(diamond.weight_gr),0),3)))  as loss_weight,
+            pp.coeff_24k as coeff_24k,
+            wk.percent as percent,
+            mp.metal_in_product as net_weight,
+            round(coalesce(sum(tab1.qty),0),3)
+            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
+            - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3)))
+            as loss,
+            mp.metal_in_product * wk.percent /100
+            as loss_limit,
+            round(coalesce(sum(tab1.qty),0),3)
+            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
+            - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3)))
+             -  ( mp.metal_in_product * wk.percent /100)
+             as loss_over,
+           ( round(coalesce(sum(tab1.qty),0),3)
+            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
+            - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3))))
+            * coeff_24k as loss_24k,
+               ( mp.metal_in_product* wk.percent /100)
+            *coeff_24k as loss_limit_24k,
+             (round(coalesce(sum(tab1.qty),0),3)
+            + (round(coalesce(sum(tab5.weight_gr),0),3) -  round(coalesce(sum(tab3.weight_gr),0),3) + round(coalesce(sum(tab4.weight_gr),0),3) )
+            - ( round(coalesce(sum(tab2.qty),0),3) + (round(coalesce(sum(tab6.weight_gr),0),3)- round(coalesce(sum(tab3.weight_gr),0),3)+  round(coalesce(sum(tab4.weight_gr),0),3)))
+             -  ( mp.metal_in_product* wk.percent /100))
+            *coeff_24k as loss_over_24k
+            from mrp_production_workcenter_line mpwl
+             left join mrp_workcenter as wk on(wk.id = mpwl.workcenter_id)
+            left join mrp_production as mp on(mp.id = mpwl.production_id)
+            left join product_product as pp on (pp.id = mp.product_id)
+            left join
+            --- JOIN METAL DELIVERY  ---
+                (SELECT mpwl.id as mpwl_id,
+                mpwl.name as mpwl_name,
+                                coalesce (SUM(sm.product_qty),0) as qty ,
+                                coalesce(SUM(sm.product_qty * coeff_24k),0) as qty_24k
+                                FROM stock_move sm,
+                                stock_picking sp,
+                                product_product pp,
+                                mrp_production_workcenter_line mpwl,
+                                mrp_production mp
+                                WHERE sp.hp_transfer_type='delivery'
+                                --AND sm.date >= to_date('%s','YYYY-MM-DD')
+                                --AND sm.date < to_date('%s','YYYY-MM-DD')
+                                AND sm.state = 'done'
+                                AND pp.hp_type ='metal'
+                                AND pp.metal_class = 'gold'
+                                AND sm.product_id =pp.id
+                                AND sm.picking_id= sp.id
+                                AND sp.wo_delivery_id = mpwl.id
+                                AND mpwl.production_id = mp.id
+                                AND sp.wo_delivery_id IN (
+                                 SELECT mpwl.id
+                                 FROM mrp_production_workcenter_line mpwl,
+                                 mrp_production mp,
+                                 product_product pp
+                                 WHERE mp.id = mpwl.production_id
+                                 AND mp.product_id = pp.id
+                                 AND pp.metal_class = 'gold'
+                                
+                                 --AND employee_id=1
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
+                                 )
+                GROUP BY mpwl.id,mpwl.name) as tab1 ON(tab1.mpwl_id = mpwl.id)
+                left join ------------------- JOIN METAL RETURN -----------------------
+                (SELECT mp.id mrp_id , mp.name mrp_name,mpwl.id as mpwl_id,mpwl.name mpwl_name,
+                                coalesce (SUM(sm.product_qty),0) as qty ,
+                                coalesce(SUM(sm.product_qty * coeff_24k),0) as qty_24k
+                                FROM stock_move sm,
+                                stock_picking sp,
+                                product_product pp,
+                                mrp_production_workcenter_line mpwl,
+                                mrp_production mp
+                                WHERE sp.hp_transfer_type='return'
+                                --AND sm.date >= to_date('%s','YYYY-MM-DD')
+                                --AND sm.date < to_date('%s','YYYY-MM-DD')
+                                AND sm.state = 'done'
+                                AND pp.hp_type ='metal'
+                                AND pp.metal_class = 'gold'
+                                AND sm.product_id =pp.id
+                                AND sm.picking_id= sp.id
+                                AND sp.wo_return_id = mpwl.id
+                                AND mpwl.production_id = mp.id
+                                AND sp.wo_return_id IN (
+                                  SELECT mpwl.id
+                                 FROM mrp_production_workcenter_line mpwl,
+                                 mrp_production mp,
+                                 product_product pp
+                                 WHERE mp.id = mpwl.production_id
+                                 AND mp.product_id = pp.id
+                                 AND pp.metal_class = 'gold'
+                                 --AND employee_id=1
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
+                                 )
+                GROUP BY mp.id, mp.name ,mpwl.id,mpwl.name)
+                as tab2 ON(tab2.mpwl_id = mpwl.id)
+
+                LEFT JOIN
+--- DIAMOND DELIVERY  ---
+                (SELECT mp.id mp_id,mp.name mp_name,mpwl.id mpwl_id, mpwl.name mpwl_name,
+                                coalesce (SUM(sm.weight_mo),0) as weight_ct ,
+                                coalesce(SUM(sm.weight_mo /5),0) as weight_gr
+                                FROM stock_move sm ,
+                                stock_picking sp,
+                                product_product pp,
+                                mrp_production mp,
+                                mrp_production_workcenter_line mpwl
+                                WHERE sp.hp_transfer_type='delivery'
+                                --AND sm.date >= to_date('%s','YYYY-MM-DD')
+                                --AND sm.date < to_date('%s','YYYY-MM-DD')
+                                AND sm.state = 'done'
+                                AND pp.hp_type ='diamonds'
+                                AND sm.product_id =pp.id
+                                AND sm.picking_id= sp.id
+                                AND mp.id = mpwl.production_id
+                                AND mpwl.id = sp.wo_delivery_id
+                                AND sp.wo_delivery_id IN (
+                                SELECT mpwl.id
+                                 FROM mrp_production_workcenter_line mpwl,
+                                 mrp_production mp,
+                                 product_product pp
+                                 WHERE mp.id = mpwl.production_id
+                                 AND mp.product_id = pp.id
+                                 AND pp.metal_class = 'gold'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
+                                 )
+                GROUP BY mp.id,mp.name,mpwl.id, mpwl.name)
+                as tab3 ON(tab3.mpwl_id = mpwl.id)
+
+                LEFT JOIN(
+                -- DIAMOND RETURN ---
+                SELECT mpwl.id as mpwl_id, mpwl.name mpwl_name,
+                                coalesce (SUM(sm.weight_mo),0) as weight_ct ,
+                                coalesce(SUM(sm.weight_mo /5),0) as weight_gr
+                                FROM stock_move sm ,
+                                stock_picking sp,
+                                product_product pp,
+                                mrp_production mp,
+                                mrp_production_workcenter_line mpwl
+                                WHERE sp.hp_transfer_type='return'
+                                --AND sm.date >= to_date('%s','YYYY-MM-DD')
+                                --AND sm.date < to_date('%s','YYYY-MM-DD')
+                                AND sm.state = 'done'
+                                AND pp.hp_type ='diamonds'
+                                AND sm.product_id =pp.id
+                                AND sm.picking_id= sp.id
+                                AND mp.id = mpwl.production_id
+                                AND mpwl.id = sp.wo_return_id
+                                AND sp.wo_return_id IN (
+                                  SELECT mpwl.id
+                                 FROM mrp_production_workcenter_line mpwl,
+                                 mrp_production mp,
+                                 product_product pp
+                                 WHERE mp.id = mpwl.production_id
+                                 AND mp.product_id = pp.id
+                                 AND pp.metal_class = 'gold'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
+                                 )
+                GROUP BY mpwl.id, mpwl.name
+                ) as tab4 ON(tab4.mpwl_id = mpwl.id)
+                --- FINISH DELIVERY ---
+                LEFT JOIN
+                (SELECT mpwl.id as mpwl_id, mpwl.name as mpwl_name,
+                                coalesce (SUM(sm.product_qty),0) as qty ,
+                                coalesce(SUM(sm.weight_mo),0) as weight_gr
+                                FROM stock_move sm ,
+                                stock_picking sp,
+                                product_product pp,
+                                mrp_production mp,
+                                mrp_production_workcenter_line mpwl
+                                WHERE sp.hp_transfer_type='delivery'
+                                --AND sm.date >= to_date('%s','YYYY-MM-DD')
+                                --AND sm.date < to_date('%s','YYYY-MM-DD')
+                                AND sm.state = 'done'
+                                AND pp.hp_type ='finish_product'
+                                AND pp.metal_class = 'gold'
+                                AND sm.product_id =pp.id
+                                AND sm.picking_id= sp.id
+                                AND mp.id= mpwl.production_id
+                                AND mpwl.id= sp.wo_delivery_id
+                                AND sp.wo_delivery_id IN (
+                                  SELECT mpwl.id
+                                 FROM mrp_production_workcenter_line mpwl,
+                                 mrp_production mp,
+                                 product_product pp
+                                 WHERE mp.id = mpwl.production_id
+                                 AND mp.product_id = pp.id
+                                 AND pp.metal_class = 'gold'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
+                                 )
+                GROUP BY mpwl.id, mpwl.name)
+                as tab5 ON(tab5.mpwl_id = mpwl.id)
+                --- FINISH RETURN ---
+                left join (
+                SELECT mpwl.id as mpwl_id, mpwl.name as mpwl_name,
+                                coalesce (SUM(sm.product_qty),0) as qty ,
+                                coalesce(SUM(sm.weight_mo),0) as weight_gr
+                                FROM stock_move sm ,
+                                stock_picking sp,
+                                product_product pp,
+                                mrp_production mp,
+                                mrp_production_workcenter_line mpwl
+                                WHERE sp.hp_transfer_type='return'
+                                --AND sm.date >= to_date('%s','YYYY-MM-DD')
+                                --AND sm.date < to_date('%s','YYYY-MM-DD')
+                                AND sm.state = 'done'
+                                AND pp.hp_type ='finish_product'
+                                AND pp.metal_class = 'gold'
+                                AND sm.product_id =pp.id
+                                AND sm.picking_id= sp.id
+                                AND mp.id= mpwl.production_id
+                                AND mpwl.id= sp.wo_return_id
+                                AND sp.wo_return_id IN (
+                                  SELECT mpwl.id
+                                 FROM mrp_production_workcenter_line mpwl,
+                                 mrp_production mp,
+                                 product_product pp
+                                 WHERE mp.id = mpwl.production_id
+                                 AND mp.product_id = pp.id
+                                 AND pp.metal_class = 'gold'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')   
+                                 )
+
+                GROUP BY mpwl.id, mpwl.name
+                ) as tab6 ON(tab6.mpwl_id = mpwl.id)
+                left join
+                --- DIAMOND IN FINISH PRODUCT ---
+                (select mrp.id as id, coalesce(sum (weight_ct),0) as weight_ct, coalesce(sum(weight_gr),0) as weight_gr
+                from(
+                SELECT mp.id as id ,mp.name  as name,
+                                coalesce (SUM(sm.weight_mo),0) as weight_ct ,
+                                coalesce(SUM(sm.weight_mo /5),0) as weight_gr
+                                FROM stock_move sm ,
+                                stock_picking sp,
+                                product_product pp,
+                                mrp_production mp,
+                                mrp_production_workcenter_line mpwl
+                                WHERE sp.hp_transfer_type='delivery'
+                                --AND sm.date >= to_date('%s','YYYY-MM-DD')
+                                --AND sm.date < to_date('%s','YYYY-MM-DD')
+                                AND sm.state = 'done'
+                                AND pp.hp_type ='diamonds'
+                                AND sm.product_id =pp.id
+                                AND sm.picking_id= sp.id
+                                AND mp.id = mpwl.production_id
+                                AND sp.wo_delivery_id = mpwl.id
+                                AND sp.wo_delivery_id IN (
+                                  SELECT mpwl.id
+                                 FROM mrp_production_workcenter_line mpwl,
+                                 mrp_production mp,
+                                 product_product pp
+                                 WHERE mp.id = mpwl.production_id
+                                 AND mp.product_id = pp.id
+                                 AND pp.metal_class = 'gold'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
+                                 )
+                GROUP BY mp.id,mp.name
+                UNION ALL
+                -- TINH TRONG LUONG DIAMOND TRA VE
+                SELECT mp.id as id,mp.name as name,
+                                coalesce (-SUM(sm.weight_mo),0) as weight_ct ,
+                                coalesce(-SUM(sm.weight_mo /5),0) as weight_gr
+                                FROM stock_move sm ,
+                                stock_picking sp,
+                                product_product pp,
+                                mrp_production mp,
+                                mrp_production_workcenter_line mpwl
+                                WHERE sp.hp_transfer_type='return'
+                                --AND sm.date >= to_date('%s','YYYY-MM-DD')
+                                --AND sm.date < to_date('%s','YYYY-MM-DD')
+                                AND sm.state = 'done'
+                                AND pp.hp_type ='diamonds'
+                                AND sm.product_id =pp.id
+                                AND sm.picking_id= sp.id
+                                AND mp.id = mpwl.production_id
+                                AND sp.wo_return_id = mpwl.id
+                                AND sp.wo_return_id IN (
+                                  SELECT mpwl.id
+                                 FROM mrp_production_workcenter_line mpwl,
+                                 mrp_production mp,
+                                 product_product pp
+                                 WHERE mp.id = mpwl.production_id
+                                 AND mp.product_id = pp.id
+                                 AND pp.metal_class = 'gold'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
+                                 )
+                GROUP BY mp.id,mp.name
+                UNION ALL
+                -- TINH TRONG LUONG DIAMOND BE, MAT
+                SELECT mp.id as id,mp.name as name,
+                                coalesce (-SUM(sm.weight_mo),0) as weight_ct ,
+                                coalesce(-SUM(sm.weight_mo /5),0) as weight_gr
+                                FROM stock_move sm ,
+                                stock_picking sp,
+                                product_product pp,
+                                mrp_production mp,
+                                mrp_production_workcenter_line mpwl
+                                WHERE sp.hp_transfer_type='return'
+                                --AND sm.date >= to_date('%s','YYYY-MM-DD')
+                                --AND sm.date < to_date('%s','YYYY-MM-DD')
+                                AND sm.state = 'done'
+                                AND pp.hp_type ='diamonds'
+                                AND sm.product_id =pp.id
+                                AND sm.picking_id= sp.id
+                                AND mp.id = mpwl.production_id
+                                AND sp.wo_lost_id = mpwl.id
+                                AND sp.wo_lost_id IN (
+                                SELECT mpwl.id
+                                 FROM mrp_production_workcenter_line mpwl,
+                                 mrp_production mp,
+                                 product_product pp
+                                 WHERE mp.id = mpwl.production_id
+                                 AND mp.product_id = pp.id
+                                 AND pp.metal_class = 'gold'
+                                 AND mp.mo_date >= to_date('%s','YYYY-MM-DD')
+                                         AND mp.mo_date < to_date('%s','YYYY-MM-DD')
+                                 )
+                GROUP BY mp.id, mp.name
+                ) as mrp
+                GROUP BY mrp.id
+                ) as diamond ON(diamond.id = mpwl.production_id)
+                group by mp.name,mpwl.date_planned, mpwl.name,pp.coeff_24k,wk.percent, mp.metal_in_product
+                having coalesce(sum(tab1.qty),0)
+                +coalesce(sum(tab1.qty_24k),0)+ coalesce(sum(tab2.qty),0)
+                +coalesce(sum(tab2.qty_24k),0)+ coalesce(sum(tab3.weight_ct),0)
+                +coalesce(sum(tab3.weight_gr),0)+ coalesce(sum(tab4.weight_ct),0)
+                +coalesce(sum(tab4.weight_gr),0)+ coalesce(sum(tab5.weight_gr),0)
+                +coalesce(sum(tab6.weight_gr),0)<>0
+                order by mp.name,mpwl.name ;
+
+            ''' %(date_from,date_to,
+                  date_from,date_to,
+                  date_from,date_to,
+                  date_from,date_to,
+                  date_from,date_to,
+                  date_from,date_to,
+                  date_from,date_to,
+                  date_from,date_to,
+                  date_from,date_to,
+                  date_from,date_to,
+                  date_from,date_to,
+                  date_from,date_to,
+                  date_from,date_to,
+                  date_from,date_to,
+                  date_from,date_to,
+                  date_from,date_to,
+                  date_from,date_to,
+                  date_from,date_to)
             
         cr.execute(sql)
         print sql
+        arr = []
         results = cr.dictfetchall()
         if len(results)>=1:
             for result in results:
-                if(result['loss']!=None):
-                    weight_loss= float(result['loss'])
+                if(result['loss_24k']!=None):
+                    weight_loss += round(float(result['loss_24k']or 0.0),3)
+                    loss_limit += round(float(result['loss_limit_24k']or 0.0),3)
+                    loss_over += round(float(result['loss_over_24k']or 0.0),3)
         
-        return  weight_loss
+            arr.append({'weight_loss':weight_loss,
+                        'loss_limit': loss_limit,
+                        'loss_over':loss_over,
+                        })
+        
+        return  arr
 
     def print_stock_in_out(self, cr, uid, date_from, date_to, location_id, category):
         str_query = ''
@@ -2030,4 +2440,15 @@ class inventory_report(osv.osv):
                             })
         return arr
         
+    def gold_pending(self , cr, uid):
+        arr = []
+        gold_pending =0
+        sql = '''select mrp.metal_used as metal from mrp_production mrp where mrp.finished_weight = 0 and mrp.state = 'ready' or mrp.state = 'in_production' '''
+        print sql
+        cr.execute(sql)
+        result = cr.dictfetchall()
+        for item in result:
+            if item['metal']:
+                gold_pending += item['metal']
+        return gold_pending
 inventory_report()

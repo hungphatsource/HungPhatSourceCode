@@ -267,26 +267,54 @@ class wizard_hpusa_material_request_report(osv.osv):
     def report_inventory(self,cr,uid, year_id):
         arr=[]
         
-        header=['Tồn Đầu Kỳ','Nhập Trong Kỳ','Xuất Trong Kỳ','TL Đang Thực Hiện Trong Kỳ','TL Hoàn Tất Trong Kỳ','HH Trong Định Mức' ,'HH Vượt Định Mức','Trả về USA','TT-24K(Thực tế)','Tồn kho HT-24K(Hệ thống)','TL Chênh Lệch','% Chênh Lệch' ]
+        header=['Tồn Đầu Kỳ',
+                'Nhập Trong Kỳ',
+                'Xuất Trong Kỳ',
+                'TL Đang Thực Hiện Trong Kỳ',
+                'TL Hoàn Tất Trong Kỳ',
+                'HH Trong Định Mức' ,
+                'HH Vượt Định Mức',
+                'Trả về USA',
+                'TT-24K(Thực tế)',
+                'Tồn kho HT-24K(Hệ thống)',
+                'TL Chênh Lệch',
+                '% Chênh Lệch' ]
+        
+        description=['Tồn Đầu Kỳ',
+                'Nhập = Hàng mua + Ship từ US + Thợ trả về',
+                'Xuất = Xuất cho kho sx + xuất cho thợ ',
+                'TL Đang Thực Hiện = Tổng trọng lượng thực tế',
+                'TL Hoàn Tất Trong Kỳ = Tổng Finished Trong kỳ',
+                'HH Trong Định Mức = Tổng trọng lượng định mức từ thợ' ,
+                'HH Vượt Định Mức = Tổng trọng lượng vượt định mức thợ',
+                'Trả về USA= Tổng trọng lượng thành phẩm của HPUSA + Alexander',
+                'Tồn kho 24k (Thực tế) = Tồn kho tổng và tồn kho sx thực tế',
+                'Tồn kho 24k HT = Tồn kho hệ thống chưa điều chỉnh',
+                'TL Chênh Lệch = Tồn kho 24k (Thực tế) - Tồn kho HT-24K(Hệ thống)',
+                '% Chênh Lệch = (Tồn kho 24k (Thực tế) - Tồn kho HT-24K(Hệ thống))/ Tồn kho 24k (Thực tế)' ]
         
         for i in range(0,12):
             value={}
             value ['header']=  header[i]
+            value ['description']=  description[i]
             for j in range(1,14):
                 key= 'month'+str(j)
                 value[key] =''
                 
             arr.append(value)   
         
-        total_gold_end = 0
-        total_gold_physical = 0
-        total_gold_loss = 0
-        total_diff_gold = 0
-        total_diamond_end = 0
-        total_diamond_physical = 0
-        total_diff_diamond = 0
-        
-        
+        sum_gold_start = 0
+        sum_gold_in = 0 
+        sum_gold_out = 0
+        sum_gold_pending = 0
+        sum_gold_finish = 0
+        sum_gold_loss_limit = 0
+        sum_gold_loss_over = 0
+        sum_gold_ship_to_us  = 0
+        sum_gold_end_phyical = 0
+        sum_gold_end_erp = 0
+        sum_diff_gold = 0
+         
         periods=  self.pool.get('hpusa.report.inventory').search(cr,uid,[('year_id','=',year_id.id)])
         if(periods): 
             for period in periods:
@@ -311,9 +339,34 @@ class wizard_hpusa_material_request_report(osv.osv):
                 arr[8][key] = round(float(_data.gold_end_phyical),3)
                 arr[9][key] = round(float(_data.gold_end_erp),3)
                 arr[10][key] = round(float(_data.diff_gold),3)
+                
+                # sum Diffence
+                sum_gold_start += round(float(_data.gold_start),3)
+                sum_gold_in += round(float(_data.gold_in),3)  
+                sum_gold_out +=  round(float(_data.gold_out),3)
+                sum_gold_pending += round(float(_data.gold_pending),3)
+                sum_gold_finish += round(float(_data.gold_finish),3)
+                sum_gold_loss_limit += round(float(_data.gold_loss_limit),3)
+                sum_gold_loss_over += round(float(_data.gold_loss_over),3)
+                sum_gold_ship_to_us  += round(float(_data.gold_ship_to_us),3)
+                sum_gold_end_phyical += round(float(_data.gold_end_phyical),3)
+                sum_gold_end_erp += round(float(_data.gold_end_erp),3)
+                sum_diff_gold += round(float(_data.diff_gold),3)
+        
                 if  _data.gold_out>0:
                     arr[11][key] = round(float((_data.diff_gold / _data.gold_out) or 0),3)
-                
+            key = 'month13'    
+            arr[0][key] = sum_gold_start
+            arr[1][key] = sum_gold_in 
+            arr[2][key] = sum_gold_out
+            arr[3][key] = sum_gold_pending
+            arr[4][key] = sum_gold_finish
+            arr[5][key] = sum_gold_loss_limit
+            arr[6][key] = sum_gold_loss_over
+            arr[7][key] = sum_gold_ship_to_us
+            arr[8][key] = sum_gold_end_phyical
+            arr[9][key] = sum_gold_end_erp
+            arr[10][key] = sum_diff_gold
                 # calculation total
                 
             
@@ -322,11 +375,37 @@ class wizard_hpusa_material_request_report(osv.osv):
     def report_inventory_platinum(self,cr,uid, year_id):
         arr=[]
         
-        header=['Tồn Đầu Kỳ','Nhập Trong Kỳ','Xuất Trong Kỳ','TL Đang Thực Hiện Trong Kỳ','TL Hoàn Tất Trong Kỳ','HH Trong Định Mức' ,'HH Vượt Định Mức','Trả về USA','Tồn kho TT-PT950(Hop)','Tồn kho HT-PT950(ERP)','TL Chênh Lệch','% Chênh Lệch' ]
+        header=['Tồn Đầu Kỳ',
+                'Nhập Trong Kỳ',
+                'Xuất Trong Kỳ',
+                'TL Đang Thực Hiện Trong Kỳ',
+                'TL Hoàn Tất Trong Kỳ',
+                'HH Trong Định Mức' ,
+                'HH Vượt Định Mức',
+                'Trả về USA',
+                'Tồn kho TT-PT950(Hop)',
+                'Tồn kho HT-PT950(ERP)',
+                'TL Chênh Lệch',
+                '% Chênh Lệch' ]
+        
+        description=['Tồn Đầu Kỳ',
+                'Nhập = Hàng mua + Ship từ US + Thợ trả về',
+                'Xuất = Xuất cho kho sx + xuất cho thợ ',
+                'TL Đang Thực Hiện = Tổng trọng lượng thực tế',
+                'TL Hoàn Tất Trong Kỳ = Tổng Finished Trong kỳ',
+                'HH Trong Định Mức = Tổng trọng lượng định mức từ thợ' ,
+                'HH Vượt Định Mức = Tổng trọng lượng vượt định mức thợ',
+                'Trả về USA= Tổng trọng lượng thành phẩm của HPUSA + Alexander',
+                'Tồn kho TT-PT950(Hop) = Tồn kho tổng và tồn kho sx thực tế',
+                'Tồn kho HT-PT950(ERP) = Tồn kho hệ thống chưa điều chỉnh',
+                'TL Chênh Lệch = Tồn kho TT-PT950(Hop) - Tồn kho HT-PT950(ERP)',
+                '% Chênh Lệch = (Tồn kho TT-PT950(Hop) - Tồn kho HT-PT950(ERP))/ Tồn kho TT-PT950(Hop)' ]
         
         for i in range(0,12):
             value={}
             value ['header']=  header[i]
+            value ['description']=  description[i]
+            
             for j in range(1,14):
                 key= 'month'+str(j)
                 value[key] =''
@@ -334,7 +413,21 @@ class wizard_hpusa_material_request_report(osv.osv):
             arr.append(value)   
            
         periods=  self.pool.get('hpusa.report.inventory').search(cr,uid,[('year_id','=',year_id.id)])
-        if(periods): 
+        
+        sum_pt_start = 0
+        sum_pt_in = 0
+        sum_pt_out = 0
+        sum_pt_pending = 0
+        sum_pt_finish = 0
+        sum_pt_loss_limit = 0
+        sum_pt_loss_over = 0
+        sum_pt_ship_to_us = 0
+        sum_pt_end_phyical = 0
+        sum_pt_end_erp = 0
+        sum_diff_pt = 0
+ 
+        if(periods):
+                         
             for period in periods:
                 _data=self.pool.get('hpusa.report.inventory').browse(cr,uid,period)
                 
@@ -357,24 +450,100 @@ class wizard_hpusa_material_request_report(osv.osv):
                 arr[8][key] = round(float(_data.pt_end_phyical),3)
                 arr[9][key] = round(float(_data.pt_end_erp),3)
                 arr[10][key] = round(float(_data.diff_pt),3)
-                arr[11][key] = diff_percent    
+                arr[11][key] = diff_percent
                 
+                sum_pt_start += round(float(_data.pt_start),3)
+                sum_pt_in += round(float(_data.pt_in),3) 
+                sum_pt_out += round(float(_data.pt_out),3)
+                sum_pt_pending += round(float(_data.pt_pending),3)
+                sum_pt_finish += round(float(_data.pt_finish),3)
+                sum_pt_loss_limit += round(float(_data.pt_loss_limit),3)
+                sum_pt_loss_over += round(float(_data.pt_loss_over),3)
+                sum_pt_ship_to_us += round(float(_data.pt_ship_to_us),3)
+                sum_pt_end_phyical += round(float(_data.pt_end_phyical),3)
+                sum_pt_end_erp += round(float(_data.pt_end_erp),3)
+                sum_diff_pt +=  round(float(_data.diff_pt),3)   
+        
+        key = 'month13'
+        
+        sum_pt_start = 0
+        sum_pt_in = 0
+        sum_pt_out = 0
+        sum_pt_pending = 0
+        sum_pt_finish = 0
+        sum_pt_loss_limit = 0
+        sum_pt_loss_over = 0
+        sum_pt_ship_to_us = 0
+        sum_pt_end_phyical = 0
+        sum_pt_end_erp = 0
+        sum_diff_pt = 0
+        
+        arr[0][key] = sum_pt_start
+        arr[1][key] = sum_pt_in
+        arr[2][key] = sum_pt_out
+        arr[3][key] = sum_pt_pending
+        arr[4][key] = sum_pt_finish
+        arr[5][key] = sum_pt_loss_limit
+        arr[6][key] = sum_pt_loss_over
+        arr[7][key] = sum_pt_ship_to_us
+        arr[8][key] = sum_pt_end_phyical
+        arr[9][key] = sum_pt_end_erp
+        arr[10][key] = sum_diff_pt
+                 
                 # calculation total
         return arr
     
     def report_inventory_diamond(self,cr,uid, year_id):
         arr=[]
         
-        header=['Tồn Đầu Kỳ','Nhập Trong Kỳ','Xuất Trong Kỳ','TL Đang Thực Hiện Trong Kỳ','TL Hoàn Tất Trong Kỳ','HH Trong Định Mức' ,'HH Vượt Định Mức','Trả về USA','Tồn kho TT-Dia(Hop)','Tồn kho HT-Dia(ERP)','TL Chênh Lệch','% Chênh Lệch' ]
+        header=['Tồn Đầu Kỳ',
+                'Nhập Trong Kỳ',
+                'Xuất Trong Kỳ',
+                'TL Đang Thực Hiện Trong Kỳ',
+                'TL Hoàn Tất Trong Kỳ',
+                'HH Trong Định Mức' ,
+                'HH Vượt Định Mức',
+                'Trả về USA',
+                'Tồn kho TT-Dia(Hop)',
+                'Tồn kho HT-Dia(ERP)',
+                'TL Chênh Lệch',
+                '% Chênh Lệch' ]
+        
+        description=['Tồn Đầu Kỳ',
+                'Nhập = Hàng mua + Ship từ US + Thợ trả về',
+                'Xuất = Xuất cho kho sx + xuất cho thợ ',
+                'TL Đang Thực Hiện = Tổng trọng lượng thực tế',
+                'TL Hoàn Tất Trong Kỳ = Tổng Finished Trong kỳ',
+                'HH Trong Định Mức = Tổng trọng lượng định mức từ thợ' ,
+                'HH Vượt Định Mức = Tổng trọng lượng vượt định mức thợ',
+                'Trả về USA= Tổng trọng lượng thành phẩm của HPUSA + Alexander',
+                'Tồn kho TT(Hop) = Tồn kho tổng và tồn kho sx thực tế',
+                'Tồn kho HT = Tồn kho hệ thống chưa điều chỉnh',
+                'TL Chênh Lệch = Tồn kho TT(Hop) - Tồn kho HT(ERP)',
+                '% Chênh Lệch = (Tồn kho TT(Hop) - Tồn kho HT(ERP))/ Tồn kho TT(Hop)' ]
         
         for i in range(0,12):
             value={}
             value ['header']=  header[i]
+            value ['description']=  description[i]
             for j in range(1,14):
                 key= 'month'+str(j)
                 value[key] =''
                 
             arr.append(value)   
+        
+        
+        sum_diamond_start = 0
+        sum_diamond_in= 0
+        sum_diamond_out = 0
+        sum_diamond_pending = 0
+        sum_diamond_finish = 0
+        sum_diamond_loss_limit = 0
+        sum_diamond_loss_over = 0
+        sum_diamond_ship_to_us = 0 
+        sum_diamond_end_physical = 0
+        sum_diamond_end_erp = 0
+        sum_diff_diamond = 0
            
         periods=  self.pool.get('hpusa.report.inventory').search(cr,uid,[('year_id','=',year_id.id)])
         if(periods): 
@@ -400,10 +569,34 @@ class wizard_hpusa_material_request_report(osv.osv):
                 arr[8][key] = round(float(_data.diamond_end_physical),3)
                 arr[9][key] = round(float(_data.diamond_end_erp),3)
                 arr[10][key] = round(float(_data.diff_diamond),3)
-                arr[11][key] = diff_percent    
-                
+                arr[11][key] = diff_percent  
+                  
                 # calculation total
+                sum_diamond_start = round(float(_data.diamond_start),3)
+                sum_diamond_in += round(float(_data.diamond_in),3)
+                sum_diamond_out += round(float(_data.diamond_out),3)
+                sum_diamond_pending += round(float(_data.diamond_pending),3)
+                sum_diamond_finish += round(float(_data.diamond_finish),3)
+                sum_diamond_loss_limit += round(float(_data.diamond_loss_limit),3)
+                sum_diamond_loss_over += round(float(_data.diamond_loss_over),3)
+                sum_diamond_ship_to_us += round(float(_data.diamond_ship_to_us),3) 
+                sum_diamond_end_physical += round(float(_data.diamond_end_physical),3)
+                sum_diamond_end_erp += round(float(_data.diamond_end_erp),3)
+                sum_diff_diamond += round(float(_data.diff_diamond),3)
                 
+        key='month13'        
+        arr[0][key] = sum_diamond_start
+        arr[1][key] = sum_diamond_in
+        arr[2][key] = sum_diamond_out
+        arr[3][key] = sum_diamond_pending
+        arr[4][key] = sum_diamond_finish
+        arr[5][key] = sum_diamond_loss_limit
+        arr[6][key] = sum_diamond_loss_over
+        arr[7][key] = sum_diamond_ship_to_us
+        arr[8][key] = sum_diamond_end_physical
+        arr[9][key] = sum_diamond_end_erp
+        arr[10][key] = sum_diff_diamond
+                   
             
         return arr
     
