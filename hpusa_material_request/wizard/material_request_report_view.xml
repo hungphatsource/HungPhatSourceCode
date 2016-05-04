@@ -20,6 +20,8 @@
 	                	<field name="planning_id" widget="many2many_tags" colspan="2"/>
 	                	<newline/>
 	                	<field name="product_id" colspan="2"/>
+	                	<field name="metal_id" widget="many2one_tags" colspan="2"/>
+	                	<newline/>
 	                </group> 
 	                 <div states="get">
                  

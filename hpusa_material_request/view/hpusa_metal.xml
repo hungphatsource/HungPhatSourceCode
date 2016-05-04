@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+    
+        <record id="view_metal" model="ir.ui.view">
+            <field name="name">hpusa.metal</field>
+            <field name="model">hpusa.metal</field>
+            <field name="arch" type="xml">
+               <form version="7.0" string="Metal View">
+                	<sheet>
+                		<group col  = "3">
+                	<h2>Confficent<field name="conff"/></h2>
+                		</group>
+                	
+               		
+              </sheet>
+                 <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+			</form>
+            </field>
+        </record>
+  <record id="metal_tree_view" model="ir.ui.view">
+            <field name="name">metal.routing.view</field>
+            <field name="model">hpusa.metal</field>
+            <field name="arch" type="xml">
+                <tree string="routing">
+                    <field name="conff"/>
+	                 
+                </tree>
+            </field>
+        </record>
+  		<record id="metal_search_view" model="ir.ui.view">
+            <field name="name">metal.routing.search</field>
+            <field name="model">hpusa.metal</field>
+            <field name="arch" type="xml">
+                <search string="routing">
+                    <field name="conff" string="Routing" filter_domain="['|',('name','ilike',self),('code','ilike',self)]"/>
+                </search>
+            </field>
+        </record>
+   <record id="hpusa_metal_id" model="ir.actions.act_window">
+            <field name="name">Metal</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">hpusa.metal</field>
+            <field name="view_type">form</field>
+             <field name="view_id" ref="metal_tree_view"/>
+            <field name="search_view_id" ref="metal_search_view"/>
+        </record >
+
+  <menuitem  action = "hpusa_metal_id" id="metal"  name="Metal Confficent" sequence="1"  parent="mrp.menu_mrp_configuration" groups="base.group_user"/>
+ </data>
+</openerp>

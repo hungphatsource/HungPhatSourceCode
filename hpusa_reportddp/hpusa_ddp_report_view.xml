@@ -4,8 +4,11 @@
                 
       <report id="export_data_wip_sumary" string="Wip Report" model="hpusa.reportddp" name="export_data_wip_sumary" rml="hpusa_reportddp/report/report_wip.ods" menu ="False" header="False"/>  
       <record model="ir.actions.report.xml" id="export_data_wip_sumary">
-        	<field name="report_type">oo-xls</field>
+        	<field name="report_type">oo-ods</field>
       </record>  
-              
+      <report id="export_data_wip_sumary_manager" string="Wip Report Manager" model="hpusa.reportddp" name="export_data_wip_sumary_manager" rml="hpusa_reportddp/report/report_wip_manager.ods" menu ="False" header="False"/>  
+      <record model="ir.actions.report.xml" id="export_data_wip_sumary_manager">
+        	<field name="report_type">oo-ods</field>
+      </record>    
     </data>
 </openerp>

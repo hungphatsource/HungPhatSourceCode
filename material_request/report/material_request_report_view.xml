@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+        <report header='False' auto="False" id="material_request_report" model="material.request" name="material.request"
+                rml="material_request/report/material_request.rml" string="Print Material Request"
+                usage="default"/>
+
+    </data>
+</openerp>
