@@ -31,6 +31,7 @@
             'view/mrp_view.xml',
             'report/wizard_hpusa_material_request_report.xml',
             'wizard/material_request_report_view.xml',
+            'view/hpusa_metal.xml',
             #'wizard/list_mo_view.xml'
     ],
     'installable': True,

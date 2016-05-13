@@ -38,7 +38,7 @@ class hpusa_reportddp_wizard(osv.osv):
             'company_id': fields.many2many('res.company','company_rel','ddp_id_rel','ddp_company_rel','Company'),
             'check_order_date':fields.boolean('Date Order'),
             'check_pickup_date': fields.boolean('Pickup Date'),
-            'check_due_date': fields.boolean('Due Date'),                                    
+            'check_due_date': fields.boolean('Due Date'),                                   
      }
     _defaults={  
               'check_order_date':True,
@@ -49,7 +49,7 @@ class hpusa_reportddp_wizard(osv.osv):
     
     def action_export(self, cr, uid, ids, context=None):
         datas = {'ids': context.get('active_ids', [])}
-        res = self.read(cr, uid, ids, ['from_date','to_date','company_id','work_center','status','worker'], context=context)
+        res = self.read(cr, uid, ids, ['from_date','to_date','company_id','work_center','status','worker','customer_id'], context=context)
         res = res and res[0] or {}
         datas['form'] = res
         name = self.pool.get('res.users').browse(cr, uid, uid).partner_id.name
@@ -60,24 +60,35 @@ class hpusa_reportddp_wizard(osv.osv):
         x = 0
         sid = ''
         if this.so_id:
-            sid += '('
-            for item in this.so_id:
-                x = x+1
-                so_id =item.id
-                if x == len(this.so_id):
-                    sid += str(so_id)
-                else:
-                    sid += str(so_id)  + ','
-            sid += ')'
+                sid += '('
+                for item in this.so_id:
+                    x = x+1
+                    so_id =item.id
+                    if x == len(this.so_id):
+                        sid += str(so_id)
+                    else:
+                        sid += str(so_id)  + ','
+                sid += ')'
+        if type == 'data':
+            datas['line']  = self.get_all_data(cr, uid, res['from_date'], res['to_date'], sid, res['work_center'], res['status'], this.worker.id,this.company_id,this.check_order_date,this.check_pickup_date,this.check_due_date, context=None)
+            datas['line1']  = self.get_all_data_detail(cr, uid, res['from_date'], res['to_date'], sid, res['work_center'], res['status'], this.worker.id,this.company_id,this.check_order_date,this.check_pickup_date,this.check_due_date, context=None)
+            datas['line2']  = self.get_so_detail(cr, uid, res['from_date'], res['to_date'],this.company_id, context=None)
+            return {
+                    'type'          : 'ir.actions.report.xml',
+                    'report_name'   : 'export_data_wip_sumary',
+                    'datas'         : datas,
+                    }
+        else:
+            datas['line']  = self.get_all_data(cr, uid, res['from_date'], res['to_date'], sid, res['work_center'], res['status'], this.worker.id,this.company_id,this.check_order_date,this.check_pickup_date,this.check_due_date, context=None)
+            datas['line1']  = self.get_all_data_detail(cr, uid, res['from_date'], res['to_date'], sid, res['work_center'], res['status'], this.worker.id,this.company_id,this.check_order_date,this.check_pickup_date,this.check_due_date, context=None)
+            datas['line2']  = self.get_so_detail(cr, uid, res['from_date'], res['to_date'],this.company_id, context=None)
+            return {
+                    'type'          : 'ir.actions.report.xml',
+                    'report_name'   : 'export_data_wip_sumary_manager',
+                    'datas'         : datas,
+                    }
+            
         
-        
-        datas['line']  = self.get_all_data(cr, uid, res['from_date'], res['to_date'], sid, res['work_center'], res['status'], this.worker.id,this.company_id,this.check_order_date,this.check_pickup_date,this.check_due_date, context=None)
-        datas['line1']  = self.get_all_data_detail(cr, uid, res['from_date'], res['to_date'], sid, res['work_center'], res['status'], this.worker.id,this.company_id,this.check_order_date,this.check_pickup_date,this.check_due_date, context=None)
-        return {
-                'type'          : 'ir.actions.report.xml',
-                'report_name'   : 'export_data_wip_sumary',
-                'datas'         : datas,
-           }
           
     def get_state (self,cr,uid,status, context=None):
         if status :
@@ -98,7 +109,6 @@ class hpusa_reportddp_wizard(osv.osv):
     
     def get_all_data(self ,cr, uid,from_date,to_date ,so_id,work_center,status,worker,company_id,check_order_date,check_pickup_date,check_due_date,context=None):
             #self.get_all_data_detail(cr, uid, from_date, to_date, so_id, work_center, status, worker,company_id,check_order_date,check_pickup_date,check_due_date, context=None)
-            
             arr =[]
             sql =''
             str_query =''
@@ -164,8 +174,6 @@ class hpusa_reportddp_wizard(osv.osv):
                 str_query += '''and mp.state_view = '%s' '''% (status)
             if worker:
                 str_query += ''' and mp.employee_id = %s'''%(str(worker))
-                
-                
             list_workcenter= ['3D Design','Waxmodeling','Casting','Assembling','Setting','Polishing']
             
             for co_id in company_ids:
@@ -203,8 +211,6 @@ class hpusa_reportddp_wizard(osv.osv):
                             %s
                             group by mp.wo_view,mp.state_view
                         ) as tab1 on ( tab1.wo_view=mp.wo_view)
-
-
                           -- Waiting Material
                         left join
                         (
@@ -235,9 +241,6 @@ class hpusa_reportddp_wizard(osv.osv):
                             %s
                             group by mp.wo_view,mp.state_view
                         ) as tab3 on ( tab3.wo_view=mp.wo_view)
-
-
-                        
                         -- Inprogress
                         left join
                         (
@@ -420,11 +423,11 @@ class hpusa_reportddp_wizard(osv.osv):
             for co_id in company_ids:
                 
                 company_name = self.pool.get('res.company').browse(cr,uid,co_id,context=None).name
-               
                 if work_center:                    
                     sql ='''
                             select 
                             so.company_id
+                            ,so.id as so_id
                             ,tab1.customer_id 
                             ,tab1.name
                             ,tab1.sale_name
@@ -439,8 +442,14 @@ class hpusa_reportddp_wizard(osv.osv):
                             ,he.name_related as employee
                             ,mp.mo_date
                             ,mp.description
+                            ,re.name as customer_name
+                            , re.phone 
+                            , re.mobile
+                            , cr.name as crm_name
                             from mrp_production mp
                             left join sale_order as so on(mp.so_id=so.id)
+                            left join res_partner as re on (re.id = so.partner_id)
+                            left join crm_vip_program as cr on (cr.id = re.vip_program_id)
                             -- sale order
                             left join 
                             (select 
@@ -471,18 +480,17 @@ class hpusa_reportddp_wizard(osv.osv):
                             and state_view <>'Done'
                             and  wo_view <> 'Polishing' 
                             order by  so.company_id,tab1.name,tab1.date_order;
-    
                                     '''%(str_query,co_id)            
-                        
                     cr.execute(sql)
                     print sql 
                     result = cr.dictfetchall() 
                     for item in result:
-                                
-                        #print 'ok'
                         arr.append({                                        
                                     'sequence':sequence,
                                     'company_id':company_name,
+                                    'customer_name': item['customer_name'],
+                                    'mobile_phone':str(item['phone'])+ ','+str(item['mobile']),
+                                    'crm_name' : item['crm_name'],
                                     'customer_name':item['customer_id'],
                                     'so_id':item['name'],
                                     'mo_name': item['mo_name'],
@@ -495,19 +503,18 @@ class hpusa_reportddp_wizard(osv.osv):
                                     'status':item['state_view'],
                                     'worker':item['employee'],
                                     'due_date':item['mo_date'],
-                                    'remark':item['description']
-                                                        
-                                    })
+                                    'remark':item['description'] ,
+                                    'so_id':  item['so_id'] ,           
+                                })
                         sequence+=1
-                     
-                else:
-                        
+                else: 
                     for workcenter in list_workcenter:
                                           
                         sql ='''
                             select 
                             so.company_id
                             ,tab1.customer_id 
+                            ,so.id as so_id
                             ,tab1.name 
                             ,tab1.sale_name
                             ,tab1.date_order
@@ -521,8 +528,14 @@ class hpusa_reportddp_wizard(osv.osv):
                             ,he.name_related as employee
                             ,mp.mo_date
                             ,mp.description
+                            ,re.name as customer_name
+                            , re.phone 
+                            , re.mobile
+                            , cr.name as crm_name
                             from mrp_production mp
                             left join sale_order as so on(mp.so_id=so.id)
+                            left join res_partner as re on (re.id = so.partner_id)
+                            left join crm_vip_program as cr on (cr.id = re.vip_program_id)
                             -- sale order
                             left join 
                             (select 
@@ -555,17 +568,17 @@ class hpusa_reportddp_wizard(osv.osv):
                         if workcenter =='Polishing':
                             sql+="and state_view <>'Done' "
                         sql+=   '''order by  so.company_id,tab1.name,tab1.date_order;
-                                    '''            
-                        
+                                    '''
                         cr.execute(sql)
                         print sql 
                         result = cr.dictfetchall() 
                         for item in result:
-                                
-                            #print 'ok'
                             arr.append({
                                     'sequence':sequence,
                                     'company_id':company_name,
+                                    'customer_name': item['customer_name'],
+                                    'mobile_phone':str(item['phone'])+ ','+str(item['mobile']),
+                                    'crm_name' : item['crm_name'],
                                     'customer_name':item['customer_id'],
                                     'so_id':item['name'],
                                     'mo_name': item['mo_name'],
@@ -578,12 +591,12 @@ class hpusa_reportddp_wizard(osv.osv):
                                     'status':item['state_view'],
                                     'worker':item['employee'],
                                     'due_date':item['mo_date'],
-                                    'remark':item['description']                   
+                                    'remark':item['description'],
+                                    'so_id':  item['so_id'] ,                   
                                         })
                             sequence+=1
-                                           
+            print arr                    
             return arr
-
     def view_rp(self,cr,uid,ids,context= None):
         this = self.browse(cr, uid,ids,context =None)[0]
         from_date = this.from_date
@@ -606,19 +619,77 @@ class hpusa_reportddp_wizard(osv.osv):
         worker = this.worker.id
         total = 0
         arr = self.get_all_data(cr, uid, from_date, to_date, sid, work_center, status, worker,this.company_id,this.check_order_date,this.check_pickup_date,this.check_due_date, context=None)
+        soids = self.get_so_detail(cr, uid, from_date, to_date,this.company_id, context=None)
         html = ''
+        html += '<span contenteditable="false">'\
+        '<h1  style = "text-align:center"> WORK IN PROCESS(WIP) </h1>'
+        if soids :
+            html +=  '<table  width="800px"  class ="tables" style = "border : 1px solid #999 ; border-collapse: collapse">'\
+                    '<thead class = "theads">'\
+                      '<tr class = "trs" style="background-color: rgb(238, 76, 140) ; text-align: center" >'\
+                        '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white">COMPANY</th>'\
+                        '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white">NO</th>'\
+                        '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white">SO NAME</th>'\
+                        '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >CUSTOMER</th>'\
+                        '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >STATE</th>'\
+                        '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >SALE NAME</th>'\
+                        '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >DATE ORDER</th>'\
+                        '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >DATE CONFIRM</th>'\
+                        '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >QTY PRODUCT</th>'\
+                      '</tr>' \
+                    '</thead>'\
+                    '<tbody>'
+            for item in soids:
+                html += '<tr class = "trs">'
+                if item['company']:
+                    html+='<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left">'+ str(item["company"])+'</td>'
+                else :
+                    html += '<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left"></td>'
+                if item['no']:
+                    html+='<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left">'+ str(item['no'])+'</td>'
+                else :
+                    html += '<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left"></td>'
+                if item['so_name']:
+                    html+='<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left">'+ str(item['so_name'])+'</td>'
+                else :
+                    html += '<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left"></td>'
+                if item['customer']:
+                    html+='<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left">'+ str(item['customer'])+'</td>'
+                else :
+                    html += '<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left"></td>'
+                if item['state']:
+                    html+='<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left">'+ str(item['state'])+'</td>'
+                else :
+                    html += '<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left"></td>'
+                if item['sale_name']:
+                    html+='<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left">'+ str(item['sale_name'])+'</td>'
+                else :
+                    html += '<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left"></td>'
+                if item['date_order']:
+                    html+='<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left">'+ str(item['date_order'])+'</td>'
+                else :
+                    html += '<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left"></td>'
+                if item['date_confirm']:
+                    html+='<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left">'+ str(item['date_confirm'])+'</td>'
+                else :
+                    html += '<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left"></td>'
+                if item['total_product']:
+                    html+='<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left">'+ str(item['total_product'])+'</td>'
+                else :
+                    html += '<td class ="tds" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left"></td>'
+                html+='</tr>'
+            html += '</tbody>'\
+                    '</table>'
         if arr:
-            html += '<span contenteditable="false">'\
-                    '<h1  style = "text-align:center"> WORK IN PROCESS(WIP) </h1>'\
-                    '<table  width="800px"  class ="tables" style = "border : 1px solid #999 ; border-collapse: collapse">'\
+            html +=  '<table  width="800px"  class ="tables" style = "border : 1px solid #999 ; border-collapse: collapse">'\
                     '<thead class = "theads">'\
                       '<tr class = "trs" style="background-color: rgb(238, 76, 140) ; text-align: center" >'\
                         '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white">COMPANY</th>'\
                         '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white">TOTAL PRODUCT</th>'\
                         '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white">WORKCENTER</th>'\
                         '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >DRAFT</th>'\
-                          '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >WAITING MATERIAL</th>'\
-                            '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >PENDING</th>'\
+                        '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >WAITING MATERIAL</th>'\
+                        '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >PENDING</th>'\
                         '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >INPROGRESS</th>'\
                         '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >QC</th>'\
                         '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: center ; color : white" >DONE</th>'\
@@ -628,8 +699,6 @@ class hpusa_reportddp_wizard(osv.osv):
                     '</thead>'\
                     '<tbody>'
             for  i in arr:
-                
-                
                 html += '<tr class = "trs">'
                 if i['company_id']:
                     
@@ -700,8 +769,7 @@ class hpusa_reportddp_wizard(osv.osv):
                     '</table>'\
                     '</span>'
         else:
-            html += '<span contenteditable="false">'\
-            '<table id ="tb" width="800px"  class ="tables" style ="align: center">'\
+            html += '<table id ="tb" width="800px"  class ="tables" style ="align: center">'\
                     '<thead class = "theads">'\
                       '<tr class = "trs" style="background-color: rgb(238, 76, 140) ; text-align: center" >'\
                         '<th class = "ths" style = "border : 1px solid #999 ; border-collapse: collapse ; text-align: left ; color : white">Sale Order</th>'\
@@ -753,6 +821,7 @@ class hpusa_reportddp_wizard(osv.osv):
         return {'value': v}
     
     def onchange_check_due_date(self, cr, uid, ids, check_due_date, context=None):
+
         v = {}
         if check_due_date==True:
             
@@ -760,10 +829,120 @@ class hpusa_reportddp_wizard(osv.osv):
             v['check_pickup_date'] = False
         return {'value': v}
     
+    def get_so_detail (self ,cr, uid,from_date,to_date ,company_id,context=None):
+        arr = []
+        so_ids = []
+        sale_order = []
+        str_query =''
+        sql_get_company=''
+        company_ids = []
+        str_query += ''' and so.date_order >= to_date('%s','YYYY-MM-DD')  '''%(from_date)
+        str_query += ''' and so.date_order <= to_date('%s','YYYY-MM-DD')  '''%(to_date)
+        sql_get_company+=''' where so.date_order >= to_date('%s','YYYY-MM-DD')  '''%(from_date)
+        sql_get_company += ''' and so.date_order <= to_date('%s','YYYY-MM-DD')  '''%(to_date)
+        sql_mo = '''  select distinct(mo.so_id) from mrp_production mo where mo.so_id is not null 
+        and mo.mo_date >= to_date('%s','YYYY-MM-DD') and  mo.mo_date <= to_date('%s','YYYY-MM-DD')
+        '''%(from_date,to_date) 
+        cr.execute(sql_mo)
+        result1 = cr.dictfetchall() 
+        for index in result1:
+            arr.append(index)
+        if company_id:
+                for id in company_id:
+                    company_ids.append(id.id)
+        else:
+                sql_get='''select distinct(company_id) as company_id from sale_order so %s'''%(sql_get_company)
+                cr.execute(sql_get) 
+                result1 = cr.dictfetchall() 
+                for item in result1:
+                    company_ids.append(item['company_id'])   
+        if arr:
+            for i in arr:
+                so_ids.append(i['so_id'])
+        if so_ids:
+            so_id =  str(so_ids).replace('[', '(')
+            so_id = str(so_id).replace(']', ')') 
+        
+        total_product = 0
+        for co_id in company_ids:
+            sequence=0
+            total_product_company = 0
+            company_name = self.pool.get('res.company').browse(cr,uid,co_id,context=None).name
+            sale_order.append({'company':company_name,
+                                  'no':'',
+                                  'so_name': '',
+                                  'customer':'',
+                                  'state':'',
+                                  'sale_name':'',
+                                  'date_order': '',
+                                  'date_confirm':'',
+                                  'total_product':'',
+                                  })
+            if so_ids:
+                sql =''' select so.id, so.name , so.date_order, rp.name as customer , so.state, so.date_confirm, pn.name as sale_name, count(sol.id) as total_product
+                            from sale_order as so
+                                ,res_partner rp
+                                ,res_users ru
+                                ,res_partner pn
+                                 ,sale_order_line sol
+                                where rp.id = so.partner_id
+                                and ru.id = so.user_id
+                                and ru.partner_id = pn.id
+                                and sol.order_id = so.id
+                                and so.sale_order_type = 'customize'
+                                and so.id not in %s
+                                %s
+                                and so.company_id = %s
+                                group by  so.id, so.name , so.date_order,rp.name,so.state, so.date_confirm, pn.name '''%(so_id ,str_query,co_id)         
+                                   
+                cr.execute(sql)
+                print sql 
+                result = cr.dictfetchall() 
+                for item in result:
+                    sequence = sequence + 1
+                    total_product_company = total_product_company + item['total_product']
+                    sale_order.append({'company':'',
+                                      'no':sequence,
+                                      'so_name': item['name'],
+                                      'customer':item['customer'],
+                                      'state':item['state'],
+                                      'sale_name':item['sale_name'],
+                                      'date_order': item['date_order'],
+                                      'date_confirm':item['date_confirm'],
+                                      'total_product':item['total_product'],
+                                      })
+                total_product = total_product  + total_product_company
+            sale_order.append({'company':'',
+                                  'no':'',
+                                  'so_name': '',
+                                  'customer':'',
+                                  'state':'',
+                                  'sale_name':'',
+                                  'date_order': '',
+                                  'date_confirm':'Total',
+                                  'total_product':total_product_company,
+                                  })
+        sale_order.append({'company':'Total',
+                                  'no':'',
+                                  'so_name': '',
+                                  'customer':'',
+                                  'state':'',
+                                  'sale_name':'',
+                                  'date_order': '',
+                                  'date_confirm':'',
+                                  'total_product':total_product,
+                                  })
+        return sale_order
+                
 hpusa_reportddp_wizard()
 
 openoffice_report.openoffice_report(
     'report.export_data_wip_sumary',
+    'hpusa.reportddp',
+    parser=hpusa_reportddp_wizard
+)
+openoffice_report.openoffice_report(
+    'report.export_data_wip_sumary_manager',
     'hpusa.reportddp',
     parser=hpusa_reportddp_wizard
 )
